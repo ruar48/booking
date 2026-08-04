@@ -5,12 +5,13 @@ namespace Database\Seeders;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\Role as RoleEnum;
+use App\Enums\Sport;
 use App\Models\Announcement;
 use App\Models\Club;
 use App\Models\ClubEvent;
-use App\Models\Court;
-use App\Models\CourtBooking;
 use App\Models\Player;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -63,13 +64,13 @@ class DemoDataSeeder extends Seeder
             'joined_at' => now()->subYear()->toDateString(),
         ]);
 
-        $courts = Court::factory()
+        $courts = Resource::factory()
             ->count(2)
             ->sequence(
-                ['name' => 'Court 1', 'court_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
-                ['name' => 'Court 2', 'court_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
+                ['name' => 'Court 1', 'resource_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
+                ['name' => 'Court 2', 'resource_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
             )
-            ->create(['club_id' => $club->id]);
+            ->create(['club_id' => $club->id, 'sport' => Sport::Pickleball]);
 
         $members = collect();
 
@@ -92,8 +93,8 @@ class DemoDataSeeder extends Seeder
         }
 
         foreach ($members->take(3) as $index => $player) {
-            CourtBooking::factory()->create([
-                'court_id' => $courts[$index % 2]->id,
+            ResourceBooking::factory()->create([
+                'resource_id' => $courts[$index % 2]->id,
                 'user_id' => $player->user_id,
                 'approved_by' => $owner->id,
                 'starts_at' => now()->addDays($index + 1)->setTime(9 + $index, 0),
@@ -104,8 +105,8 @@ class DemoDataSeeder extends Seeder
             ]);
         }
 
-        CourtBooking::factory()->create([
-            'court_id' => $courts->first()->id,
+        ResourceBooking::factory()->create([
+            'resource_id' => $courts->first()->id,
             'user_id' => $members->first()->user_id,
             'starts_at' => now()->addDays(2)->setTime(14, 0),
             'ends_at' => now()->addDays(2)->setTime(15, 0),

@@ -4,7 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Club;
 use App\Models\Coach;
-use App\Models\Court;
+use App\Models\Resource;
 use App\Models\TrainingSession;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -20,7 +20,7 @@ class TrainingSessionFactory extends Factory
         return [
             'coach_id' => Coach::factory(),
             'club_id' => Club::factory(),
-            'court_id' => Court::factory(),
+            'court_id' => Resource::factory(),
             'title' => fake()->words(3, true).' Training',
             'description' => fake()->paragraph(),
             'scheduled_at' => fake()->dateTimeBetween('+1 day', '+30 days'),

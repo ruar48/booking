@@ -33,7 +33,7 @@ import type {
     BookedSlot,
     Club,
     ClubEvent,
-    Court,
+    Resource,
 } from '@/types/booking';
 
 type HomeStats = {
@@ -44,7 +44,7 @@ type HomeStats = {
 
 type Props = {
     club: Club | null;
-    courts: Court[];
+    courts: Resource[];
     stats: HomeStats;
     announcements?: Announcement[];
     openPlayEvents?: ClubEvent[];
@@ -491,7 +491,7 @@ function BookCourtTab({
     bookedSlots,
     isAuthenticated,
 }: {
-    courts: Court[];
+    courts: Resource[];
     club: Club | null;
     bookedSlots: BookedSlot[];
     isAuthenticated: boolean;
@@ -506,7 +506,7 @@ function BookCourtTab({
     );
 }
 
-function PhotosTab({ courts, gallery }: { courts: Court[]; gallery: string[] }) {
+function PhotosTab({ courts, gallery }: { courts: Resource[]; gallery: string[] }) {
     return (
         <div className="space-y-6">
             <Card className="border-slate-200 shadow-sm">

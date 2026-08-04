@@ -2,63 +2,63 @@
 
 namespace App\Repositories;
 
-use App\Contracts\Repositories\CourtBookingRepositoryInterface;
-use App\Contracts\Repositories\CourtRepositoryInterface;
-use App\Enums\CourtStatus;
-use App\Models\Court;
+use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
+use App\Contracts\Repositories\ResourceRepositoryInterface;
+use App\Enums\ResourceStatus;
+use App\Models\Resource;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
-class CourtRepository implements CourtRepositoryInterface
+class ResourceRepository implements ResourceRepositoryInterface
 {
     public function __construct(
-        private readonly CourtBookingRepositoryInterface $courtBookingRepository,
+        private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
     ) {}
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return Court::query()
+        return Resource::query()
             ->with('club')
             ->latest()
             ->paginate($perPage);
     }
 
-    public function find(int $id): ?Court
+    public function find(int $id): ?Resource
     {
-        return Court::query()->find($id);
+        return Resource::query()->find($id);
     }
 
-    public function create(array $data): Court
+    public function create(array $data): Resource
     {
-        return Court::query()->create($data);
+        return Resource::query()->create($data);
     }
 
-    public function update(Court $court, array $data): Court
+    public function update(Resource $resource, array $data): Resource
     {
-        $court->update($data);
+        $resource->update($data);
 
-        return $court->fresh();
+        return $resource->fresh();
     }
 
-    public function delete(Court $court): bool
+    public function delete(Resource $resource): bool
     {
-        return (bool) $court->delete();
+        return (bool) $resource->delete();
     }
 
     public function getAvailableForSlot(
-        int $courtId,
+        int $resourceId,
         Carbon $startsAt,
         Carbon $endsAt,
         ?int $excludeBookingId = null,
     ): bool {
-        $court = $this->find($courtId);
+        $resource = $this->find($resourceId);
 
-        if ($court === null || $court->status !== CourtStatus::Available) {
+        if ($resource === null || $resource->status !== ResourceStatus::Available) {
             return false;
         }
 
-        return $this->courtBookingRepository
-            ->getConflicts($courtId, $startsAt, $endsAt, $excludeBookingId)
+        return $this->resourceBookingRepository
+            ->getConflicts($resourceId, $startsAt, $endsAt, $excludeBookingId)
             ->isEmpty();
     }
 }

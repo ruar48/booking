@@ -7,22 +7,22 @@ use App\Models\Announcement;
 use App\Models\Club;
 use App\Models\ClubEvent;
 use App\Models\Coach;
-use App\Models\Court;
-use App\Models\CourtBooking;
 use App\Models\GameMatch;
 use App\Models\Payment;
 use App\Models\Player;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use App\Models\Tournament;
 use App\Models\TrainingSession;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\ClubEventPolicy;
 use App\Policies\ClubPolicy;
 use App\Policies\CoachPolicy;
-use App\Policies\CourtBookingPolicy;
-use App\Policies\CourtPolicy;
 use App\Policies\GameMatchPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PlayerPolicy;
+use App\Policies\ResourceBookingPolicy;
+use App\Policies\ResourcePolicy;
 use App\Policies\TournamentPolicy;
 use App\Policies\TrainingSessionPolicy;
 use Carbon\CarbonImmutable;
@@ -42,8 +42,8 @@ class AppServiceProvider extends ServiceProvider
     protected array $policies = [
         Club::class => ClubPolicy::class,
         Player::class => PlayerPolicy::class,
-        Court::class => CourtPolicy::class,
-        CourtBooking::class => CourtBookingPolicy::class,
+        Resource::class => ResourcePolicy::class,
+        ResourceBooking::class => ResourceBookingPolicy::class,
         Tournament::class => TournamentPolicy::class,
         GameMatch::class => GameMatchPolicy::class,
         Announcement::class => AnnouncementPolicy::class,

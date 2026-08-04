@@ -16,7 +16,7 @@ class RolePermissionSeeder extends Seeder
     private const RESOURCE_ACTIONS = [
         'clubs' => ['view', 'create', 'update', 'delete'],
         'players' => ['view', 'create', 'update', 'delete'],
-        'courts' => ['view', 'create', 'update', 'delete'],
+        'resources' => ['view', 'create', 'update', 'delete'],
         'bookings' => ['view', 'create', 'update', 'delete', 'approve'],
         'tournaments' => ['view', 'create', 'update', 'delete'],
         'matches' => ['view', 'create', 'update', 'delete'],
@@ -24,6 +24,8 @@ class RolePermissionSeeder extends Seeder
         'coaches' => ['view', 'create', 'update', 'delete'],
         'training' => ['view', 'create', 'update', 'delete'],
         'payments' => ['view', 'create', 'update', 'delete', 'refund'],
+        'inventory' => ['view', 'create', 'update', 'delete', 'adjust'],
+        'pos' => ['view', 'create', 'void', 'reports'],
         'reports' => ['view', 'export'],
         'settings' => ['view', 'update'],
         'audit_logs' => ['view'],
@@ -37,7 +39,7 @@ class RolePermissionSeeder extends Seeder
         RoleEnum::ClubAdmin->value => [
             'clubs.view', 'clubs.update',
             'players.*',
-            'courts.*',
+            'resources.*',
             'bookings.*',
             'tournaments.*',
             'matches.*',
@@ -45,6 +47,8 @@ class RolePermissionSeeder extends Seeder
             'coaches.*',
             'training.*',
             'payments.view', 'payments.create', 'payments.update', 'payments.refund',
+            'inventory.*',
+            'pos.*',
             'reports.view', 'reports.export',
             'settings.view', 'settings.update',
             'audit_logs.view',
@@ -52,7 +56,7 @@ class RolePermissionSeeder extends Seeder
         RoleEnum::TournamentOrganizer->value => [
             'clubs.view',
             'players.view',
-            'courts.view',
+            'resources.view',
             'bookings.view',
             'tournaments.*',
             'matches.*',
@@ -65,7 +69,7 @@ class RolePermissionSeeder extends Seeder
         RoleEnum::Coach->value => [
             'clubs.view',
             'players.view',
-            'courts.view',
+            'resources.view',
             'bookings.view', 'bookings.create',
             'tournaments.view',
             'matches.view',
@@ -78,7 +82,7 @@ class RolePermissionSeeder extends Seeder
         RoleEnum::Player->value => [
             'clubs.view',
             'players.view',
-            'courts.view',
+            'resources.view',
             'bookings.view', 'bookings.create', 'bookings.update', 'bookings.delete',
             'tournaments.view',
             'matches.view',

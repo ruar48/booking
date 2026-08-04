@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\PaymentStatus;
-use App\Models\CourtBooking;
 use App\Models\Payment;
+use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
@@ -20,8 +20,8 @@ class PaymentFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'payable_type' => CourtBooking::class,
-            'payable_id' => CourtBooking::factory(),
+            'payable_type' => ResourceBooking::class,
+            'payable_id' => ResourceBooking::factory(),
             'invoice_number' => 'INV-'.Str::upper(Str::random(10)),
             'amount' => fake()->randomFloat(2, 10, 500),
             'currency' => 'USD',

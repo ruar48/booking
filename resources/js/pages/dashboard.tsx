@@ -33,9 +33,9 @@ import { create as createOpenPlay, edit as editOpenPlay, index as openPlayIndex 
 import type {
     Announcement,
     ClubEvent,
-    Court,
-    CourtBooking,
     DashboardData,
+    Resource,
+    ResourceBooking,
 } from '@/types/booking';
 
 type Props = {
@@ -45,7 +45,7 @@ type Props = {
 export default function Dashboard({ data }: Props) {
     const {
         stats,
-        courtAvailability,
+        resourceAvailability,
         revenueChart,
         recentBookings,
         openPlaySessions = [],
@@ -115,10 +115,10 @@ export default function Dashboard({ data }: Props) {
                             <CardDescription>Court 1 & Court 2 today</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            {courtAvailability.length ? (
+                            {resourceAvailability.length ? (
                                 <ul className="space-y-4">
-                                    {courtAvailability.map((court) => (
-                                        <CourtRow key={court.id} court={court} />
+                                    {resourceAvailability.map((resource) => (
+                                        <ResourceRow key={resource.id} resource={resource} />
                                     ))}
                                 </ul>
                             ) : (
@@ -247,29 +247,29 @@ function OpenPlayRow({ session }: { session: ClubEvent }) {
     );
 }
 
-function CourtRow({ court }: { court: Court }) {
-    const todayBookings = court.bookings?.length ?? 0;
+function ResourceRow({ resource }: { resource: Resource }) {
+    const todayBookings = resource.bookings?.length ?? 0;
 
     return (
         <li className="flex items-center justify-between gap-3">
             <div>
-                <p className="font-medium">{court.name}</p>
+                <p className="font-medium">{resource.name}</p>
                 <p className="text-muted-foreground text-xs">
-                    {formatCurrency(court.hourly_rate)}/hr · {todayBookings} booking
+                    {formatCurrency(resource.hourly_rate)}/hr · {todayBookings} booking
                     {todayBookings !== 1 ? 's' : ''} today
                 </p>
             </div>
-            <StatusBadge status={court.status} />
+            <StatusBadge status={resource.status} />
         </li>
     );
 }
 
-function BookingRow({ booking }: { booking: CourtBooking }) {
+function BookingRow({ booking }: { booking: ResourceBooking }) {
     return (
         <li className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <Link href={showBooking(booking)} className="text-sm font-medium hover:underline">
-                    {booking.court?.name ?? 'Court'} · {booking.user?.name ?? 'Guest'}
+                    {booking.resource?.name ?? 'Court'} · {booking.user?.name ?? 'Guest'}
                 </Link>
                 <p className="text-muted-foreground text-xs">
                     {booking.starts_at ? formatDateTime(booking.starts_at) : '—'}

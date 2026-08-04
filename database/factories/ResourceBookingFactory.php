@@ -4,24 +4,24 @@ namespace Database\Factories;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
-use App\Models\Court;
-use App\Models\CourtBooking;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<CourtBooking>
+ * @extends Factory<ResourceBooking>
  */
-class CourtBookingFactory extends Factory
+class ResourceBookingFactory extends Factory
 {
-    protected $model = CourtBooking::class;
+    protected $model = ResourceBooking::class;
 
     public function definition(): array
     {
         $startsAt = fake()->dateTimeBetween('+1 day', '+30 days');
 
         return [
-            'court_id' => Court::factory(),
+            'resource_id' => Resource::factory(),
             'user_id' => User::factory(),
             'approved_by' => null,
             'starts_at' => $startsAt,

@@ -14,7 +14,7 @@ interface DashboardRepositoryInterface
 
     public function getUpcomingTournaments(?int $clubId = null, int $limit = 10): Collection;
 
-    public function getCourtAvailability(?int $clubId = null): Collection;
+    public function getResourceAvailability(?int $clubId = null): Collection;
 
     public function getRevenueChart(?int $clubId = null): array;
 

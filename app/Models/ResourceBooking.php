@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
-use Database\Factories\CourtBookingFactory;
+use Database\Factories\ResourceBookingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $court_id
+ * @property int $resource_id
  * @property int $user_id
  * @property int|null $approved_by
  * @property Carbon $starts_at
@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
-    'court_id',
+    'resource_id',
     'user_id',
     'approved_by',
     'starts_at',
@@ -41,9 +41,9 @@ use Illuminate\Support\Carbon;
     'notes',
     'cancellation_reason',
 ])]
-class CourtBooking extends Model
+class ResourceBooking extends Model
 {
-    /** @use HasFactory<CourtBookingFactory> */
+    /** @use HasFactory<ResourceBookingFactory> */
     use HasFactory, SoftDeletes;
 
     protected function casts(): array
@@ -57,9 +57,9 @@ class CourtBooking extends Model
         ];
     }
 
-    public function court(): BelongsTo
+    public function resource(): BelongsTo
     {
-        return $this->belongsTo(Court::class);
+        return $this->belongsTo(Resource::class, 'resource_id');
     }
 
     public function user(): BelongsTo

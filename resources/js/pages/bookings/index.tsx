@@ -13,19 +13,19 @@ import {
     index as bookingsIndex,
     show,
 } from '@/routes/bookings';
-import type { CourtBooking, Paginated } from '@/types/booking';
+import type { ResourceBooking, Paginated } from '@/types/booking';
 
 type Props = {
-    bookings: Paginated<CourtBooking>;
+    bookings: Paginated<ResourceBooking>;
     canManage?: boolean;
 };
 
 export default function BookingsIndex({ bookings, canManage = false }: Props) {
-    const columns: ColumnDef<CourtBooking>[] = [
+    const columns: ColumnDef<ResourceBooking>[] = [
         {
-            accessorKey: 'court',
+            accessorKey: 'resource',
             header: 'Court',
-            cell: ({ row }) => row.original.court?.name ?? '—',
+            cell: ({ row }) => row.original.resource?.name ?? '—',
         },
         ...(canManage
             ? [
@@ -33,7 +33,7 @@ export default function BookingsIndex({ bookings, canManage = false }: Props) {
                       accessorKey: 'user',
                       header: 'Booked by',
                       cell: ({ row }) => row.original.user?.name ?? '—',
-                  } as ColumnDef<CourtBooking>,
+                  } as ColumnDef<ResourceBooking>,
               ]
             : []),
         {
@@ -69,7 +69,7 @@ export default function BookingsIndex({ bookings, canManage = false }: Props) {
                       cell: ({ row }) => (
                           <StatusBadge status={row.original.status} />
                       ),
-                  } as ColumnDef<CourtBooking>,
+                  } as ColumnDef<ResourceBooking>,
               ]
             : []),
         {

@@ -2,48 +2,48 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\Repositories\CourtBookingRepositoryInterface;
+use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
-use App\Http\Requests\StoreBulkCourtBookingRequest;
-use App\Http\Requests\StoreCourtBookingRequest;
+use App\Http\Requests\StoreBulkResourceBookingRequest;
+use App\Http\Requests\StoreResourceBookingRequest;
 use App\Models\Club;
-use App\Models\Court;
-use App\Models\CourtBooking;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class CourtBookingController extends Controller
+class ResourceBookingController extends Controller
 {
     public function __construct(
-        private readonly CourtBookingRepositoryInterface $courtBookingRepository,
+        private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
     ) {}
 
     public function index(): Response
     {
-        $this->authorize('viewAny', CourtBooking::class);
+        $this->authorize('viewAny', ResourceBooking::class);
 
         $user = request()->user();
 
         return Inertia::render('bookings/index', [
-            'bookings' => $this->courtBookingRepository->paginateForUser($user),
+            'bookings' => $this->resourceBookingRepository->paginateForUser($user),
             'canManage' => $user->isVenueAdmin(),
         ]);
     }
 
     public function create(): Response
     {
-        $this->authorize('create', CourtBooking::class);
+        $this->authorize('create', ResourceBooking::class);
 
         return Inertia::render('bookings/create', $this->bookingScheduleData());
     }
 
-    public function store(StoreCourtBookingRequest $request): RedirectResponse
+    public function store(StoreResourceBookingRequest $request): RedirectResponse
     {
-        $booking = $this->courtBookingRepository->create(
+        $booking = $this->resourceBookingRepository->create(
             $this->attributesForNewBooking(
                 $request->validated(),
                 $request->user()->id,
@@ -55,10 +55,10 @@ class CourtBookingController extends Controller
         return to_route('bookings.show', $booking);
     }
 
-    public function storeBulk(StoreBulkCourtBookingRequest $request): RedirectResponse
+    public function storeBulk(StoreBulkResourceBookingRequest $request): RedirectResponse
     {
         foreach ($request->validated('bookings') as $data) {
-            $this->courtBookingRepository->create(
+            $this->resourceBookingRepository->create(
                 $this->attributesForNewBooking($data, $request->user()->id),
             );
         }
@@ -71,11 +71,11 @@ class CourtBookingController extends Controller
         return to_route('bookings.index');
     }
 
-    public function show(CourtBooking $booking): Response
+    public function show(ResourceBooking $booking): Response
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['court.club', 'user', 'approver']);
+        $booking->load(['resource.club', 'user', 'approver']);
 
         return Inertia::render('bookings/show', [
             'booking' => $booking,
@@ -83,11 +83,11 @@ class CourtBookingController extends Controller
         ]);
     }
 
-    public function markPaid(CourtBooking $booking): RedirectResponse
+    public function markPaid(ResourceBooking $booking): RedirectResponse
     {
         $this->authorize('markPaid', $booking);
 
-        $this->courtBookingRepository->update($booking, [
+        $this->resourceBookingRepository->update($booking, [
             'payment_status' => PaymentStatus::Paid,
         ]);
 
@@ -96,11 +96,11 @@ class CourtBookingController extends Controller
         return to_route('bookings.show', $booking);
     }
 
-    public function cancel(Request $request, CourtBooking $booking): RedirectResponse
+    public function cancel(Request $request, ResourceBooking $booking): RedirectResponse
     {
         $this->authorize('cancel', $booking);
 
-        $this->courtBookingRepository->update($booking, [
+        $this->resourceBookingRepository->update($booking, [
             'status' => BookingStatus::Cancelled,
             'cancellation_reason' => $request->input('cancellation_reason'),
         ]);
@@ -112,14 +112,14 @@ class CourtBookingController extends Controller
 
     public function calendar(Request $request): Response
     {
-        $this->authorize('viewAny', CourtBooking::class);
+        $this->authorize('viewAny', ResourceBooking::class);
 
         $clubId = $request->integer('club_id') ?: null;
         $start = $request->filled('start') ? Carbon::parse($request->input('start')) : null;
         $end = $request->filled('end') ? Carbon::parse($request->input('end')) : null;
 
         return Inertia::render('bookings/calendar', [
-            'bookings' => $this->courtBookingRepository->getForCalendar($clubId, $start, $end),
+            'bookings' => $this->resourceBookingRepository->getForCalendar($clubId, $start, $end),
             'filters' => $request->only(['club_id', 'start', 'end']),
         ]);
     }
@@ -130,7 +130,7 @@ class CourtBookingController extends Controller
      */
     protected function attributesForNewBooking(array $data, int $userId): array
     {
-        $court = Court::query()->findOrFail($data['court_id']);
+        $resource = Resource::query()->findOrFail($data['resource_id']);
         $startsAt = Carbon::parse($data['starts_at']);
         $endsAt = Carbon::parse($data['ends_at']);
         $hours = $startsAt->diffInMinutes($endsAt) / 60;
@@ -140,7 +140,7 @@ class CourtBookingController extends Controller
             'user_id' => $userId,
             'status' => BookingStatus::Approved,
             'payment_status' => PaymentStatus::Unpaid,
-            'amount' => round((float) $court->hourly_rate * $hours, 2),
+            'amount' => round((float) $resource->hourly_rate * $hours, 2),
         ];
     }
 
@@ -156,25 +156,25 @@ class CourtBookingController extends Controller
 
         $clubId = $club?->id;
 
-        $courts = $clubId
-            ? Court::query()
+        $resources = $clubId
+            ? Resource::query()
                 ->where('club_id', $clubId)
-                ->orderBy('court_number')
+                ->orderBy('resource_number')
                 ->get()
             : collect();
 
         $bookedSlots = $clubId
-            ? CourtBooking::query()
-                ->whereHas('court', fn ($query) => $query->where('club_id', $clubId))
+            ? ResourceBooking::query()
+                ->whereHas('resource', fn ($query) => $query->where('club_id', $clubId))
                 ->where('starts_at', '>=', now()->startOfDay())
                 ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
-                ->with('court:id,name')
-                ->get(['id', 'court_id', 'starts_at', 'ends_at'])
+                ->with('resource:id,name')
+                ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
             : collect();
 
         return [
             'club' => $club,
-            'courts' => $courts,
+            'resources' => $resources,
             'bookedSlots' => $bookedSlots,
         ];
     }

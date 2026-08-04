@@ -2,18 +2,18 @@
 
 namespace App\Http\Requests;
 
-use App\Concerns\CourtValidationRules;
-use App\Models\Court;
+use App\Concerns\ResourceValidationRules;
+use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCourtRequest extends FormRequest
+class StoreResourceRequest extends FormRequest
 {
-    use CourtValidationRules;
+    use ResourceValidationRules;
 
     public function authorize(): bool
     {
-        return $this->user()->can('create', Court::class);
+        return $this->user()->can('create', Resource::class);
     }
 
     /**
@@ -21,6 +21,6 @@ class StoreCourtRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->courtRules();
+        return $this->resourceRules();
     }
 }

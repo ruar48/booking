@@ -3,11 +3,11 @@
 namespace App\Policies;
 
 use App\Enums\Role;
-use App\Models\Court;
+use App\Models\Resource;
 use App\Models\User;
 use App\Policies\Concerns\HandlesRoles;
 
-class CourtPolicy
+class ResourcePolicy
 {
     use HandlesRoles;
 
@@ -16,11 +16,11 @@ class CourtPolicy
         return $this->viewAnyAuthenticated($user);
     }
 
-    public function view(User $user, Court $court): bool
+    public function view(User $user, Resource $resource): bool
     {
         return $this->isSuperAdmin($user)
-            || $this->isClubAdmin($user, $court->club_id)
-            || $this->belongsToClub($user, $court->club_id);
+            || $this->isClubAdmin($user, $resource->club_id)
+            || $this->belongsToClub($user, $resource->club_id);
     }
 
     public function create(User $user): bool
@@ -28,14 +28,14 @@ class CourtPolicy
         return $this->isSuperAdmin($user) || $this->hasRole($user, Role::ClubAdmin);
     }
 
-    public function update(User $user, Court $court): bool
+    public function update(User $user, Resource $resource): bool
     {
-        return $this->isClubAdmin($user, $court->club_id);
+        return $this->isClubAdmin($user, $resource->club_id);
     }
 
-    public function delete(User $user, Court $court): bool
+    public function delete(User $user, Resource $resource): bool
     {
-        return $this->isClubAdmin($user, $court->club_id);
+        return $this->isClubAdmin($user, $resource->club_id);
     }
 
     private function viewAnyAuthenticated(User $user): bool

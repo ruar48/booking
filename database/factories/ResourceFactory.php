@@ -2,31 +2,34 @@
 
 namespace Database\Factories;
 
-use App\Enums\CourtStatus;
+use App\Enums\ResourceStatus;
+use App\Enums\Sport;
 use App\Models\Club;
-use App\Models\Court;
+use App\Models\Resource;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<Court>
+ * @extends Factory<Resource>
  */
-class CourtFactory extends Factory
+class ResourceFactory extends Factory
 {
-    protected $model = Court::class;
+    protected $model = Resource::class;
 
     public function definition(): array
     {
         return [
             'club_id' => Club::factory(),
+            'sport' => Sport::Pickleball,
             'name' => 'Court '.fake()->numberBetween(1, 20),
-            'court_number' => (string) fake()->numberBetween(1, 20),
+            'resource_number' => (string) fake()->numberBetween(1, 20),
             'surface_type' => fake()->randomElement(['hard', 'acrylic', 'cushioned', 'sport']),
             'location_type' => fake()->randomElement(['indoor', 'outdoor']),
             'has_lighting' => fake()->boolean(),
             'hourly_rate' => fake()->randomFloat(2, 10, 100),
-            'status' => CourtStatus::Available,
+            'status' => ResourceStatus::Available,
             'photos' => null,
             'description' => fake()->optional()->sentence(),
+            'metadata' => null,
         ];
     }
 }

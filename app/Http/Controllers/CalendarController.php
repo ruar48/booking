@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\Repositories\CourtBookingRepositoryInterface;
+use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Models\ClubEvent;
 use App\Models\Tournament;
 use App\Models\TrainingSession;
@@ -14,7 +14,7 @@ use Inertia\Response;
 class CalendarController extends Controller
 {
     public function __construct(
-        private readonly CourtBookingRepositoryInterface $courtBookingRepository,
+        private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
     ) {}
 
     public function index(Request $request): Response
@@ -24,7 +24,7 @@ class CalendarController extends Controller
         $end = $request->filled('end') ? Carbon::parse($request->input('end')) : now()->endOfMonth();
 
         return Inertia::render('calendar/index', [
-            'bookings' => $this->courtBookingRepository->getForCalendar($clubId, $start, $end),
+            'bookings' => $this->resourceBookingRepository->getForCalendar($clubId, $start, $end),
             'tournaments' => Tournament::query()
                 ->when($clubId, fn ($q) => $q->where('club_id', $clubId))
                 ->where('starts_at', '<', $end)

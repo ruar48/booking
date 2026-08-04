@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Club;
 use App\Models\Coach;
-use App\Models\Court;
 use App\Models\Player;
+use App\Models\Resource;
 use App\Models\Tournament;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,7 +43,7 @@ class SearchController extends Controller
                     ->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%"))
                     ->limit(10)
                     ->get(),
-                'courts' => Court::query()
+                'courts' => Resource::query()
                     ->with('club:id,name')
                     ->where('name', 'like', "%{$query}%")
                     ->limit(10)

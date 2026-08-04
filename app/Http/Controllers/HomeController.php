@@ -6,9 +6,9 @@ use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Models\Club;
 use App\Models\ClubEvent;
-use App\Models\Court;
-use App\Models\CourtBooking;
 use App\Models\Player;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -28,9 +28,9 @@ class HomeController extends Controller
         $clubId = $club?->id;
 
         $courts = $clubId
-            ? Court::query()
+            ? Resource::query()
                 ->where('club_id', $clubId)
-                ->orderBy('court_number')
+                ->orderBy('resource_number')
                 ->get()
             : collect();
 
@@ -54,17 +54,17 @@ class HomeController extends Controller
             : collect();
 
         $bookedSlots = $clubId
-            ? CourtBooking::query()
-                ->whereHas('court', fn ($query) => $query->where('club_id', $clubId))
+            ? ResourceBooking::query()
+                ->whereHas('resource', fn ($query) => $query->where('club_id', $clubId))
                 ->where('starts_at', '>=', now()->startOfDay())
                 ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
-                ->with('court:id,name')
-                ->get(['id', 'court_id', 'starts_at', 'ends_at'])
+                ->with('resource:id,name')
+                ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
             : collect();
 
         $bookingsToday = $clubId
-            ? CourtBooking::query()
-                ->whereHas('court', fn ($query) => $query->where('club_id', $clubId))
+            ? ResourceBooking::query()
+                ->whereHas('resource', fn ($query) => $query->where('club_id', $clubId))
                 ->whereDate('starts_at', today())
                 ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
                 ->count()

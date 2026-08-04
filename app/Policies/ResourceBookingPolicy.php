@@ -4,11 +4,11 @@ namespace App\Policies;
 
 use App\Enums\BookingStatus;
 use App\Enums\Role;
-use App\Models\CourtBooking;
+use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Policies\Concerns\HandlesRoles;
 
-class CourtBookingPolicy
+class ResourceBookingPolicy
 {
     use HandlesRoles;
 
@@ -19,12 +19,12 @@ class CourtBookingPolicy
             || $this->hasRole($user, Role::Player);
     }
 
-    public function view(User $user, CourtBooking $courtBooking): bool
+    public function view(User $user, ResourceBooking $resourceBooking): bool
     {
-        $clubId = $courtBooking->court?->club_id;
+        $clubId = $resourceBooking->resource?->club_id;
 
         return $this->isClubAdmin($user, $clubId)
-            || $this->ownsRecord($user, $courtBooking->user_id);
+            || $this->ownsRecord($user, $resourceBooking->user_id);
     }
 
     public function create(User $user): bool
@@ -34,35 +34,35 @@ class CourtBookingPolicy
             || $this->isSuperAdmin($user);
     }
 
-    public function update(User $user, CourtBooking $courtBooking): bool
+    public function update(User $user, ResourceBooking $resourceBooking): bool
     {
-        $clubId = $courtBooking->court?->club_id;
+        $clubId = $resourceBooking->resource?->club_id;
 
         if ($this->isClubAdmin($user, $clubId)) {
             return true;
         }
 
-        return $this->ownsRecord($user, $courtBooking->user_id)
-            && $courtBooking->status === BookingStatus::Pending;
+        return $this->ownsRecord($user, $resourceBooking->user_id)
+            && $resourceBooking->status === BookingStatus::Pending;
     }
 
-    public function delete(User $user, CourtBooking $courtBooking): bool
+    public function delete(User $user, ResourceBooking $resourceBooking): bool
     {
-        return $this->update($user, $courtBooking);
+        return $this->update($user, $resourceBooking);
     }
 
-    public function markPaid(User $user, CourtBooking $courtBooking): bool
+    public function markPaid(User $user, ResourceBooking $resourceBooking): bool
     {
-        return $this->isClubAdmin($user, $courtBooking->court?->club_id);
+        return $this->isClubAdmin($user, $resourceBooking->resource?->club_id);
     }
 
-    public function cancel(User $user, CourtBooking $courtBooking): bool
+    public function cancel(User $user, ResourceBooking $resourceBooking): bool
     {
-        if ($this->isClubAdmin($user, $courtBooking->court?->club_id)) {
+        if ($this->isClubAdmin($user, $resourceBooking->resource?->club_id)) {
             return true;
         }
 
-        return $this->ownsRecord($user, $courtBooking->user_id)
-            && in_array($courtBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true);
+        return $this->ownsRecord($user, $resourceBooking->user_id)
+            && in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true);
     }
 }

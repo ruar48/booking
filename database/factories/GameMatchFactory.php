@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\MatchStatus;
-use App\Models\Court;
+use App\Models\Resource;
 use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Tournament;
@@ -20,7 +20,7 @@ class GameMatchFactory extends Factory
     {
         return [
             'tournament_id' => Tournament::factory(),
-            'court_id' => Court::factory(),
+            'court_id' => Resource::factory(),
             'player1_id' => Player::factory(),
             'player2_id' => Player::factory(),
             'winner_id' => null,

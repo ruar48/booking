@@ -45,7 +45,7 @@ class ClubController extends Controller
     {
         $this->authorize('view', $club);
 
-        $club->loadCount(['courts', 'players', 'tournaments', 'coaches']);
+        $club->loadCount(['resources', 'players', 'tournaments', 'coaches']);
 
         return Inertia::render('clubs/show', [
             'club' => $club,

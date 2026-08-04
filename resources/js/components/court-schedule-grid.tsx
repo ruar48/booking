@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk } from '@/routes/bookings';
-import type { BookedSlot, Club, Court } from '@/types/booking';
+import type { BookedSlot, Club, Resource } from '@/types/booking';
 
 const BOOKING_WINDOW_DAYS = 9;
 
@@ -19,7 +19,7 @@ type SlotSelection = {
 };
 
 type Props = {
-    courts: Court[];
+    courts: Resource[];
     club: Club | null;
     bookedSlots: BookedSlot[];
     isAuthenticated: boolean;
@@ -50,7 +50,7 @@ function slotIsBooked(
     slotEnd.setHours(slotEnd.getHours() + 1);
 
     return bookedSlots.some((booking) => {
-        if (booking.court_id !== courtId) {
+        if (booking.resource_id !== courtId) {
             return false;
         }
 
@@ -105,7 +105,7 @@ export function CourtScheduleGrid({
         [selections],
     );
 
-    const toggleSlot = (court: Court, slot: string) => {
+    const toggleSlot = (court: Resource, slot: string) => {
         if (slotIsBooked(court.id, selectedDate, slot, bookedSlots)) {
             return;
         }
@@ -159,7 +159,7 @@ export function CourtScheduleGrid({
             const endHour = Number(selection.slot.split(':')[0]) + 1;
 
             return {
-                court_id: selection.courtId,
+                resource_id: selection.courtId,
                 starts_at: `${selectedDate}T${selection.slot}:00`,
                 ends_at: `${selectedDate}T${String(endHour).padStart(2, '0')}:00:00`,
             };

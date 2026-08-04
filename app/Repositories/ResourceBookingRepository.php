@@ -2,15 +2,15 @@
 
 namespace App\Repositories;
 
-use App\Contracts\Repositories\CourtBookingRepositoryInterface;
+use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
-use App\Models\CourtBooking;
+use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
-class CourtBookingRepository implements CourtBookingRepositoryInterface
+class ResourceBookingRepository implements ResourceBookingRepositoryInterface
 {
     /** @var list<BookingStatus> */
     private const BLOCKING_STATUSES = [
@@ -21,16 +21,16 @@ class CourtBookingRepository implements CourtBookingRepositoryInterface
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return CourtBooking::query()
-            ->with(['court.club', 'user', 'approver'])
+        return ResourceBooking::query()
+            ->with(['resource.club', 'user', 'approver'])
             ->latest('starts_at')
             ->paginate($perPage);
     }
 
     public function paginateForUser(User $user, int $perPage = 15): LengthAwarePaginator
     {
-        return CourtBooking::query()
-            ->with(['court.club', 'user', 'approver'])
+        return ResourceBooking::query()
+            ->with(['resource.club', 'user', 'approver'])
             ->when(
                 ! $user->isVenueAdmin(),
                 fn ($query) => $query->where('user_id', $user->id),
@@ -39,36 +39,36 @@ class CourtBookingRepository implements CourtBookingRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function find(int $id): ?CourtBooking
+    public function find(int $id): ?ResourceBooking
     {
-        return CourtBooking::query()->find($id);
+        return ResourceBooking::query()->find($id);
     }
 
-    public function create(array $data): CourtBooking
+    public function create(array $data): ResourceBooking
     {
-        return CourtBooking::query()->create($data);
+        return ResourceBooking::query()->create($data);
     }
 
-    public function update(CourtBooking $booking, array $data): CourtBooking
+    public function update(ResourceBooking $booking, array $data): ResourceBooking
     {
         $booking->update($data);
 
         return $booking->fresh();
     }
 
-    public function delete(CourtBooking $booking): bool
+    public function delete(ResourceBooking $booking): bool
     {
         return (bool) $booking->delete();
     }
 
     public function getConflicts(
-        int $courtId,
+        int $resourceId,
         Carbon $startsAt,
         Carbon $endsAt,
         ?int $excludeBookingId = null,
     ): Collection {
-        return CourtBooking::query()
-            ->where('court_id', $courtId)
+        return ResourceBooking::query()
+            ->where('resource_id', $resourceId)
             ->whereIn('status', self::BLOCKING_STATUSES)
             ->when(
                 $excludeBookingId !== null,
@@ -87,12 +87,12 @@ class CourtBookingRepository implements CourtBookingRepositoryInterface
         $start ??= now()->startOfMonth();
         $end ??= now()->endOfMonth();
 
-        return CourtBooking::query()
-            ->with(['court', 'user'])
+        return ResourceBooking::query()
+            ->with(['resource', 'user'])
             ->when(
                 $clubId !== null,
                 fn ($query) => $query->whereHas(
-                    'court',
+                    'resource',
                     fn ($query) => $query->where('club_id', $clubId),
                 ),
             )

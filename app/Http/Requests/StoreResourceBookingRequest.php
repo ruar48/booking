@@ -2,18 +2,18 @@
 
 namespace App\Http\Requests;
 
-use App\Concerns\CourtBookingValidationRules;
-use App\Models\CourtBooking;
+use App\Concerns\ResourceBookingValidationRules;
+use App\Models\ResourceBooking;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreCourtBookingRequest extends FormRequest
+class StoreResourceBookingRequest extends FormRequest
 {
-    use CourtBookingValidationRules;
+    use ResourceBookingValidationRules;
 
     public function authorize(): bool
     {
-        return $this->user()->can('create', CourtBooking::class);
+        return $this->user()->can('create', ResourceBooking::class);
     }
 
     /**
@@ -21,6 +21,6 @@ class StoreCourtBookingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->courtBookingRules();
+        return $this->resourceBookingRules();
     }
 }

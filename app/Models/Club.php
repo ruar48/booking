@@ -75,9 +75,19 @@ class Club extends Model
             ->withTimestamps();
     }
 
-    public function courts(): HasMany
+    public function resources(): HasMany
     {
-        return $this->hasMany(Court::class);
+        return $this->hasMany(Resource::class);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
     }
 
     public function players(): HasMany

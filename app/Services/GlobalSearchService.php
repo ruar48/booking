@@ -4,10 +4,10 @@ namespace App\Services;
 
 use App\Models\Club;
 use App\Models\Coach;
-use App\Models\Court;
-use App\Models\CourtBooking;
 use App\Models\GameMatch;
 use App\Models\Player;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use App\Models\Tournament;
 use Illuminate\Support\Collection;
 
@@ -29,7 +29,7 @@ class GlobalSearchService
             'players' => $this->searchPlayers($like, $clubId),
             'coaches' => $this->searchCoaches($like, $clubId),
             'clubs' => $this->searchClubs($like),
-            'courts' => $this->searchCourts($like, $clubId),
+            'courts' => $this->searchResources($like, $clubId),
             'bookings' => $this->searchBookings($like, $clubId),
             'matches' => $this->searchMatches($like, $clubId),
             'tournaments' => $this->searchTournaments($like, $clubId),
@@ -82,29 +82,29 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchCourts(string $like, ?int $clubId): Collection
+    private function searchResources(string $like, ?int $clubId): Collection
     {
-        return Court::query()
+        return Resource::query()
             ->when($clubId !== null, fn ($q) => $q->where('club_id', $clubId))
             ->where(fn ($q) => $q
                 ->where('name', 'like', $like)
-                ->orWhere('court_number', 'like', $like))
+                ->orWhere('resource_number', 'like', $like))
             ->limit(self::LIMIT_PER_TYPE)
             ->get();
     }
 
     private function searchBookings(string $like, ?int $clubId): Collection
     {
-        return CourtBooking::query()
-            ->with(['court', 'user'])
+        return ResourceBooking::query()
+            ->with(['resource', 'user'])
             ->when($clubId !== null, fn ($q) => $q->whereHas(
-                'court',
+                'resource',
                 fn ($q) => $q->where('club_id', $clubId),
             ))
             ->where(fn ($q) => $q
                 ->where('notes', 'like', $like)
                 ->orWhereHas('user', fn ($q) => $q->where('name', 'like', $like))
-                ->orWhereHas('court', fn ($q) => $q->where('name', 'like', $like)))
+                ->orWhereHas('resource', fn ($q) => $q->where('name', 'like', $like)))
             ->limit(self::LIMIT_PER_TYPE)
             ->get();
     }

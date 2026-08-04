@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,7 +48,7 @@ class PaymentController extends Controller
         $this->authorize('markPaid', $payment);
 
         $validated = $request->validate([
-            'payment_method' => ['nullable', 'string', 'max:50'],
+            'payment_method' => ['nullable', Rule::enum(PaymentMethod::class)],
             'notes' => ['nullable', 'string'],
         ]);
 

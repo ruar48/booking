@@ -5,15 +5,15 @@ import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { create, index as bookingsIndex } from '@/routes/bookings';
-import type { BookedSlot, Club, Court } from '@/types/booking';
+import type { BookedSlot, Club, Resource } from '@/types/booking';
 
 type Props = {
     club: Club | null;
-    courts: Court[];
+    resources: Resource[];
     bookedSlots: BookedSlot[];
 };
 
-export default function BookingsCreate({ club, courts, bookedSlots }: Props) {
+export default function BookingsCreate({ club, resources, bookedSlots }: Props) {
     const { auth } = usePage().props;
 
     return (
@@ -32,7 +32,7 @@ export default function BookingsCreate({ club, courts, bookedSlots }: Props) {
                 <Card className="mx-auto w-full max-w-4xl">
                     <CardContent className="pt-6">
                         <CourtScheduleGrid
-                            courts={courts}
+                            courts={resources}
                             club={club}
                             bookedSlots={bookedSlots}
                             isAuthenticated={!!auth.user}

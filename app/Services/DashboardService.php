@@ -19,7 +19,7 @@ class DashboardService
 
         return [
             'stats' => $this->dashboardRepository->getStats($clubId),
-            'courtAvailability' => $this->dashboardRepository->getCourtAvailability($clubId),
+            'resourceAvailability' => $this->dashboardRepository->getResourceAvailability($clubId),
             'revenueChart' => $this->dashboardRepository->getRevenueChart($clubId),
             'recentBookings' => $this->dashboardRepository->getRecentBookings($clubId),
             'openPlaySessions' => $this->dashboardRepository->getUpcomingOpenPlay($clubId),

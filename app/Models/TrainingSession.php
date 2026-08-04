@@ -61,7 +61,7 @@ class TrainingSession extends Model
 
     public function court(): BelongsTo
     {
-        return $this->belongsTo(Court::class);
+        return $this->belongsTo(Resource::class, 'court_id');
     }
 
     public function attendance(): HasMany

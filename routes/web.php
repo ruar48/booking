@@ -19,7 +19,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('payments/{payment}/mark-paid', [PaymentController::class, 'markPaid'])->name('payments.mark-paid');
 
         require __DIR__.'/players.php';
-        require __DIR__.'/courts.php';
+        require __DIR__.'/resources.php';
+        require __DIR__.'/inventory.php';
+        require __DIR__.'/pos.php';
         require __DIR__.'/announcements.php';
         require __DIR__.'/open-play.php';
         require __DIR__.'/admin.php';

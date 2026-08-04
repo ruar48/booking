@@ -8,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDateTime } from '@/lib/format';
 import { create, index as bookingsIndex } from '@/routes/bookings';
-import type { CourtBooking } from '@/types/booking';
+import type { ResourceBooking } from '@/types/booking';
 
 type Props = {
-    bookings: CourtBooking[];
+    bookings: ResourceBooking[];
     filters: {
         club_id?: number | null;
         start?: string;
@@ -20,7 +20,7 @@ type Props = {
 };
 
 export default function BookingsCalendar({ bookings, filters }: Props) {
-    const grouped = bookings.reduce<Record<string, CourtBooking[]>>(
+    const grouped = bookings.reduce<Record<string, ResourceBooking[]>>(
         (acc, booking) => {
             const day = booking.starts_at.split('T')[0];
             acc[day] = acc[day] ?? [];
@@ -73,7 +73,7 @@ export default function BookingsCalendar({ bookings, filters }: Props) {
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
                                                     <p className="font-medium">
-                                                        {booking.court?.name ?? 'Court'}
+                                                        {booking.resource?.name ?? 'Court'}
                                                     </p>
                                                     <p className="text-muted-foreground text-xs">
                                                         {formatDateTime(booking.starts_at)}{' '}

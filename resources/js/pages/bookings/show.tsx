@@ -13,10 +13,10 @@ import {
     index as bookingsIndex,
     markPaid,
 } from '@/routes/bookings';
-import type { CourtBooking } from '@/types/booking';
+import type { ResourceBooking } from '@/types/booking';
 
 type Props = {
-    booking: CourtBooking;
+    booking: ResourceBooking;
     canManage?: boolean;
 };
 
@@ -38,7 +38,7 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title={`Booking #${booking.id}`}
-                    description={booking.court?.club?.name}
+                    description={booking.resource?.club?.name}
                     actions={
                         <div className="flex flex-wrap gap-2">
                             {canMarkPaid ? (
@@ -89,11 +89,11 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                             ) : null}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Court</span>
-                                <span>{booking.court?.name ?? '—'}</span>
+                                <span>{booking.resource?.name ?? '—'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Club</span>
-                                <span>{booking.court?.club?.name ?? '—'}</span>
+                                <span>{booking.resource?.club?.name ?? '—'}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Starts</span>

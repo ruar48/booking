@@ -39,7 +39,7 @@ export type Club = {
     amenities?: string[] | null;
     gallery?: string[] | null;
     is_active: boolean;
-    courts_count?: number;
+    resources_count?: number;
     players_count?: number;
     tournaments_count?: number;
     coaches_count?: number;
@@ -62,10 +62,10 @@ export type ClubEvent = {
 
 export type BookedSlot = {
     id: number;
-    court_id: number;
+    resource_id: number;
     starts_at: string;
     ends_at: string;
-    court?: Pick<Court, 'id' | 'name'>;
+    resource?: Pick<Resource, 'id' | 'name'>;
 };
 
 export type Player = {
@@ -92,11 +92,12 @@ export type Player = {
     updated_at?: string;
 };
 
-export type Court = {
+export type Resource = {
     id: number;
     club_id: number;
+    sport: 'pickleball' | 'billiards';
     name: string;
-    court_number: string;
+    resource_number: string;
     surface_type: string;
     location_type: string;
     has_lighting: boolean;
@@ -104,15 +105,16 @@ export type Court = {
     status: string;
     photos?: string[] | null;
     description?: string | null;
+    metadata: Record<string, unknown> | null;
     club?: Club;
-    bookings?: CourtBooking[];
+    bookings?: ResourceBooking[];
     created_at?: string;
     updated_at?: string;
 };
 
-export type CourtBooking = {
+export type ResourceBooking = {
     id: number;
-    court_id: number;
+    resource_id: number;
     user_id: number;
     starts_at: string;
     ends_at: string;
@@ -122,7 +124,7 @@ export type CourtBooking = {
     notes?: string | null;
     cancellation_reason?: string | null;
     approved_by?: number | null;
-    court?: Court;
+    resource?: Resource;
     user?: { id: number; name: string; email: string };
     approver?: { id: number; name: string } | null;
     created_at?: string;
@@ -183,7 +185,7 @@ export type GameMatch = {
     started_at?: string | null;
     completed_at?: string | null;
     tournament?: Tournament | null;
-    court?: Court | null;
+    court?: Resource | null;
     player1?: Player;
     player2?: Player;
     winner?: Player | null;
@@ -234,7 +236,7 @@ export type TrainingSession = {
     status: string;
     coach?: Coach;
     club?: Club;
-    court?: Court | null;
+    court?: Resource | null;
     attendance?: TrainingAttendance[];
     drills?: TrainingDrill[];
 };
@@ -279,7 +281,7 @@ export type Payment = {
     paid_at?: string | null;
     notes?: string | null;
     user?: { id: number; name: string; email: string };
-    payable?: CourtBooking | Tournament | Record<string, unknown>;
+    payable?: ResourceBooking | Tournament | Record<string, unknown>;
     created_at?: string;
     updated_at?: string;
 };
@@ -349,9 +351,9 @@ export type RevenueChartPoint = {
 
 export type DashboardData = {
     stats: DashboardStats;
-    courtAvailability: Court[];
+    resourceAvailability: Resource[];
     revenueChart: RevenueChartPoint[];
-    recentBookings?: CourtBooking[];
+    recentBookings?: ResourceBooking[];
     openPlaySessions?: ClubEvent[];
     announcements?: Announcement[];
 };
@@ -359,7 +361,7 @@ export type DashboardData = {
 export type SearchResults = {
     clubs: Pick<Club, 'id' | 'name' | 'slug' | 'city'>[];
     players: Player[];
-    courts: Court[];
+    courts: Resource[];
     tournaments: Pick<Tournament, 'id' | 'name' | 'slug' | 'starts_at'>[];
     coaches: Coach[];
 };

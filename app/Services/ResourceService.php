@@ -2,60 +2,60 @@
 
 namespace App\Services;
 
-use App\Contracts\Repositories\CourtRepositoryInterface;
-use App\Models\Court;
+use App\Contracts\Repositories\ResourceRepositoryInterface;
+use App\Models\Resource;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
-class CourtService
+class ResourceService
 {
     public function __construct(
-        private readonly CourtRepositoryInterface $courtRepository,
+        private readonly ResourceRepositoryInterface $resourceRepository,
     ) {}
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return $this->courtRepository->paginate($perPage);
+        return $this->resourceRepository->paginate($perPage);
     }
 
-    public function find(int $id): ?Court
+    public function find(int $id): ?Resource
     {
-        return $this->courtRepository->find($id);
+        return $this->resourceRepository->find($id);
     }
 
-    public function create(array $data, array $photos = []): Court
+    public function create(array $data, array $photos = []): Resource
     {
         $data['photos'] = $this->storePhotos($photos);
 
-        return $this->courtRepository->create($data);
+        return $this->resourceRepository->create($data);
     }
 
-    public function update(Court $court, array $data, array $photos = []): Court
+    public function update(Resource $resource, array $data, array $photos = []): Resource
     {
         if ($photos !== []) {
-            $existing = $court->photos ?? [];
-            $data['photos'] = array_merge($existing, $this->storePhotos($photos, $court->id));
+            $existing = $resource->photos ?? [];
+            $data['photos'] = array_merge($existing, $this->storePhotos($photos, $resource->id));
         }
 
-        return $this->courtRepository->update($court, $data);
+        return $this->resourceRepository->update($resource, $data);
     }
 
-    public function delete(Court $court): bool
+    public function delete(Resource $resource): bool
     {
-        foreach ($court->photos ?? [] as $photo) {
+        foreach ($resource->photos ?? [] as $photo) {
             Storage::disk('public')->delete($photo);
         }
 
-        return $this->courtRepository->delete($court);
+        return $this->resourceRepository->delete($resource);
     }
 
     /**
      * @param  list<UploadedFile>  $photos
      * @return list<string>
      */
-    private function storePhotos(array $photos, ?int $courtId = null): array
+    private function storePhotos(array $photos, ?int $resourceId = null): array
     {
         $paths = [];
 
@@ -64,7 +64,7 @@ class CourtService
                 continue;
             }
 
-            $directory = $courtId ? "courts/{$courtId}" : 'courts/temp';
+            $directory = $resourceId ? "resources/{$resourceId}" : 'resources/temp';
             $filename = Str::uuid()->toString().'.'.$photo->getClientOriginalExtension();
             $paths[] = $photo->storeAs($directory, $filename, 'public');
         }

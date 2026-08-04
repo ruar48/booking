@@ -2,15 +2,15 @@
 
 namespace App\Http\Requests;
 
-use App\Models\CourtBooking;
+use App\Models\ResourceBooking;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreBulkCourtBookingRequest extends FormRequest
+class StoreBulkResourceBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('create', CourtBooking::class);
+        return $this->user()->can('create', ResourceBooking::class);
     }
 
     /**
@@ -20,7 +20,7 @@ class StoreBulkCourtBookingRequest extends FormRequest
     {
         return [
             'bookings' => ['required', 'array', 'min:1', 'max:24'],
-            'bookings.*.court_id' => ['required', 'integer', 'exists:courts,id'],
+            'bookings.*.resource_id' => ['required', 'integer', 'exists:resources,id'],
             'bookings.*.starts_at' => ['required', 'date', 'after:now'],
             'bookings.*.ends_at' => ['required', 'date'],
         ];

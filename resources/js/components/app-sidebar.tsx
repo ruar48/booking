@@ -7,6 +7,8 @@ import {
     LayoutGrid,
     MapPin,
     Megaphone,
+    Package,
+    Receipt,
     Settings,
     Users,
 } from 'lucide-react';
@@ -28,11 +30,13 @@ import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
-import { index as courtsIndex } from '@/routes/courts';
+import { index as resourcesIndex } from '@/routes/resources';
 import { dashboard } from '@/routes';
+import { checkout as posCheckout } from '@/routes/pos';
 import { index as openPlayIndex } from '@/routes/open-play';
 import { index as paymentsIndex } from '@/routes/payments';
 import { index as playersIndex } from '@/routes/players';
+import { index as productsIndex } from '@/routes/products';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -53,7 +57,9 @@ export function AppSidebar() {
 
     const manageNavItems: NavItem[] = isVenueAdmin
         ? [
-              { title: 'Courts', href: courtsIndex(), icon: MapPin },
+              { title: 'Resources', href: resourcesIndex(), icon: MapPin },
+              { title: 'Inventory', href: productsIndex(), icon: Package },
+              { title: 'POS', href: posCheckout(), icon: Receipt },
               { title: 'Members', href: playersIndex(), icon: Users },
               { title: 'Open play', href: openPlayIndex(), icon: CalendarClock },
               { title: 'Announcements', href: announcementsIndex(), icon: Megaphone },

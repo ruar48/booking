@@ -4,7 +4,7 @@ namespace App\Concerns;
 
 use App\Models\Club;
 use App\Models\Coach;
-use App\Models\Court;
+use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +18,7 @@ trait TrainingSessionValidationRules
         return [
             'coach_id' => ['required', 'integer', Rule::exists(Coach::class, 'id')],
             'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
-            'court_id' => ['nullable', 'integer', Rule::exists(Court::class, 'id')],
+            'court_id' => ['nullable', 'integer', Rule::exists(Resource::class, 'id')],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'scheduled_at' => ['required', 'date', 'after:now'],

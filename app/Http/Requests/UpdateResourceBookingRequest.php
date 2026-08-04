@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests;
 
-use App\Concerns\CourtBookingValidationRules;
+use App\Concerns\ResourceBookingValidationRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCourtBookingRequest extends FormRequest
+class UpdateResourceBookingRequest extends FormRequest
 {
-    use CourtBookingValidationRules;
+    use ResourceBookingValidationRules;
 
     public function authorize(): bool
     {
@@ -20,6 +20,6 @@ class UpdateCourtBookingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->courtBookingAdminRules();
+        return $this->resourceBookingAdminRules();
     }
 }

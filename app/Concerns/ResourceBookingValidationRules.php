@@ -4,19 +4,19 @@ namespace App\Concerns;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
-use App\Models\Court;
+use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
-trait CourtBookingValidationRules
+trait ResourceBookingValidationRules
 {
     /**
      * @return array<string, array<int, ValidationRule|array<mixed>|string>>
      */
-    protected function courtBookingRules(): array
+    protected function resourceBookingRules(): array
     {
         return [
-            'court_id' => ['required', 'integer', Rule::exists(Court::class, 'id')],
+            'resource_id' => ['required', 'integer', Rule::exists(Resource::class, 'id')],
             'starts_at' => ['required', 'date', 'after:now'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -26,9 +26,9 @@ trait CourtBookingValidationRules
     /**
      * @return array<string, array<int, ValidationRule|array<mixed>|string>>
      */
-    protected function courtBookingAdminRules(): array
+    protected function resourceBookingAdminRules(): array
     {
-        return array_merge($this->courtBookingRules(), [
+        return array_merge($this->resourceBookingRules(), [
             'status' => ['sometimes', 'string', Rule::enum(BookingStatus::class)],
             'payment_status' => ['sometimes', 'string', Rule::enum(PaymentStatus::class)],
             'amount' => ['sometimes', 'numeric', 'min:0'],

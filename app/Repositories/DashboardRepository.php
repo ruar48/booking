@@ -8,11 +8,11 @@ use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\TournamentStatus;
 use App\Models\ClubEvent;
-use App\Models\Court;
-use App\Models\CourtBooking;
 use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Ranking;
+use App\Models\Resource;
+use App\Models\ResourceBooking;
 use App\Models\Tournament;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -26,16 +26,16 @@ class DashboardRepository implements DashboardRepositoryInterface
             fn ($query) => $query->where('club_id', $clubId),
         );
 
-        $courtsQuery = Court::query()->when(
+        $resourcesQuery = Resource::query()->when(
             $clubId !== null,
             fn ($query) => $query->where('club_id', $clubId),
         );
 
-        $bookingsQuery = CourtBooking::query()
+        $bookingsQuery = ResourceBooking::query()
             ->when(
                 $clubId !== null,
                 fn ($query) => $query->whereHas(
-                    'court',
+                    'resource',
                     fn ($query) => $query->where('club_id', $clubId),
                 ),
             );
@@ -57,7 +57,7 @@ class DashboardRepository implements DashboardRepositoryInterface
         return [
             'players' => (clone $playersQuery)->count(),
             'active_players' => (clone $playersQuery)->where('is_active', true)->count(),
-            'courts' => (clone $courtsQuery)->count(),
+            'courts' => (clone $resourcesQuery)->count(),
             'bookings_today' => (clone $bookingsQuery)
                 ->whereDate('starts_at', today())
                 ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
@@ -127,9 +127,9 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->get();
     }
 
-    public function getCourtAvailability(?int $clubId = null): Collection
+    public function getResourceAvailability(?int $clubId = null): Collection
     {
-        return Court::query()
+        return Resource::query()
             ->with([
                 'club',
                 'bookings' => fn ($query) => $query
@@ -141,7 +141,7 @@ class DashboardRepository implements DashboardRepositoryInterface
                 $clubId !== null,
                 fn ($query) => $query->where('club_id', $clubId),
             )
-            ->orderBy('court_number')
+            ->orderBy('resource_number')
             ->get();
     }
 
@@ -153,7 +153,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             default => "DATE_FORMAT(starts_at, '%Y-%m')",
         };
 
-        $rows = CourtBooking::query()
+        $rows = ResourceBooking::query()
             ->select([
                 DB::raw("{$periodExpression} as period"),
                 DB::raw('SUM(amount) as total'),
@@ -162,7 +162,7 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->when(
                 $clubId !== null,
                 fn ($query) => $query->whereHas(
-                    'court',
+                    'resource',
                     fn ($query) => $query->where('club_id', $clubId),
                 ),
             )
@@ -204,12 +204,12 @@ class DashboardRepository implements DashboardRepositoryInterface
 
     public function getRecentBookings(?int $clubId = null, int $limit = 8): Collection
     {
-        return CourtBooking::query()
-            ->with(['court', 'user'])
+        return ResourceBooking::query()
+            ->with(['resource', 'user'])
             ->when(
                 $clubId !== null,
                 fn ($query) => $query->whereHas(
-                    'court',
+                    'resource',
                     fn ($query) => $query->where('club_id', $clubId),
                 ),
             )

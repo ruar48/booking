@@ -70,7 +70,7 @@ class GameMatch extends Model
 
     public function court(): BelongsTo
     {
-        return $this->belongsTo(Court::class);
+        return $this->belongsTo(Resource::class, 'court_id');
     }
 
     public function player1(): BelongsTo

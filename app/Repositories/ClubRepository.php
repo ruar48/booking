@@ -41,7 +41,7 @@ class ClubRepository implements ClubRepositoryInterface
     public function getWithCounts(): Collection
     {
         return Club::query()
-            ->withCount(['courts', 'players', 'tournaments', 'coaches', 'announcements'])
+            ->withCount(['resources', 'players', 'tournaments', 'coaches', 'announcements'])
             ->latest()
             ->get();
     }

@@ -2,17 +2,17 @@
 
 namespace App\Http\Requests;
 
-use App\Concerns\CourtValidationRules;
+use App\Concerns\ResourceValidationRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateCourtRequest extends FormRequest
+class UpdateResourceRequest extends FormRequest
 {
-    use CourtValidationRules;
+    use ResourceValidationRules;
 
     public function authorize(): bool
     {
-        return $this->user()->can('update', $this->route('court'));
+        return $this->user()->can('update', $this->route('resource'));
     }
 
     /**
@@ -20,6 +20,6 @@ class UpdateCourtRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->courtRules($this->route('court')->id);
+        return $this->resourceRules($this->route('resource')->id);
     }
 }

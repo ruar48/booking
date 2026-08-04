@@ -2,73 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use App\Contracts\Repositories\CourtRepositoryInterface;
-use App\Http\Requests\StoreCourtRequest;
-use App\Http\Requests\UpdateCourtRequest;
-use App\Models\Court;
+use App\Contracts\Repositories\ResourceRepositoryInterface;
+use App\Http\Requests\StoreResourceRequest;
+use App\Http\Requests\UpdateResourceRequest;
+use App\Models\Resource;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
-class CourtController extends Controller
+class ResourceController extends Controller
 {
     public function __construct(
-        private readonly CourtRepositoryInterface $courtRepository,
+        private readonly ResourceRepositoryInterface $resourceRepository,
     ) {}
 
     public function index(): Response
     {
-        $this->authorize('viewAny', Court::class);
+        $this->authorize('viewAny', Resource::class);
 
-        return Inertia::render('courts/index', [
-            'courts' => $this->courtRepository->paginate(),
+        return Inertia::render('resources/index', [
+            'resources' => $this->resourceRepository->paginate(),
         ]);
     }
 
     public function create(): Response
     {
-        $this->authorize('create', Court::class);
+        $this->authorize('create', Resource::class);
 
-        return Inertia::render('courts/create');
+        return Inertia::render('resources/create');
     }
 
-    public function store(StoreCourtRequest $request): RedirectResponse
+    public function store(StoreResourceRequest $request): RedirectResponse
     {
-        $court = $this->courtRepository->create($request->validated());
+        $resource = $this->resourceRepository->create($request->validated());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Court created.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Resource created.')]);
 
-        return to_route('courts.edit', $court);
+        return to_route('resources.edit', $resource);
     }
 
-    public function edit(Court $court): Response
+    public function edit(Resource $resource): Response
     {
-        $this->authorize('update', $court);
+        $this->authorize('update', $resource);
 
-        $court->load('club');
+        $resource->load('club');
 
-        return Inertia::render('courts/edit', [
-            'court' => $court,
+        return Inertia::render('resources/edit', [
+            'resource' => $resource,
         ]);
     }
 
-    public function update(UpdateCourtRequest $request, Court $court): RedirectResponse
+    public function update(UpdateResourceRequest $request, Resource $resource): RedirectResponse
     {
-        $this->courtRepository->update($court, $request->validated());
+        $this->resourceRepository->update($resource, $request->validated());
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Court updated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Resource updated.')]);
 
-        return to_route('courts.edit', $court);
+        return to_route('resources.edit', $resource);
     }
 
-    public function destroy(Court $court): RedirectResponse
+    public function destroy(Resource $resource): RedirectResponse
     {
-        $this->authorize('delete', $court);
+        $this->authorize('delete', $resource);
 
-        $this->courtRepository->delete($court);
+        $this->resourceRepository->delete($resource);
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Court deleted.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Resource deleted.')]);
 
-        return to_route('courts.index');
+        return to_route('resources.index');
     }
 }
