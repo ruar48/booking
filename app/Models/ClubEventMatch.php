@@ -11,11 +11,13 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $club_event_id
- * @property int $entry1_id
- * @property int $entry2_id
+ * @property int|null $entry1_id
+ * @property int|null $entry2_id
  * @property int|null $entry1_score
  * @property int|null $entry2_score
  * @property int|null $winner_registration_id
+ * @property int $round
+ * @property int|null $bracket_position
  * @property MatchStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -27,6 +29,8 @@ use Illuminate\Support\Carbon;
     'entry1_score',
     'entry2_score',
     'winner_registration_id',
+    'round',
+    'bracket_position',
     'status',
 ])]
 class ClubEventMatch extends Model

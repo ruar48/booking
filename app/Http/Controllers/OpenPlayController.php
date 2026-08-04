@@ -94,6 +94,7 @@ class OpenPlayController extends Controller
         $open_play->load([
             'registrations.player.user:id,name',
             'registrations.partner.user:id,name',
+            'matches' => fn ($query) => $query->orderBy('round')->orderBy('bracket_position'),
             'matches.entry1.player.user:id,name',
             'matches.entry1.partner.user:id,name',
             'matches.entry2.player.user:id,name',

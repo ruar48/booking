@@ -61,6 +61,7 @@ export type ClubEvent = {
     price_per_player?: number | null;
     max_players?: number | null;
     target_score: number;
+    bracket_format: 'single_elimination' | 'round_robin' | null;
     skill_level?: string;
     registrations_count?: number;
     registrations?: ClubEventRegistration[];
@@ -81,14 +82,16 @@ export type ClubEventRegistration = {
 export type ClubEventMatch = {
     id: number;
     club_event_id: number;
-    entry1_id: number;
-    entry2_id: number;
+    entry1_id: number | null;
+    entry2_id: number | null;
     entry1_score: number | null;
     entry2_score: number | null;
     winner_registration_id: number | null;
+    round: number;
+    bracket_position: number | null;
     status: 'scheduled' | 'in_progress' | 'completed' | 'walkover' | 'forfeit' | 'cancelled';
-    entry1?: ClubEventRegistration;
-    entry2?: ClubEventRegistration;
+    entry1?: ClubEventRegistration | null;
+    entry2?: ClubEventRegistration | null;
     winner?: ClubEventRegistration | null;
 };
 

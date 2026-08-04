@@ -2,51 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\MatchStatus;
+use App\Enums\TournamentFormat;
 use App\Models\ClubEvent;
-use App\Models\ClubEventMatch;
+use App\Services\OpenPlayBracketService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Enum;
 use Inertia\Inertia;
 
 class OpenPlayBracketController extends Controller
 {
-    public function generate(ClubEvent $open_play): RedirectResponse
+    public function __construct(
+        private readonly OpenPlayBracketService $bracketService,
+    ) {}
+
+    public function generate(Request $request, ClubEvent $open_play): RedirectResponse
     {
         $this->authorize('update', $open_play);
 
-        if ($open_play->matches()->exists()) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __('Bracket already generated. Reset it first.')]);
+        $validated = $request->validate([
+            'format' => ['required', new Enum(TournamentFormat::class), 'not_in:double_elimination'],
+        ]);
+
+        $error = $this->bracketService->generate($open_play, TournamentFormat::from($validated['format']));
+
+        if ($error !== null) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __($error)]);
 
             return back();
         }
 
-        $registrationIds = $open_play->registrations()->pluck('id')->values();
-
-        if ($registrationIds->count() < 2) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __('Register at least 2 players/teams first.')]);
-
-            return back();
-        }
-
-        $now = now();
-        $matches = [];
-
-        for ($i = 0; $i < $registrationIds->count(); $i++) {
-            for ($j = $i + 1; $j < $registrationIds->count(); $j++) {
-                $matches[] = [
-                    'club_event_id' => $open_play->id,
-                    'entry1_id' => $registrationIds[$i],
-                    'entry2_id' => $registrationIds[$j],
-                    'status' => MatchStatus::Scheduled->value,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
-        }
-
-        ClubEventMatch::query()->insert($matches);
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Round robin bracket generated.')]);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Bracket generated.')]);
 
         return back();
     }
@@ -56,6 +42,7 @@ class OpenPlayBracketController extends Controller
         $this->authorize('update', $open_play);
 
         $open_play->matches()->delete();
+        $open_play->update(['bracket_format' => null]);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Bracket reset.')]);
 

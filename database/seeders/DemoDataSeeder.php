@@ -3,16 +3,21 @@
 namespace Database\Seeders;
 
 use App\Enums\BookingStatus;
+use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\Role as RoleEnum;
 use App\Enums\Sport;
+use App\Enums\TournamentFormat;
 use App\Models\Announcement;
 use App\Models\Club;
 use App\Models\ClubEvent;
+use App\Models\ClubEventMatch;
+use App\Models\ClubEventRegistration;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use App\Services\OpenPlayBracketService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -139,8 +144,10 @@ class DemoDataSeeder extends Seeder
             now()->addWeek()->next('Friday')->setTime(18, 0),
         ];
 
+        $openPlaySessions = collect();
+
         foreach ($openPlayDates as $index => $startsAt) {
-            ClubEvent::factory()->create([
+            $openPlaySessions->push(ClubEvent::factory()->create([
                 'club_id' => $club->id,
                 'title' => $index % 2 === 0 ? 'Friday Open Play' : 'Saturday Smash Session',
                 'description' => 'Drop-in open play for all skill levels. Paddles available on request.',
@@ -150,7 +157,118 @@ class DemoDataSeeder extends Seeder
                 'price_per_player' => 10,
                 'max_players' => 16,
                 'skill_level' => 'all_levels',
+            ]));
+        }
+
+        // Friday Open Play: a doubles team plus two singles entries, with a
+        // round robin bracket partway played so the manage page shows both
+        // completed scores and a still-pending match.
+        $fridaySession = $openPlaySessions->first();
+        $fridaySession->update(['bracket_format' => TournamentFormat::RoundRobin]);
+
+        $doublesEntry = ClubEventRegistration::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'player_id' => $members[0]->id,
+            'partner_player_id' => $members[1]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        $singleEntryA = ClubEventRegistration::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'player_id' => $members[2]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        $singleEntryB = ClubEventRegistration::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'player_id' => $members[3]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        ClubEventMatch::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'entry1_id' => $doublesEntry->id,
+            'entry2_id' => $singleEntryA->id,
+            'entry1_score' => 11,
+            'entry2_score' => 6,
+            'winner_registration_id' => $doublesEntry->id,
+            'status' => MatchStatus::Completed,
+        ]);
+
+        ClubEventMatch::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'entry1_id' => $doublesEntry->id,
+            'entry2_id' => $singleEntryB->id,
+            'entry1_score' => 11,
+            'entry2_score' => 4,
+            'winner_registration_id' => $doublesEntry->id,
+            'status' => MatchStatus::Completed,
+        ]);
+
+        ClubEventMatch::query()->create([
+            'club_event_id' => $fridaySession->id,
+            'entry1_id' => $singleEntryA->id,
+            'entry2_id' => $singleEntryB->id,
+            'status' => MatchStatus::Scheduled,
+        ]);
+
+        // Saturday Smash Session: registrations only, bracket not generated
+        // yet, showing the "before you generate a bracket" state.
+        $saturdaySession = $openPlaySessions->get(1);
+
+        ClubEventRegistration::query()->create([
+            'club_event_id' => $saturdaySession->id,
+            'player_id' => $members[0]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        ClubEventRegistration::query()->create([
+            'club_event_id' => $saturdaySession->id,
+            'player_id' => $members[2]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        // Second Friday Open Play: single elimination bracket with an odd
+        // (3) entry count, demonstrating an auto-advanced bye alongside a
+        // completed round 1 match that has already fed into the final.
+        $bracketSession = $openPlaySessions->get(2);
+
+        ClubEventRegistration::query()->create([
+            'club_event_id' => $bracketSession->id,
+            'player_id' => $members[1]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        ClubEventRegistration::query()->create([
+            'club_event_id' => $bracketSession->id,
+            'player_id' => $members[2]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        ClubEventRegistration::query()->create([
+            'club_event_id' => $bracketSession->id,
+            'player_id' => $members[3]->id,
+            'created_by' => $owner->id,
+        ]);
+
+        $bracketService = new OpenPlayBracketService;
+        $bracketService->generate($bracketSession, TournamentFormat::SingleElimination);
+
+        $round1Match = ClubEventMatch::query()
+            ->where('club_event_id', $bracketSession->id)
+            ->where('round', 1)
+            ->whereNotNull('entry2_id')
+            ->first();
+
+        if ($round1Match) {
+            $round1Match->update([
+                'entry1_score' => 11,
+                'entry2_score' => 9,
+                'winner_registration_id' => $round1Match->entry1_id,
+                'status' => MatchStatus::Completed,
             ]);
+
+            $bracketService->advanceWinner($round1Match);
         }
     }
 }

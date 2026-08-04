@@ -11,6 +11,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import {
     Table,
     TableBody,
     TableCell,
@@ -79,7 +86,7 @@ function computeStandings(
             match.winner_registration_id === match.entry1_id ? match.entry2_id : match.entry1_id;
 
         const winner = standings.get(match.winner_registration_id);
-        const loser = standings.get(loserId);
+        const loser = loserId !== null ? standings.get(loserId) : undefined;
 
         if (winner) {
             winner.wins += 1;
@@ -95,6 +102,52 @@ function computeStandings(
     return [...standings.values()].sort(
         (a, b) => b.wins - a.wins || b.played - a.played || a.label.localeCompare(b.label),
     );
+}
+
+function bracketSlotLabel(match: ClubEventMatch, slot: 'entry1' | 'entry2'): string {
+    const entry = match[slot];
+
+    if (entry) {
+        return entryLabel(entry);
+    }
+
+    if (slot === 'entry2' && match.status === 'completed') {
+        return 'Bye';
+    }
+
+    return 'TBD';
+}
+
+function groupByRound(matches: ClubEventMatch[]): Map<number, ClubEventMatch[]> {
+    const rounds = new Map<number, ClubEventMatch[]>();
+
+    for (const match of matches) {
+        const list = rounds.get(match.round) ?? [];
+        list.push(match);
+        rounds.set(match.round, list);
+    }
+
+    for (const list of rounds.values()) {
+        list.sort((a, b) => (a.bracket_position ?? 0) - (b.bracket_position ?? 0));
+    }
+
+    return rounds;
+}
+
+function roundLabel(round: number, totalRounds: number): string {
+    if (round === totalRounds) {
+        return 'Final';
+    }
+
+    if (round === totalRounds - 1) {
+        return 'Semifinals';
+    }
+
+    if (round === totalRounds - 2) {
+        return 'Quarterfinals';
+    }
+
+    return `Round ${round}`;
 }
 
 function PlayerSearchInput({
@@ -260,10 +313,125 @@ function MatchRow({ match }: { match: ClubEventMatch }) {
     );
 }
 
+function BracketMatchCard({ match }: { match: ClubEventMatch }) {
+    const [score1, setScore1] = useState(match.entry1_score?.toString() ?? '');
+    const [score2, setScore2] = useState(match.entry2_score?.toString() ?? '');
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const completed = match.status === 'completed';
+    const isBye = match.entry2_id === null && completed;
+    const canScore = match.entry1_id !== null && match.entry2_id !== null && !completed;
+    const entry1Won = completed && match.winner_registration_id === match.entry1_id;
+    const entry2Won = completed && match.winner_registration_id === match.entry2_id;
+
+    const save = () => {
+        if (score1 === '' || score2 === '') {
+            return;
+        }
+
+        setProcessing(true);
+        setError(null);
+
+        router.patch(
+            updateScore(match).url,
+            {
+                entry1_score: Number(score1),
+                entry2_score: Number(score2),
+            },
+            {
+                onError: (errors) => setError(Object.values(errors)[0] as string),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
+    return (
+        <div className="w-56 shrink-0 rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm">
+            <div
+                className={cn(
+                    'flex items-center justify-between gap-2 py-1',
+                    entry1Won && 'font-semibold text-emerald-700',
+                )}
+            >
+                <span className="truncate">{bracketSlotLabel(match, 'entry1')}</span>
+                {canScore ? (
+                    <Input
+                        type="number"
+                        min={0}
+                        className="h-7 w-12 px-1 text-center"
+                        value={score1}
+                        onChange={(e) => setScore1(e.target.value)}
+                    />
+                ) : (
+                    match.entry1_score !== null && <span className="font-mono">{match.entry1_score}</span>
+                )}
+            </div>
+            <div
+                className={cn(
+                    'flex items-center justify-between gap-2 border-t border-slate-100 py-1',
+                    entry2Won && 'font-semibold text-emerald-700',
+                )}
+            >
+                <span className="truncate">{bracketSlotLabel(match, 'entry2')}</span>
+                {canScore ? (
+                    <Input
+                        type="number"
+                        min={0}
+                        className="h-7 w-12 px-1 text-center"
+                        value={score2}
+                        onChange={(e) => setScore2(e.target.value)}
+                    />
+                ) : (
+                    match.entry2_score !== null && <span className="font-mono">{match.entry2_score}</span>
+                )}
+            </div>
+            {canScore && (
+                <Button
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={save}
+                    disabled={processing || score1 === '' || score2 === ''}
+                >
+                    Save score
+                </Button>
+            )}
+            {isBye && <p className="text-muted-foreground mt-1 text-xs">Bye — advances automatically</p>}
+            {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
+        </div>
+    );
+}
+
+function BracketTree({ matches, totalRounds }: { matches: ClubEventMatch[]; totalRounds: number }) {
+    const rounds = groupByRound(matches);
+    const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+
+    return (
+        <div className="flex gap-6 overflow-x-auto pb-2">
+            {roundNumbers.map((round) => (
+                <div key={round} className="flex min-w-[14rem] flex-col justify-around gap-4">
+                    <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
+                        {roundLabel(round, totalRounds)}
+                    </h5>
+                    {rounds.get(round)!.map((match) => (
+                        <BracketMatchCard key={match.id} match={match} />
+                    ))}
+                </div>
+            ))}
+        </div>
+    );
+}
+
 export default function OpenPlayManage({ session }: Props) {
     const registrations = session.registrations ?? [];
     const matches = session.matches ?? [];
     const standings = computeStandings(registrations, matches);
+    const totalRounds = matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 0;
+    const finalMatch = matches.find((m) => m.round === totalRounds);
+    const champion =
+        session.bracket_format === 'single_elimination' && finalMatch?.status === 'completed'
+            ? (finalMatch.winner ?? null)
+            : null;
 
     const [primaryPlayer, setPrimaryPlayer] = useState<Player | null>(null);
     const [partnerPlayer, setPartnerPlayer] = useState<Player | null>(null);
@@ -276,6 +444,9 @@ export default function OpenPlayManage({ session }: Props) {
 
     const [resetOpen, setResetOpen] = useState(false);
     const [bracketProcessing, setBracketProcessing] = useState(false);
+    const [bracketFormatChoice, setBracketFormatChoice] = useState<
+        'round_robin' | 'single_elimination'
+    >('round_robin');
 
     const submitRegistration = (event: FormEvent) => {
         event.preventDefault();
@@ -322,7 +493,11 @@ export default function OpenPlayManage({ session }: Props) {
 
     const runGenerateBracket = () => {
         setBracketProcessing(true);
-        router.post(generateBracket(session).url, {}, { onFinish: () => setBracketProcessing(false) });
+        router.post(
+            generateBracket(session).url,
+            { format: bracketFormatChoice },
+            { onFinish: () => setBracketProcessing(false) },
+        );
     };
 
     const runResetBracket = () => {
@@ -443,11 +618,16 @@ export default function OpenPlayManage({ session }: Props) {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <Trophy className="size-5" />
-                                Round robin bracket
+                                {session.bracket_format === 'single_elimination'
+                                    ? 'Single elimination bracket'
+                                    : session.bracket_format === 'round_robin'
+                                      ? 'Round robin bracket'
+                                      : 'Bracket'}
                             </CardTitle>
                             <CardDescription>
-                                Every entry plays every other entry once. Enter each match's final score
-                                to record the winner.
+                                {session.bracket_format === 'single_elimination'
+                                    ? 'Knockout format — lose once and you are out. Enter each match score to advance the winner.'
+                                    : "Every entry plays every other entry once. Enter each match's final score to record the winner."}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -475,16 +655,37 @@ export default function OpenPlayManage({ session }: Props) {
                             {matches.length === 0 ? (
                                 <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-slate-300 p-4">
                                     <p className="text-muted-foreground text-sm">
-                                        No bracket yet. Generate a round robin bracket from the{' '}
-                                        {registrations.length} registered {registrations.length === 1 ? 'entry' : 'entries'}.
+                                        No bracket yet. Choose a format and generate one from the{' '}
+                                        {registrations.length} registered{' '}
+                                        {registrations.length === 1 ? 'entry' : 'entries'}.
                                     </p>
-                                    <Button
-                                        type="button"
-                                        onClick={runGenerateBracket}
-                                        disabled={registrations.length < 2 || bracketProcessing}
-                                    >
-                                        Generate round robin bracket
-                                    </Button>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Select
+                                            value={bracketFormatChoice}
+                                            onValueChange={(v) =>
+                                                setBracketFormatChoice(
+                                                    v as 'round_robin' | 'single_elimination',
+                                                )
+                                            }
+                                        >
+                                            <SelectTrigger className="w-56">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="round_robin">Round robin</SelectItem>
+                                                <SelectItem value="single_elimination">
+                                                    Single elimination
+                                                </SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            type="button"
+                                            onClick={runGenerateBracket}
+                                            disabled={registrations.length < 2 || bracketProcessing}
+                                        >
+                                            Generate bracket
+                                        </Button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>
@@ -498,46 +699,62 @@ export default function OpenPlayManage({ session }: Props) {
                                         </Button>
                                     </div>
 
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead>Entry 1</TableHead>
-                                                <TableHead>Entry 2</TableHead>
-                                                <TableHead>Score</TableHead>
-                                                <TableHead>Status</TableHead>
-                                                <TableHead className="text-right">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {matches.map((match) => (
-                                                <MatchRow key={match.id} match={match} />
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-
-                                    <div>
-                                        <h4 className="mb-2 text-sm font-semibold">Standings</h4>
-                                        <Table>
-                                            <TableHeader>
-                                                <TableRow>
-                                                    <TableHead>Entry</TableHead>
-                                                    <TableHead>Played</TableHead>
-                                                    <TableHead>Wins</TableHead>
-                                                    <TableHead>Losses</TableHead>
-                                                </TableRow>
-                                            </TableHeader>
-                                            <TableBody>
-                                                {standings.map((standing) => (
-                                                    <TableRow key={standing.registrationId}>
-                                                        <TableCell>{standing.label}</TableCell>
-                                                        <TableCell>{standing.played}</TableCell>
-                                                        <TableCell>{standing.wins}</TableCell>
-                                                        <TableCell>{standing.losses}</TableCell>
+                                    {session.bracket_format === 'single_elimination' ? (
+                                        <>
+                                            <BracketTree matches={matches} totalRounds={totalRounds} />
+                                            {champion && (
+                                                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                                                    <Trophy className="size-5" />
+                                                    <span className="font-semibold">
+                                                        Champion: {entryLabel(champion)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Table>
+                                                <TableHeader>
+                                                    <TableRow>
+                                                        <TableHead>Entry 1</TableHead>
+                                                        <TableHead>Entry 2</TableHead>
+                                                        <TableHead>Score</TableHead>
+                                                        <TableHead>Status</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </div>
+                                                </TableHeader>
+                                                <TableBody>
+                                                    {matches.map((match) => (
+                                                        <MatchRow key={match.id} match={match} />
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+
+                                            <div>
+                                                <h4 className="mb-2 text-sm font-semibold">Standings</h4>
+                                                <Table>
+                                                    <TableHeader>
+                                                        <TableRow>
+                                                            <TableHead>Entry</TableHead>
+                                                            <TableHead>Played</TableHead>
+                                                            <TableHead>Wins</TableHead>
+                                                            <TableHead>Losses</TableHead>
+                                                        </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                        {standings.map((standing) => (
+                                                            <TableRow key={standing.registrationId}>
+                                                                <TableCell>{standing.label}</TableCell>
+                                                                <TableCell>{standing.played}</TableCell>
+                                                                <TableCell>{standing.wins}</TableCell>
+                                                                <TableCell>{standing.losses}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </div>
+                                        </>
+                                    )}
                                 </>
                             )}
                         </CardContent>

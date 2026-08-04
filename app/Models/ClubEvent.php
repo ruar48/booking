@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\TournamentFormat;
 use Database\Factories\ClubEventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property float|null $price_per_player
  * @property int|null $max_players
  * @property int $target_score
+ * @property TournamentFormat|null $bracket_format
  * @property string $skill_level
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -35,6 +37,7 @@ use Illuminate\Support\Carbon;
     'price_per_player',
     'max_players',
     'target_score',
+    'bracket_format',
     'skill_level',
 ])]
 class ClubEvent extends Model
@@ -50,6 +53,7 @@ class ClubEvent extends Model
             'price_per_player' => 'decimal:2',
             'max_players' => 'integer',
             'target_score' => 'integer',
+            'bracket_format' => TournamentFormat::class,
         ];
     }
 
