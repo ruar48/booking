@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $resource_id
  * @property int $user_id
+ * @property int|null $created_by
  * @property int|null $approved_by
  * @property Carbon $starts_at
  * @property Carbon $ends_at
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
 #[Fillable([
     'resource_id',
     'user_id',
+    'created_by',
     'approved_by',
     'starts_at',
     'ends_at',
@@ -70,6 +72,11 @@ class ResourceBooking extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function payments(): MorphMany

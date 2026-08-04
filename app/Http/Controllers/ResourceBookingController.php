@@ -2,17 +2,27 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateWalkInCustomer;
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\BookingConflictException;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
+use App\Http\Requests\StoreWalkInBookingRequest;
 use App\Models\Club;
+use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Models\ScheduleBlock;
+use App\Models\User;
+use App\Services\ResourceBookingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +30,7 @@ class ResourceBookingController extends Controller
 {
     public function __construct(
         private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
+        private readonly ResourceBookingService $resourceBookingService,
     ) {}
 
     public function index(): Response
@@ -43,12 +54,16 @@ class ResourceBookingController extends Controller
 
     public function store(StoreResourceBookingRequest $request): RedirectResponse
     {
-        $booking = $this->resourceBookingRepository->create(
-            $this->attributesForNewBooking(
-                $request->validated(),
-                $request->user()->id,
-            ),
-        );
+        try {
+            $booking = $this->resourceBookingService->create(
+                $this->attributesForNewBooking(
+                    $request->validated(),
+                    $request->user()->id,
+                ),
+            );
+        } catch (BookingConflictException $e) {
+            throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
+        }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking confirmed. Complete payment to secure your reservation.')]);
 
@@ -57,10 +72,14 @@ class ResourceBookingController extends Controller
 
     public function storeBulk(StoreBulkResourceBookingRequest $request): RedirectResponse
     {
-        foreach ($request->validated('bookings') as $data) {
-            $this->resourceBookingRepository->create(
-                $this->attributesForNewBooking($data, $request->user()->id),
-            );
+        try {
+            foreach ($request->validated('bookings') as $data) {
+                $this->resourceBookingService->create(
+                    $this->attributesForNewBooking($data, $request->user()->id),
+                );
+            }
+        } catch (BookingConflictException $e) {
+            throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
         }
 
         Inertia::flash('toast', [
@@ -69,6 +88,60 @@ class ResourceBookingController extends Controller
         ]);
 
         return to_route('bookings.index');
+    }
+
+    public function storeWalkIn(StoreWalkInBookingRequest $request, CreateWalkInCustomer $createWalkInCustomer): RedirectResponse
+    {
+        $customer = $request->validated('customer');
+        $bookings = $request->validated('bookings');
+        $markPaid = $request->boolean('mark_paid');
+
+        try {
+            DB::transaction(function () use ($customer, $bookings, $markPaid, $request, $createWalkInCustomer) {
+                $customerId = $customer['mode'] === 'existing'
+                    ? (int) $customer['user_id']
+                    : $createWalkInCustomer->create($customer['name'], $customer['phone'])->id;
+
+                foreach ($bookings as $data) {
+                    $attributes = $this->attributesForNewBooking($data, $customerId);
+                    $attributes['created_by'] = $request->user()->id;
+
+                    $booking = $this->resourceBookingService->create($attributes);
+
+                    if ($markPaid) {
+                        $this->resourceBookingRepository->update($booking, [
+                            'payment_status' => PaymentStatus::Paid,
+                        ]);
+                    }
+                }
+            });
+        } catch (BookingConflictException $e) {
+            throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => __(':count booking(s) submitted.', ['count' => count($bookings)]),
+        ]);
+
+        return to_route('bookings.index');
+    }
+
+    public function searchCustomers(Request $request): JsonResponse
+    {
+        $request->validate([
+            'q' => ['required', 'string', 'min:2'],
+        ]);
+
+        $q = $request->string('q')->toString();
+
+        $users = User::query()
+            ->where('name', 'like', "%{$q}%")
+            ->orWhere('phone', 'like', "%{$q}%")
+            ->limit(10)
+            ->get(['id', 'name', 'phone']);
+
+        return response()->json($users);
     }
 
     public function show(ResourceBooking $booking): Response
@@ -172,10 +245,26 @@ class ResourceBookingController extends Controller
                 ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
             : collect();
 
+        $scheduleBlocks = $clubId
+            ? ScheduleBlock::query()
+                ->where('club_id', $clubId)
+                ->where('ends_at', '>=', now()->startOfDay())
+                ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'reason'])
+            : collect();
+
+        $recurringLocks = $clubId
+            ? RecurringScheduleLock::query()
+                ->where('club_id', $clubId)
+                ->get(['id', 'resource_id', 'day_of_week', 'starts_at', 'ends_at', 'reason'])
+            : collect();
+
         return [
             'club' => $club,
             'resources' => $resources,
             'bookedSlots' => $bookedSlots,
+            'scheduleBlocks' => $scheduleBlocks,
+            'recurringLocks' => $recurringLocks,
+            'canManage' => request()->user()?->isVenueAdmin() ?? false,
         ];
     }
 }

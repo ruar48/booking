@@ -14,6 +14,7 @@ trait ClubValidationRules
     protected function clubRules(?int $clubId = null): array
     {
         return [
+            ...$this->operatingHoursRules(),
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',
@@ -32,8 +33,38 @@ trait ClubValidationRules
             'state' => ['nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'country' => ['nullable', 'string', 'max:100'],
-            'operating_hours' => ['nullable', 'array'],
             'is_active' => ['sometimes', 'boolean'],
         ];
+    }
+
+    /**
+     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
+     */
+    protected function operatingHoursRules(): array
+    {
+        $rules = [
+            'operating_hours' => ['nullable', 'array'],
+        ];
+
+        foreach ([
+            'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+        ] as $day) {
+            $rules["operating_hours.{$day}"] = ['nullable', 'array'];
+            $rules["operating_hours.{$day}.closed"] = ['nullable', 'boolean'];
+            $rules["operating_hours.{$day}.open"] = [
+                'nullable',
+                'string',
+                'date_format:H:i',
+                Rule::requiredIf(fn () => ! request()->boolean("operating_hours.{$day}.closed")),
+            ];
+            $rules["operating_hours.{$day}.close"] = [
+                'nullable',
+                'string',
+                'date_format:H:i',
+                Rule::requiredIf(fn () => ! request()->boolean("operating_hours.{$day}.closed")),
+            ];
+        }
+
+        return $rules;
     }
 }

@@ -72,6 +72,14 @@ class DemoDataSeeder extends Seeder
             )
             ->create(['club_id' => $club->id, 'sport' => Sport::Pickleball]);
 
+        $billiardsTables = Resource::factory()
+            ->count(2)
+            ->sequence(
+                ['name' => 'Table 1', 'resource_number' => '1', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Table 2', 'resource_number' => '2', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+            )
+            ->create(['club_id' => $club->id, 'sport' => Sport::Billiards]);
+
         $members = collect();
 
         foreach (range(1, 4) as $index) {

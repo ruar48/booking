@@ -32,7 +32,17 @@ export default function BookingsIndex({ bookings, canManage = false }: Props) {
                   {
                       accessorKey: 'user',
                       header: 'Booked by',
-                      cell: ({ row }) => row.original.user?.name ?? '—',
+                      cell: ({ row }) => (
+                          <span className="flex items-center gap-2">
+                              {row.original.user?.name ?? '—'}
+                              {row.original.created_by &&
+                                  row.original.created_by !== row.original.user_id && (
+                                      <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                                          Walk-in
+                                      </span>
+                                  )}
+                          </span>
+                      ),
                   } as ColumnDef<ResourceBooking>,
               ]
             : []),

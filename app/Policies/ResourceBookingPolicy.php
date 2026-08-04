@@ -34,6 +34,11 @@ class ResourceBookingPolicy
             || $this->isSuperAdmin($user);
     }
 
+    public function createForOther(User $user): bool
+    {
+        return $this->isClubAdmin($user);
+    }
+
     public function update(User $user, ResourceBooking $resourceBooking): bool
     {
         $clubId = $resourceBooking->resource?->club_id;

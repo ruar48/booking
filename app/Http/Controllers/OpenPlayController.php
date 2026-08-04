@@ -6,7 +6,10 @@ use App\Http\Requests\StoreOpenPlayRequest;
 use App\Http\Requests\UpdateOpenPlayRequest;
 use App\Models\Club;
 use App\Models\ClubEvent;
+use App\Models\Player;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +23,7 @@ class OpenPlayController extends Controller
 
         $sessions = ClubEvent::query()
             ->when($clubId !== null, fn ($query) => $query->where('club_id', $clubId))
+            ->withCount('registrations')
             ->orderBy('starts_at')
             ->paginate(15);
 
@@ -81,5 +85,38 @@ class OpenPlayController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Open play session deleted.')]);
 
         return to_route('open-play.index');
+    }
+
+    public function manage(ClubEvent $open_play): Response
+    {
+        $this->authorize('update', $open_play);
+
+        $open_play->load([
+            'registrations.player.user:id,name',
+            'registrations.partner.user:id,name',
+            'matches.entry1.player.user:id,name',
+            'matches.entry1.partner.user:id,name',
+            'matches.entry2.player.user:id,name',
+            'matches.entry2.partner.user:id,name',
+        ]);
+
+        return Inertia::render('open-play/manage', [
+            'session' => $open_play,
+        ]);
+    }
+
+    public function search(Request $request): JsonResponse
+    {
+        $request->validate(['q' => ['required', 'string', 'min:2']]);
+
+        $q = $request->string('q')->toString();
+
+        $players = Player::query()
+            ->whereHas('user', fn ($query) => $query->where('name', 'like', "%{$q}%"))
+            ->with('user:id,name')
+            ->limit(10)
+            ->get(['id', 'user_id']);
+
+        return response()->json($players);
     }
 }

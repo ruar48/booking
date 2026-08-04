@@ -3,6 +3,7 @@ import {
     Calendar,
     CalendarClock,
     CalendarDays,
+    Clock,
     CreditCard,
     LayoutGrid,
     MapPin,
@@ -27,6 +28,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
+import { index as adminScheduleIndex } from '@/routes/admin/schedule';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
@@ -68,7 +70,10 @@ export function AppSidebar() {
         : [];
 
     const adminNavItems: NavItem[] = isVenueAdmin
-        ? [{ title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings }]
+        ? [
+              { title: 'Schedule', href: adminScheduleIndex(), icon: Clock },
+              { title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings },
+          ]
         : [];
 
     return (

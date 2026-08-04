@@ -4,10 +4,14 @@ namespace App\Services;
 
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\ResourceStatus;
 use App\Events\BookingApproved;
 use App\Events\BookingCancelled;
 use App\Exceptions\BookingConflictException;
+use App\Models\RecurringScheduleLock;
+use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Models\ScheduleBlock;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -32,7 +36,7 @@ class ResourceBookingService
 
     public function create(array $data): ResourceBooking
     {
-        $this->assertNoConflict(
+        $this->assertBookable(
             $data['resource_id'],
             Carbon::parse($data['starts_at']),
             Carbon::parse($data['ends_at']),
@@ -51,7 +55,7 @@ class ResourceBookingService
             ? Carbon::parse($data['ends_at'])
             : $booking->ends_at;
 
-        $this->assertNoConflict($resourceId, $startsAt, $endsAt, $booking->id);
+        $this->assertBookable($resourceId, $startsAt, $endsAt, $booking->id);
 
         return $this->bookingRepository->update($booking, $data);
     }
@@ -63,7 +67,7 @@ class ResourceBookingService
 
     public function approve(ResourceBooking $booking, User $approver): ResourceBooking
     {
-        $this->assertNoConflict(
+        $this->assertBookable(
             $booking->resource_id,
             $booking->starts_at,
             $booking->ends_at,
@@ -110,12 +114,70 @@ class ResourceBookingService
         return $this->bookingRepository->getForCalendar($clubId, $start, $end);
     }
 
-    private function assertNoConflict(
+    private function assertBookable(
         int $resourceId,
         Carbon $startsAt,
         Carbon $endsAt,
         ?int $excludeBookingId = null,
     ): void {
+        $resource = Resource::query()->with('club')->find($resourceId);
+
+        if ($resource === null || $resource->status !== ResourceStatus::Available) {
+            throw new BookingConflictException('This court/table is currently unavailable.');
+        }
+
+        $isBlocked = ScheduleBlock::query()
+            ->where('club_id', $resource->club_id)
+            ->where(fn ($query) => $query
+                ->whereNull('resource_id')
+                ->orWhere('resource_id', $resourceId))
+            ->where('starts_at', '<', $endsAt)
+            ->where('ends_at', '>', $startsAt)
+            ->exists();
+
+        if ($isBlocked) {
+            throw new BookingConflictException('This time slot is blocked.');
+        }
+
+        $isRecurringLocked = RecurringScheduleLock::query()
+            ->where('club_id', $resource->club_id)
+            ->where(fn ($query) => $query
+                ->whereNull('resource_id')
+                ->orWhere('resource_id', $resourceId))
+            ->where('day_of_week', $startsAt->dayOfWeek)
+            ->where('starts_at', '<', $endsAt->format('H:i:s'))
+            ->where('ends_at', '>', $startsAt->format('H:i:s'))
+            ->exists();
+
+        if ($isRecurringLocked) {
+            throw new BookingConflictException('This time slot is locked.');
+        }
+
+        $operatingHours = $resource->club?->operating_hours;
+
+        if (! empty($operatingHours)) {
+            $day = strtolower($startsAt->format('l'));
+            $dayHours = $operatingHours[$day] ?? null;
+
+            if ($dayHours !== null) {
+                if (! empty($dayHours['closed'])) {
+                    throw new BookingConflictException('This time is outside operating hours.');
+                }
+
+                $open = $dayHours['open'] ?? null;
+                $close = $dayHours['close'] ?? null;
+
+                if ($open && $close) {
+                    $openAt = $startsAt->clone()->setTimeFromTimeString($open);
+                    $closeAt = $startsAt->clone()->setTimeFromTimeString($close);
+
+                    if ($startsAt->lt($openAt) || $endsAt->gt($closeAt)) {
+                        throw new BookingConflictException('This time is outside operating hours.');
+                    }
+                }
+            }
+        }
+
         $conflicts = $this->bookingRepository->getConflicts(
             $resourceId,
             $startsAt,

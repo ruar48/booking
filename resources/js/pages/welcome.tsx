@@ -82,7 +82,11 @@ function clubAddress(club: Club): string {
         .join(', ');
 }
 
-function formatHoursRange(open: string, close: string): string {
+function formatHoursRange(open: string | null, close: string | null): string {
+    if (!open || !close) {
+        return 'Closed';
+    }
+
     const toLabel = (time: string) => {
         const [hour, minute] = time.split(':').map(Number);
         const date = new Date();

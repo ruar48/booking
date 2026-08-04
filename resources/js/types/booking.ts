@@ -35,7 +35,10 @@ export type Club = {
     state?: string | null;
     postal_code?: string | null;
     country?: string | null;
-    operating_hours?: Record<string, { open: string; close: string }> | null;
+    operating_hours?: Record<
+        string,
+        { open: string | null; close: string | null; closed: boolean }
+    > | null;
     amenities?: string[] | null;
     gallery?: string[] | null;
     is_active: boolean;
@@ -57,7 +60,36 @@ export type ClubEvent = {
     location?: string | null;
     price_per_player?: number | null;
     max_players?: number | null;
+    target_score: number;
     skill_level?: string;
+    registrations_count?: number;
+    registrations?: ClubEventRegistration[];
+    matches?: ClubEventMatch[];
+};
+
+export type ClubEventRegistration = {
+    id: number;
+    club_event_id: number;
+    player_id: number;
+    partner_player_id: number | null;
+    player?: Player;
+    partner?: Player | null;
+    creator?: { id: number; name: string } | null;
+    created_at?: string;
+};
+
+export type ClubEventMatch = {
+    id: number;
+    club_event_id: number;
+    entry1_id: number;
+    entry2_id: number;
+    entry1_score: number | null;
+    entry2_score: number | null;
+    winner_registration_id: number | null;
+    status: 'scheduled' | 'in_progress' | 'completed' | 'walkover' | 'forfeit' | 'cancelled';
+    entry1?: ClubEventRegistration;
+    entry2?: ClubEventRegistration;
+    winner?: ClubEventRegistration | null;
 };
 
 export type BookedSlot = {
@@ -66,6 +98,27 @@ export type BookedSlot = {
     starts_at: string;
     ends_at: string;
     resource?: Pick<Resource, 'id' | 'name'>;
+};
+
+export type ScheduleBlock = {
+    id: number;
+    resource_id: number | null;
+    starts_at: string;
+    ends_at: string;
+    reason?: string | null;
+    resource?: Pick<Resource, 'id' | 'name'> | null;
+    creator?: { id: number; name: string } | null;
+};
+
+export type RecurringScheduleLock = {
+    id: number;
+    resource_id: number | null;
+    day_of_week: number;
+    starts_at: string;
+    ends_at: string;
+    reason?: string | null;
+    resource?: Pick<Resource, 'id' | 'name'> | null;
+    creator?: { id: number; name: string } | null;
 };
 
 export type Player = {
@@ -124,9 +177,11 @@ export type ResourceBooking = {
     notes?: string | null;
     cancellation_reason?: string | null;
     approved_by?: number | null;
+    created_by?: number | null;
     resource?: Resource;
     user?: { id: number; name: string; email: string };
     approver?: { id: number; name: string } | null;
+    creator?: { id: number; name: string } | null;
     created_at?: string;
     updated_at?: string;
 };

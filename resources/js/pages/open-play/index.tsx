@@ -1,13 +1,13 @@
 import { Head, Link } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { CalendarDays, Pencil, Plus } from 'lucide-react';
+import { CalendarDays, Pencil, Plus, Users } from 'lucide-react';
 
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
-import { create, edit, index as openPlayIndex } from '@/routes/open-play';
+import { create, edit, manage, index as openPlayIndex } from '@/routes/open-play';
 import type { ClubEvent, Paginated } from '@/types/booking';
 
 type Props = {
@@ -63,8 +63,8 @@ export default function OpenPlayIndex({ sessions, upcomingCount }: Props) {
             header: 'Players',
             cell: ({ row }) =>
                 row.original.max_players
-                    ? `0 / ${row.original.max_players}`
-                    : '—',
+                    ? `${row.original.registrations_count ?? 0} / ${row.original.max_players}`
+                    : (row.original.registrations_count ?? 0),
         },
         {
             accessorKey: 'price_per_player',
@@ -95,11 +95,18 @@ export default function OpenPlayIndex({ sessions, upcomingCount }: Props) {
             id: 'actions',
             header: '',
             cell: ({ row }) => (
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href={edit(row.original)}>
-                        <Pencil className="size-4" />
-                    </Link>
-                </Button>
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" asChild title="Manage players & bracket">
+                        <Link href={manage(row.original)}>
+                            <Users className="size-4" />
+                        </Link>
+                    </Button>
+                    <Button variant="ghost" size="icon" asChild title="Edit session">
+                        <Link href={edit(row.original)}>
+                            <Pencil className="size-4" />
+                        </Link>
+                    </Button>
+                </div>
             ),
         },
     ];
