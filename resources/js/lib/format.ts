@@ -33,9 +33,9 @@ export function formatRelative(value?: string | null): string {
 }
 
 export function formatCurrency(amount?: number | null): string {
-    return new Intl.NumberFormat(undefined, {
+    return new Intl.NumberFormat('en-PH', {
         style: 'currency',
-        currency: 'USD',
+        currency: 'PHP',
     }).format(amount ?? 0);
 }
 

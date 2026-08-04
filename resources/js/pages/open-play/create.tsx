@@ -47,6 +47,9 @@ export default function OpenPlayCreate({ club }: Props) {
         price_per_player: '10',
         max_players: '16',
         skill_level: 'all_levels',
+        team_size: 'singles',
+        bracket_format: 'round_robin',
+        bracket_generation: 'automatic',
     });
 
     const submit = (event: FormEvent) => {
@@ -159,6 +162,61 @@ export default function OpenPlayCreate({ club }: Props) {
                                     onChange={(e) => setData('max_players', e.target.value)}
                                 />
                                 <InputError message={errors.max_players} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Match type</Label>
+                                <Select
+                                    value={data.team_size}
+                                    onValueChange={(v) => setData('team_size', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="singles">1v1 (Singles)</SelectItem>
+                                        <SelectItem value="doubles">2v2 (Doubles)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.team_size} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Bracket format</Label>
+                                <Select
+                                    value={data.bracket_format}
+                                    onValueChange={(v) => setData('bracket_format', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="round_robin">Round robin</SelectItem>
+                                        <SelectItem value="single_elimination">
+                                            Single elimination
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.bracket_format} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Matchup generation</Label>
+                                <Select
+                                    value={data.bracket_generation}
+                                    onValueChange={(v) => setData('bracket_generation', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="automatic">
+                                            Automatic (seeded by registration order)
+                                        </SelectItem>
+                                        <SelectItem value="random">Random draw</SelectItem>
+                                        <SelectItem value="manual">
+                                            Manual (I&apos;ll set up matchups myself)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.bracket_generation} />
                             </div>
                         </CardContent>
                     </Card>

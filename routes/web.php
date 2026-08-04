@@ -10,6 +10,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     require __DIR__.'/bookings.php';
+    require __DIR__.'/open-play-join.php';
 
     Route::middleware('venue.admin')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');

@@ -62,6 +62,8 @@ export type ClubEvent = {
     max_players?: number | null;
     target_score: number;
     bracket_format: 'single_elimination' | 'round_robin' | null;
+    bracket_generation: 'automatic' | 'random' | 'manual';
+    team_size: 'singles' | 'doubles';
     skill_level?: string;
     registrations_count?: number;
     registrations?: ClubEventRegistration[];

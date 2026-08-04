@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\BracketGenerationMode;
+use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use Database\Factories\ClubEventFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -23,7 +25,9 @@ use Illuminate\Support\Carbon;
  * @property int|null $max_players
  * @property int $target_score
  * @property TournamentFormat|null $bracket_format
+ * @property BracketGenerationMode $bracket_generation
  * @property string $skill_level
+ * @property TeamSize $team_size
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -38,7 +42,9 @@ use Illuminate\Support\Carbon;
     'max_players',
     'target_score',
     'bracket_format',
+    'bracket_generation',
     'skill_level',
+    'team_size',
 ])]
 class ClubEvent extends Model
 {
@@ -54,6 +60,8 @@ class ClubEvent extends Model
             'max_players' => 'integer',
             'target_score' => 'integer',
             'bracket_format' => TournamentFormat::class,
+            'bracket_generation' => BracketGenerationMode::class,
+            'team_size' => TeamSize::class,
         ];
     }
 

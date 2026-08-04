@@ -2,35 +2,91 @@
 
 namespace App\Services;
 
+use App\Enums\BracketGenerationMode;
 use App\Enums\MatchStatus;
+use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\ClubEvent;
 use App\Models\ClubEventMatch;
+use App\Models\ClubEventRegistration;
 
 class OpenPlayBracketService
 {
+    public function __construct(
+        private readonly OpenPlayRegistrationService $registrationService,
+    ) {}
+
     /**
      * @return string|null An error message, or null on success.
      */
-    public function generate(ClubEvent $event, TournamentFormat $format): ?string
+    public function generate(ClubEvent $event): ?string
     {
         if ($event->matches()->exists()) {
             return 'Bracket already generated. Reset it first.';
         }
 
-        $registrationIds = $event->registrations()->orderBy('id')->pluck('id')->values();
+        if ($event->bracket_generation === BracketGenerationMode::Manual) {
+            return 'This session uses manual matchups — add matchups directly instead of generating.';
+        }
+
+        $format = $event->bracket_format;
+
+        if ($format === null) {
+            return 'Choose a bracket format for this session first.';
+        }
+
+        $isDoubles = $event->team_size === TeamSize::Doubles;
+
+        if ($isDoubles) {
+            // Randomly pair up anyone still waiting for a doubles partner
+            // so they aren't left out of the bracket.
+            $this->registrationService->pairRandomly($event);
+        }
+
+        $registrationsQuery = $event->registrations()->orderBy('id');
+
+        if ($isDoubles) {
+            // A leftover unpaired player (odd number of solo sign-ups) can't
+            // form a 2v2 team and is excluded from this bracket.
+            $registrationsQuery->whereNotNull('partner_player_id');
+        }
+
+        $registrationIds = $registrationsQuery->pluck('id')->values();
 
         if ($registrationIds->count() < 2) {
             return 'Register at least 2 players/teams first.';
         }
 
-        $event->update(['bracket_format' => $format]);
+        if ($event->bracket_generation === BracketGenerationMode::Random) {
+            $registrationIds = $registrationIds->shuffle()->values();
+        }
 
         if ($format === TournamentFormat::SingleElimination) {
             $this->generateSingleElimination($event, $registrationIds);
         } else {
             $this->generateRoundRobin($event, $registrationIds);
         }
+
+        return null;
+    }
+
+    /**
+     * @return string|null An error message, or null on success.
+     */
+    public function addManualMatch(ClubEvent $event, ClubEventRegistration $entry1, ClubEventRegistration $entry2): ?string
+    {
+        if ($entry1->id === $entry2->id) {
+            return 'Choose two different entries.';
+        }
+
+        ClubEventMatch::query()->create([
+            'club_event_id' => $event->id,
+            'entry1_id' => $entry1->id,
+            'entry2_id' => $entry2->id,
+            'round' => 1,
+            'bracket_position' => null,
+            'status' => MatchStatus::Scheduled,
+        ]);
 
         return null;
     }

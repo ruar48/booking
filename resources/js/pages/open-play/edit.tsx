@@ -3,6 +3,7 @@ import { FormEvent, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import InputError from '@/components/input-error';
+import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,6 +44,9 @@ export default function OpenPlayEdit({ session }: Props) {
         price_per_player: String(session.price_per_player ?? ''),
         max_players: String(session.max_players ?? ''),
         skill_level: session.skill_level ?? 'all_levels',
+        team_size: session.team_size ?? 'singles',
+        bracket_format: session.bracket_format ?? 'round_robin',
+        bracket_generation: session.bracket_generation ?? 'automatic',
     });
 
     const submit = (event: FormEvent) => {
@@ -163,6 +167,73 @@ export default function OpenPlayEdit({ session }: Props) {
                                 />
                                 <InputError message={errors.max_players} />
                             </div>
+                            <div className="grid gap-2">
+                                <Label>Match type</Label>
+                                <Select
+                                    value={data.team_size}
+                                    onValueChange={(v) =>
+                                        setData('team_size', v as 'singles' | 'doubles')
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="singles">1v1 (Singles)</SelectItem>
+                                        <SelectItem value="doubles">2v2 (Doubles)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.team_size} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Bracket format</Label>
+                                <Select
+                                    value={data.bracket_format}
+                                    onValueChange={(v) =>
+                                        setData(
+                                            'bracket_format',
+                                            v as 'round_robin' | 'single_elimination',
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="round_robin">Round robin</SelectItem>
+                                        <SelectItem value="single_elimination">
+                                            Single elimination
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.bracket_format} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Matchup generation</Label>
+                                <Select
+                                    value={data.bracket_generation}
+                                    onValueChange={(v) =>
+                                        setData(
+                                            'bracket_generation',
+                                            v as 'automatic' | 'random' | 'manual',
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="automatic">
+                                            Automatic (seeded by registration order)
+                                        </SelectItem>
+                                        <SelectItem value="random">Random draw</SelectItem>
+                                        <SelectItem value="manual">
+                                            Manual (I&apos;ll set up matchups myself)
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <InputError message={errors.bracket_generation} />
+                            </div>
                         </CardContent>
                     </Card>
                     <div className="flex justify-end gap-2">
@@ -174,6 +245,10 @@ export default function OpenPlayEdit({ session }: Props) {
                         </Button>
                     </div>
                 </form>
+
+                <div className="mx-auto w-full max-w-2xl">
+                    <OpenPlayJoinQrCard session={session} />
+                </div>
             </div>
 
             <ConfirmDialog

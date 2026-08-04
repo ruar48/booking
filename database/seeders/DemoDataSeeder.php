@@ -3,10 +3,12 @@
 namespace Database\Seeders;
 
 use App\Enums\BookingStatus;
+use App\Enums\BracketGenerationMode;
 use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\Role as RoleEnum;
 use App\Enums\Sport;
+use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\Announcement;
 use App\Models\Club;
@@ -87,7 +89,7 @@ class DemoDataSeeder extends Seeder
 
         $members = collect();
 
-        foreach (range(1, 4) as $index) {
+        foreach (range(1, 16) as $index) {
             $member = User::factory()->create([
                 'name' => fake()->name(),
                 'email' => "member{$index}@galaangramos.test",
@@ -138,21 +140,25 @@ class DemoDataSeeder extends Seeder
             'show_on_player_portal' => true,
         ]);
 
-        $openPlayDates = [
-            now()->next('Friday')->setTime(18, 0),
-            now()->next('Saturday')->setTime(18, 0),
-            now()->addWeek()->next('Friday')->setTime(18, 0),
+        $openPlaySpecs = [
+            ['title' => 'Friday Open Play', 'starts_at' => now()->next('Friday')->setTime(18, 0)],
+            ['title' => 'Saturday Smash Session', 'starts_at' => now()->next('Saturday')->setTime(18, 0)],
+            ['title' => 'Friday Open Play', 'starts_at' => now()->addWeek()->next('Friday')->setTime(18, 0)],
+            ['title' => 'Sunday Doubles Mixer', 'starts_at' => now()->next('Sunday')->setTime(15, 0)],
+            ['title' => 'Midweek Knockout', 'starts_at' => now()->addDays(3)->setTime(19, 0)],
+            ['title' => 'Beginner Friendly Open Play', 'starts_at' => now()->addWeek()->next('Sunday')->setTime(10, 0)],
+            ['title' => 'Custom Matchup Night', 'starts_at' => now()->addDays(5)->setTime(17, 0)],
         ];
 
         $openPlaySessions = collect();
 
-        foreach ($openPlayDates as $index => $startsAt) {
+        foreach ($openPlaySpecs as $spec) {
             $openPlaySessions->push(ClubEvent::factory()->create([
                 'club_id' => $club->id,
-                'title' => $index % 2 === 0 ? 'Friday Open Play' : 'Saturday Smash Session',
+                'title' => $spec['title'],
                 'description' => 'Drop-in open play for all skill levels. Paddles available on request.',
-                'starts_at' => $startsAt,
-                'ends_at' => (clone $startsAt)->addHours(5),
+                'starts_at' => $spec['starts_at'],
+                'ends_at' => (clone $spec['starts_at'])->addHours(5),
                 'location' => 'Courts 1, 2',
                 'price_per_player' => 10,
                 'max_players' => 16,
@@ -160,11 +166,17 @@ class DemoDataSeeder extends Seeder
             ]));
         }
 
+        $bracketService = app(OpenPlayBracketService::class);
+
         // Friday Open Play: a doubles team plus two singles entries, with a
         // round robin bracket partway played so the manage page shows both
         // completed scores and a still-pending match.
-        $fridaySession = $openPlaySessions->first();
-        $fridaySession->update(['bracket_format' => TournamentFormat::RoundRobin]);
+        $fridaySession = $openPlaySessions->get(0);
+        $fridaySession->update([
+            'team_size' => TeamSize::Doubles,
+            'bracket_format' => TournamentFormat::RoundRobin,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
 
         $doublesEntry = ClubEventRegistration::query()->create([
             'club_event_id' => $fridaySession->id,
@@ -251,8 +263,11 @@ class DemoDataSeeder extends Seeder
             'created_by' => $owner->id,
         ]);
 
-        $bracketService = new OpenPlayBracketService;
-        $bracketService->generate($bracketSession, TournamentFormat::SingleElimination);
+        $bracketSession->update([
+            'bracket_format' => TournamentFormat::SingleElimination,
+            'bracket_generation' => BracketGenerationMode::Random,
+        ]);
+        $bracketService->generate($bracketSession);
 
         $round1Match = ClubEventMatch::query()
             ->where('club_event_id', $bracketSession->id)
@@ -269,6 +284,133 @@ class DemoDataSeeder extends Seeder
             ]);
 
             $bracketService->advanceWinner($round1Match);
+        }
+
+        // Sunday Doubles Mixer: 4 doubles teams (8 members), a fully played
+        // round robin so the manage page shows a complete standings table.
+        $doublesMixer = $openPlaySessions->get(3);
+
+        foreach ([[4, 5], [6, 7], [8, 9], [10, 11]] as [$a, $b]) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $doublesMixer->id,
+                'player_id' => $members[$a]->id,
+                'partner_player_id' => $members[$b]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $doublesMixer->update([
+            'team_size' => TeamSize::Doubles,
+            'bracket_format' => TournamentFormat::RoundRobin,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
+        $bracketService->generate($doublesMixer);
+
+        $mixerScores = [[11, 7], [9, 11], [11, 6], [8, 11], [11, 9], [7, 11]];
+
+        $doublesMixer->matches()->orderBy('id')->get()->each(function ($match, $index) use ($mixerScores) {
+            [$score1, $score2] = $mixerScores[$index % count($mixerScores)];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+        });
+
+        // Midweek Knockout: a clean 8-entry single elimination bracket (no
+        // byes) with all quarterfinals decided, one semifinal decided, and
+        // the other semifinal plus the final still pending — a deeper tree
+        // than the other demo sessions.
+        $knockoutSession = $openPlaySessions->get(4);
+
+        foreach (range(0, 7) as $index) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $knockoutSession->id,
+                'player_id' => $members[$index]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $knockoutSession->update([
+            'bracket_format' => TournamentFormat::SingleElimination,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
+        $bracketService->generate($knockoutSession);
+
+        $quarterfinalScores = [[11, 4], [11, 9], [6, 11], [11, 8]];
+        $quarterfinals = $knockoutSession->matches()->where('round', 1)->orderBy('bracket_position')->get();
+
+        foreach ($quarterfinals as $index => $match) {
+            [$score1, $score2] = $quarterfinalScores[$index];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+
+            $bracketService->advanceWinner($match->fresh());
+        }
+
+        $firstSemifinal = $knockoutSession->matches()->where('round', 2)->orderBy('bracket_position')->first();
+
+        if ($firstSemifinal) {
+            $firstSemifinal->update([
+                'entry1_score' => 11,
+                'entry2_score' => 7,
+                'winner_registration_id' => $firstSemifinal->entry1_id,
+                'status' => MatchStatus::Completed,
+            ]);
+
+            $bracketService->advanceWinner($firstSemifinal->fresh());
+        }
+
+        // Beginner Friendly Open Play: registrations only, no bracket
+        // generated yet — more volume for the "before you generate" state.
+        $beginnerSession = $openPlaySessions->get(5);
+
+        foreach ([12, 13, 14] as $index) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $beginnerSession->id,
+                'player_id' => $members[$index]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        // Custom Matchup Night: manual matchups — the admin builds the
+        // pairing list by hand instead of generating one, with one match
+        // already scored and one still pending.
+        $manualSession = $openPlaySessions->get(6);
+        $manualSession->update([
+            'bracket_format' => TournamentFormat::RoundRobin,
+            'bracket_generation' => BracketGenerationMode::Manual,
+        ]);
+
+        $manualEntries = collect();
+
+        foreach (range(0, 3) as $index) {
+            $manualEntries->push(ClubEventRegistration::query()->create([
+                'club_event_id' => $manualSession->id,
+                'player_id' => $members[$index]->id,
+                'created_by' => $owner->id,
+            ]));
+        }
+
+        $bracketService->addManualMatch($manualSession, $manualEntries[0], $manualEntries[1]);
+        $bracketService->addManualMatch($manualSession, $manualEntries[2], $manualEntries[3]);
+
+        $scoredManualMatch = $manualSession->matches()->orderBy('id')->first();
+
+        if ($scoredManualMatch) {
+            $scoredManualMatch->update([
+                'entry1_score' => 11,
+                'entry2_score' => 8,
+                'winner_registration_id' => $scoredManualMatch->entry1_id,
+                'status' => MatchStatus::Completed,
+            ]);
         }
     }
 }

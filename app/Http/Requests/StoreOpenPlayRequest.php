@@ -2,10 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\BracketGenerationMode;
+use App\Enums\TeamSize;
+use App\Enums\TournamentFormat;
 use App\Models\ClubEvent;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Enum;
 
 class StoreOpenPlayRequest extends FormRequest
 {
@@ -29,6 +33,9 @@ class StoreOpenPlayRequest extends FormRequest
             'price_per_player' => ['nullable', 'numeric', 'min:0'],
             'max_players' => ['nullable', 'integer', 'min:1', 'max:100'],
             'skill_level' => ['required', 'string', Rule::in(['all_levels', 'beginner', 'intermediate', 'advanced'])],
+            'bracket_format' => ['required', new Enum(TournamentFormat::class), 'not_in:double_elimination'],
+            'bracket_generation' => ['required', new Enum(BracketGenerationMode::class)],
+            'team_size' => ['required', new Enum(TeamSize::class)],
         ];
     }
 }
