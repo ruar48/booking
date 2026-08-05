@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { CourtScheduleGrid } from '@/components/court-schedule-grid';
 import { BrandLogo } from '@/components/brand-logo';
+import { InstallAppButton } from '@/components/install-app-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -169,6 +170,10 @@ function HeroLanding({
                     </nav>
 
                     <div className="flex items-center gap-2">
+                        <InstallAppButton
+                            variant="outline"
+                            className="hidden border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:inline-flex"
+                        />
                         {auth.user ? (
                             <>
                                 <Button

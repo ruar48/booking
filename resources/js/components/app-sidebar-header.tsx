@@ -2,6 +2,7 @@ import { usePage } from '@inertiajs/react';
 import { Bell } from 'lucide-react';
 
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import { InstallAppButton } from '@/components/install-app-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
@@ -20,6 +21,8 @@ export function AppSidebarHeader({
                 <SidebarTrigger className="-ml-1 hidden md:inline-flex" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
+
+            <InstallAppButton variant="ghost" iconOnly className="shrink-0" />
 
             <Button variant="ghost" size="icon" className="relative shrink-0" aria-label="Notifications">
                 <Bell className="size-4" />

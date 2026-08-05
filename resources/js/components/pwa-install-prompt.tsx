@@ -1,30 +1,11 @@
 import { Button } from '@/components/ui/button';
+import { usePwaInstall } from '@/hooks/use-pwa-install';
 import { cn } from '@/lib/utils';
 import { Download, Share, SquarePlus, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 const DISMISSED_KEY = 'pwa-install-dismissed-at';
 const DISMISS_SNOOZE_DAYS = 14;
-
-interface BeforeInstallPromptEvent extends Event {
-    prompt: () => Promise<void>;
-    userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
-
-function isStandalone(): boolean {
-    if (typeof window === 'undefined') return false;
-
-    return (
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-    );
-}
-
-function isIos(): boolean {
-    if (typeof window === 'undefined') return false;
-
-    return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-}
 
 function wasRecentlyDismissed(): boolean {
     const dismissedAt = localStorage.getItem(DISMISSED_KEY);
@@ -35,60 +16,24 @@ function wasRecentlyDismissed(): boolean {
 }
 
 export function PwaInstallPrompt() {
-    const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-    const [showIosHint, setShowIosHint] = useState(false);
-    const [visible, setVisible] = useState(false);
+    const { canInstall, isIos, promptInstall } = usePwaInstall();
+    const [dismissed, setDismissed] = useState(true);
 
     useEffect(() => {
-        if (isStandalone() || wasRecentlyDismissed()) return;
-
-        const handleBeforeInstallPrompt = (event: Event) => {
-            event.preventDefault();
-            setDeferredPrompt(event as BeforeInstallPromptEvent);
-            setVisible(true);
-        };
-
-        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-        const handleAppInstalled = () => {
-            setVisible(false);
-            setDeferredPrompt(null);
-        };
-
-        window.addEventListener('appinstalled', handleAppInstalled);
-
-        if (isIos()) {
-            setShowIosHint(true);
-            setVisible(true);
-        }
-
-        return () => {
-            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-            window.removeEventListener('appinstalled', handleAppInstalled);
-        };
+        setDismissed(wasRecentlyDismissed());
     }, []);
 
     const dismiss = () => {
         localStorage.setItem(DISMISSED_KEY, String(Date.now()));
-        setVisible(false);
+        setDismissed(true);
     };
 
     const install = async () => {
-        if (!deferredPrompt) return;
-
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-
-        if (outcome === 'accepted') {
-            setVisible(false);
-        } else {
-            dismiss();
-        }
-
-        setDeferredPrompt(null);
+        await promptInstall();
+        dismiss();
     };
 
-    if (!visible) return null;
+    if (!canInstall || dismissed) return null;
 
     return (
         <div
@@ -104,7 +49,7 @@ export function PwaInstallPrompt() {
 
                 <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">Install this app</p>
-                    {showIosHint ? (
+                    {isIos ? (
                         <p className="mt-1 text-sm text-muted-foreground">
                             Tap <Share className="inline size-3.5 -translate-y-px" /> then{' '}
                             <span className="inline-flex items-center gap-1 font-medium text-foreground">
@@ -118,7 +63,7 @@ export function PwaInstallPrompt() {
                         </p>
                     )}
 
-                    {!showIosHint && (
+                    {!isIos && (
                         <div className="mt-3 flex gap-2">
                             <Button size="sm" onClick={install}>
                                 <Download />
