@@ -8,6 +8,8 @@ use App\Contracts\Repositories\DashboardRepositoryInterface;
 use App\Contracts\Repositories\GameMatchRepositoryInterface;
 use App\Contracts\Repositories\PlayerRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
+use App\Contracts\Repositories\RentalItemRepositoryInterface;
+use App\Contracts\Repositories\RentalRepositoryInterface;
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Contracts\Repositories\ResourceRepositoryInterface;
 use App\Contracts\Repositories\SaleRepositoryInterface;
@@ -18,6 +20,8 @@ use App\Repositories\DashboardRepository;
 use App\Repositories\GameMatchRepository;
 use App\Repositories\PlayerRepository;
 use App\Repositories\ProductRepository;
+use App\Repositories\RentalItemRepository;
+use App\Repositories\RentalRepository;
 use App\Repositories\ResourceBookingRepository;
 use App\Repositories\ResourceRepository;
 use App\Repositories\SaleRepository;
@@ -40,6 +44,8 @@ class RepositoryServiceProvider extends ServiceProvider
         AnnouncementRepositoryInterface::class => AnnouncementRepository::class,
         ProductRepositoryInterface::class => ProductRepository::class,
         SaleRepositoryInterface::class => SaleRepository::class,
+        RentalItemRepositoryInterface::class => RentalItemRepository::class,
+        RentalRepositoryInterface::class => RentalRepository::class,
     ];
 
     public function register(): void

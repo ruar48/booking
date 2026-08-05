@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             RolePermissionSeeder::class,
             DemoDataSeeder::class,
             ProductSeeder::class,
+            RentalItemSeeder::class,
         ]);
     }
 }

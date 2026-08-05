@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { FormEvent, useState } from 'react';
 import { Maximize2, Trophy, UserPlus, X } from 'lucide-react';
+import type { FormEvent} from 'react';
+import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
@@ -29,11 +30,18 @@ import {
 } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatDate, formatTime } from '@/lib/format';
+import {
+    bracketSlotLabel,
+    computeStandings,
+    entryLabel,
+    groupByRound,
+    roundLabel,
+} from '@/lib/open-play';
 import { cn } from '@/lib/utils';
 import { edit, index as openPlayIndex } from '@/routes/open-play';
 import { generate as generateBracket, reset as resetBracket } from '@/routes/open-play/bracket';
-import { destroy as destroyBracketMatch } from '@/routes/open-play/bracket-matches';
 import { store as storeBracketMatch } from '@/routes/open-play/bracket/matches';
+import { destroy as destroyBracketMatch } from '@/routes/open-play/bracket-matches';
 import { updateScore } from '@/routes/open-play/matches';
 import {
     destroy as destroyRegistration,
@@ -46,117 +54,6 @@ import type { ClubEvent, ClubEventMatch, ClubEventRegistration, Player } from '@
 type Props = {
     session: ClubEvent;
 };
-
-function entryLabel(entry?: ClubEventRegistration | null): string {
-    if (!entry) {
-        return '—';
-    }
-
-    const primary = entry.player?.user?.name ?? `Player #${entry.player_id}`;
-
-    if (entry.partner) {
-        return `${primary} & ${entry.partner.user?.name ?? `Player #${entry.partner_player_id}`}`;
-    }
-
-    return primary;
-}
-
-type Standing = {
-    registrationId: number;
-    label: string;
-    wins: number;
-    losses: number;
-    played: number;
-};
-
-function computeStandings(
-    registrations: ClubEventRegistration[],
-    matches: ClubEventMatch[],
-): Standing[] {
-    const standings = new Map<number, Standing>();
-
-    for (const registration of registrations) {
-        standings.set(registration.id, {
-            registrationId: registration.id,
-            label: entryLabel(registration),
-            wins: 0,
-            losses: 0,
-            played: 0,
-        });
-    }
-
-    for (const match of matches) {
-        if (match.status !== 'completed' || match.winner_registration_id == null) {
-            continue;
-        }
-
-        const loserId =
-            match.winner_registration_id === match.entry1_id ? match.entry2_id : match.entry1_id;
-
-        const winner = standings.get(match.winner_registration_id);
-        const loser = loserId !== null ? standings.get(loserId) : undefined;
-
-        if (winner) {
-            winner.wins += 1;
-            winner.played += 1;
-        }
-
-        if (loser) {
-            loser.losses += 1;
-            loser.played += 1;
-        }
-    }
-
-    return [...standings.values()].sort(
-        (a, b) => b.wins - a.wins || b.played - a.played || a.label.localeCompare(b.label),
-    );
-}
-
-function bracketSlotLabel(match: ClubEventMatch, slot: 'entry1' | 'entry2'): string {
-    const entry = match[slot];
-
-    if (entry) {
-        return entryLabel(entry);
-    }
-
-    if (slot === 'entry2' && match.status === 'completed') {
-        return 'Bye';
-    }
-
-    return 'TBD';
-}
-
-function groupByRound(matches: ClubEventMatch[]): Map<number, ClubEventMatch[]> {
-    const rounds = new Map<number, ClubEventMatch[]>();
-
-    for (const match of matches) {
-        const list = rounds.get(match.round) ?? [];
-        list.push(match);
-        rounds.set(match.round, list);
-    }
-
-    for (const list of rounds.values()) {
-        list.sort((a, b) => (a.bracket_position ?? 0) - (b.bracket_position ?? 0));
-    }
-
-    return rounds;
-}
-
-function roundLabel(round: number, totalRounds: number): string {
-    if (round === totalRounds) {
-        return 'Final';
-    }
-
-    if (round === totalRounds - 1) {
-        return 'Semifinals';
-    }
-
-    if (round === totalRounds - 2) {
-        return 'Quarterfinals';
-    }
-
-    return `Round ${round}`;
-}
 
 function MatchRow({
     match,
@@ -651,6 +548,7 @@ export default function OpenPlayManage({ session }: Props) {
                                                 if (!value) {
                                                     return;
                                                 }
+
                                                 setPartnerMode(value as 'select' | 'random');
                                                 setPartnerPlayer(null);
                                             }}

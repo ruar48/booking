@@ -5,23 +5,31 @@ namespace Database\Seeders;
 use App\Enums\BookingStatus;
 use App\Enums\BracketGenerationMode;
 use App\Enums\MatchStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\Role as RoleEnum;
 use App\Enums\Sport;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\Announcement;
+use App\Models\AuditLog;
 use App\Models\Club;
 use App\Models\ClubEvent;
 use App\Models\ClubEventMatch;
 use App\Models\ClubEventRegistration;
+use App\Models\Payment;
 use App\Models\Player;
+use App\Models\Product;
+use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Models\Sale;
+use App\Models\ScheduleBlock;
 use App\Models\User;
 use App\Services\OpenPlayBracketService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DemoDataSeeder extends Seeder
 {
@@ -410,6 +418,372 @@ class DemoDataSeeder extends Seeder
                 'entry2_score' => 8,
                 'winner_registration_id' => $scoredManualMatch->entry1_id,
                 'status' => MatchStatus::Completed,
+            ]);
+        }
+
+        // -----------------------------------------------------------------
+        // Extra open play sessions: dedicated 1v1 (singles) and 2v2
+        // (doubles) formats in a variety of states, for demo purposes.
+        // -----------------------------------------------------------------
+        $allCourts = $courts;
+
+        // Monday Singles Ladder: 1v1 round robin, fully played standings.
+        $singlesLadder = ClubEvent::factory()->create([
+            'club_id' => $club->id,
+            'title' => 'Monday Singles Ladder',
+            'description' => '1v1 round robin ladder. Every player faces every other player once — climb the standings!',
+            'starts_at' => now()->addWeek()->next('Monday')->setTime(18, 0),
+            'ends_at' => now()->addWeek()->next('Monday')->setTime(21, 0),
+            'location' => 'Court 1',
+            'price_per_player' => 10,
+            'max_players' => 8,
+            'skill_level' => 'intermediate',
+            'team_size' => TeamSize::Singles,
+            'bracket_format' => TournamentFormat::RoundRobin,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
+
+        foreach ([5, 7, 9, 11] as $index) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $singlesLadder->id,
+                'player_id' => $members[$index]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $bracketService->generate($singlesLadder);
+
+        $ladderScores = [[11, 6], [9, 11], [11, 8], [7, 11], [11, 9], [11, 5]];
+
+        $singlesLadder->matches()->orderBy('id')->get()->each(function ($match, $index) use ($ladderScores) {
+            [$score1, $score2] = $ladderScores[$index % count($ladderScores)];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+        });
+
+        // Thursday 1v1 Knockout: singles single elimination, played out to
+        // a champion — quarterfinal-style semis feeding a decided final.
+        $singlesKnockout = ClubEvent::factory()->create([
+            'club_id' => $club->id,
+            'title' => 'Thursday 1v1 Knockout',
+            'description' => 'Single elimination, 1v1. Win or go home — last player standing takes the pot.',
+            'starts_at' => now()->addDays(4)->setTime(19, 0),
+            'ends_at' => now()->addDays(4)->setTime(21, 30),
+            'location' => 'Court 2',
+            'price_per_player' => 15,
+            'max_players' => 8,
+            'skill_level' => 'advanced',
+            'team_size' => TeamSize::Singles,
+            'bracket_format' => TournamentFormat::SingleElimination,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
+
+        foreach ([0, 6, 8, 13] as $index) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $singlesKnockout->id,
+                'player_id' => $members[$index]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $bracketService->generate($singlesKnockout);
+
+        $knockoutRound1 = $singlesKnockout->matches()->where('round', 1)->orderBy('bracket_position')->get();
+        $round1KoScores = [[11, 4], [11, 9]];
+
+        foreach ($knockoutRound1 as $index => $match) {
+            [$score1, $score2] = $round1KoScores[$index];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+
+            $bracketService->advanceWinner($match->fresh());
+        }
+
+        $singlesFinal = $singlesKnockout->matches()->where('round', 2)->first();
+
+        if ($singlesFinal) {
+            $singlesFinal->update([
+                'entry1_score' => 11,
+                'entry2_score' => 8,
+                'winner_registration_id' => $singlesFinal->entry1_id,
+                'status' => MatchStatus::Completed,
+            ]);
+        }
+
+        // Tuesday Doubles Social: 2v2 round robin among three teams, fully
+        // played so the standings table is complete.
+        $doublesSocial = ClubEvent::factory()->create([
+            'club_id' => $club->id,
+            'title' => 'Tuesday Doubles Social',
+            'description' => '2v2 round robin. Bring a partner — pairings stay fixed for the night.',
+            'starts_at' => now()->addWeek()->next('Tuesday')->setTime(18, 30),
+            'ends_at' => now()->addWeek()->next('Tuesday')->setTime(21, 0),
+            'location' => 'Courts 1, 2',
+            'price_per_player' => 12,
+            'max_players' => 12,
+            'skill_level' => 'all_levels',
+            'team_size' => TeamSize::Doubles,
+            'bracket_format' => TournamentFormat::RoundRobin,
+            'bracket_generation' => BracketGenerationMode::Automatic,
+        ]);
+
+        foreach ([[12, 13], [14, 15], [0, 5]] as [$a, $b]) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $doublesSocial->id,
+                'player_id' => $members[$a]->id,
+                'partner_player_id' => $members[$b]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $bracketService->generate($doublesSocial);
+
+        $socialScores = [[11, 9], [8, 11], [11, 6]];
+
+        $doublesSocial->matches()->orderBy('id')->get()->each(function ($match, $index) use ($socialScores) {
+            [$score1, $score2] = $socialScores[$index % count($socialScores)];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+        });
+
+        // Weekend Doubles Knockout: 2v2 single elimination with 4 teams —
+        // semis decided, final still pending for the "in progress" state.
+        $doublesKnockout = ClubEvent::factory()->create([
+            'club_id' => $club->id,
+            'title' => 'Weekend Doubles Knockout',
+            'description' => '2v2 single elimination bracket. Four teams enter, one team leaves champion.',
+            'starts_at' => now()->addWeek()->next('Saturday')->setTime(13, 0),
+            'ends_at' => now()->addWeek()->next('Saturday')->setTime(17, 0),
+            'location' => 'Courts 1, 2',
+            'price_per_player' => 15,
+            'max_players' => 16,
+            'skill_level' => 'intermediate',
+            'team_size' => TeamSize::Doubles,
+            'bracket_format' => TournamentFormat::SingleElimination,
+            'bracket_generation' => BracketGenerationMode::Random,
+        ]);
+
+        foreach ([[1, 8], [2, 9], [3, 10], [4, 11]] as [$a, $b]) {
+            ClubEventRegistration::query()->create([
+                'club_event_id' => $doublesKnockout->id,
+                'player_id' => $members[$a]->id,
+                'partner_player_id' => $members[$b]->id,
+                'created_by' => $owner->id,
+            ]);
+        }
+
+        $bracketService->generate($doublesKnockout);
+
+        $doublesKoRound1 = $doublesKnockout->matches()->where('round', 1)->orderBy('bracket_position')->get();
+        $round1DkScores = [[11, 7], [9, 11]];
+
+        foreach ($doublesKoRound1 as $index => $match) {
+            [$score1, $score2] = $round1DkScores[$index];
+
+            $match->update([
+                'entry1_score' => $score1,
+                'entry2_score' => $score2,
+                'winner_registration_id' => $score1 > $score2 ? $match->entry1_id : $match->entry2_id,
+                'status' => MatchStatus::Completed,
+            ]);
+
+            $bracketService->advanceWinner($match->fresh());
+        }
+
+        // -----------------------------------------------------------------
+        // Extra resource bookings for a busier calendar demo, spread across
+        // the current month with a realistic mix of statuses.
+        // -----------------------------------------------------------------
+        $bookableResources = $allCourts->merge($billiardsTables);
+        $bookingStatusCycle = [
+            [BookingStatus::Approved, PaymentStatus::Paid],
+            [BookingStatus::Approved, PaymentStatus::Paid],
+            [BookingStatus::Approved, PaymentStatus::Unpaid],
+            [BookingStatus::Pending, PaymentStatus::Unpaid],
+            [BookingStatus::Completed, PaymentStatus::Paid],
+            [BookingStatus::Cancelled, PaymentStatus::Refunded],
+            [BookingStatus::Rejected, PaymentStatus::Unpaid],
+        ];
+        $bookingHours = [8, 9, 10, 13, 14, 16, 17, 18, 19, 20];
+
+        foreach (range(-10, 18) as $dayOffset) {
+            $bookingsToday = fake()->numberBetween(1, 3);
+
+            foreach (range(1, $bookingsToday) as $slot) {
+                $resource = $bookableResources->random();
+                $member = $members->random();
+                [$status, $paymentStatus] = $bookingStatusCycle[array_rand($bookingStatusCycle)];
+                $hour = fake()->randomElement($bookingHours);
+                $day = now()->addDays($dayOffset);
+
+                // Past days should read as completed/paid rather than pending.
+                if ($dayOffset < 0 && in_array($status, [BookingStatus::Pending], true)) {
+                    $status = BookingStatus::Completed;
+                    $paymentStatus = PaymentStatus::Paid;
+                }
+
+                ResourceBooking::factory()->create([
+                    'resource_id' => $resource->id,
+                    'user_id' => $member->user_id,
+                    'approved_by' => $status === BookingStatus::Pending ? null : $owner->id,
+                    'starts_at' => (clone $day)->setTime($hour, 0),
+                    'ends_at' => (clone $day)->setTime($hour + 1, 0),
+                    'status' => $status,
+                    'payment_status' => $paymentStatus,
+                    'amount' => $resource->hourly_rate,
+                ]);
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // Payments tied to court bookings (separate from the booking's own
+        // payment_status column — these back the Payments admin page).
+        // -----------------------------------------------------------------
+        ResourceBooking::query()
+            ->where('payment_status', PaymentStatus::Paid)
+            ->latest()
+            ->take(8)
+            ->get()
+            ->each(function (ResourceBooking $booking) {
+                Payment::query()->create([
+                    'user_id' => $booking->user_id,
+                    'payable_type' => ResourceBooking::class,
+                    'payable_id' => $booking->id,
+                    'invoice_number' => 'INV-'.Str::upper(Str::random(10)),
+                    'amount' => $booking->amount ?? 25,
+                    'currency' => 'PHP',
+                    'status' => PaymentStatus::Paid,
+                    'payment_method' => fake()->randomElement(PaymentMethod::cases())->value,
+                    'paid_at' => $booking->created_at ?? now(),
+                ]);
+            });
+
+        ResourceBooking::query()
+            ->where('payment_status', PaymentStatus::Unpaid)
+            ->where('status', '!=', BookingStatus::Cancelled)
+            ->take(4)
+            ->get()
+            ->each(function (ResourceBooking $booking) {
+                Payment::query()->create([
+                    'user_id' => $booking->user_id,
+                    'payable_type' => ResourceBooking::class,
+                    'payable_id' => $booking->id,
+                    'invoice_number' => 'INV-'.Str::upper(Str::random(10)),
+                    'amount' => $booking->amount ?? 25,
+                    'currency' => 'PHP',
+                    'status' => PaymentStatus::Pending,
+                    'payment_method' => null,
+                    'paid_at' => null,
+                ]);
+            });
+
+        // -----------------------------------------------------------------
+        // Schedule blocks & recurring locks (Admin > Schedule page).
+        // -----------------------------------------------------------------
+        ScheduleBlock::query()->create([
+            'club_id' => $club->id,
+            'resource_id' => $courts[1]->id,
+            'starts_at' => now()->addDays(6)->setTime(9, 0),
+            'ends_at' => now()->addDays(6)->setTime(13, 0),
+            'reason' => 'Court resurfacing maintenance',
+            'created_by' => $owner->id,
+        ]);
+
+        ScheduleBlock::query()->create([
+            'club_id' => $club->id,
+            'resource_id' => null,
+            'starts_at' => now()->addDays(20)->setTime(0, 0),
+            'ends_at' => now()->addDays(20)->setTime(23, 59),
+            'reason' => 'Club closed — public holiday',
+            'created_by' => $owner->id,
+        ]);
+
+        RecurringScheduleLock::query()->create([
+            'club_id' => $club->id,
+            'resource_id' => $courts[0]->id,
+            'day_of_week' => 1,
+            'starts_at' => '12:00',
+            'ends_at' => '13:00',
+            'reason' => 'Weekly court cleaning',
+            'created_by' => $owner->id,
+        ]);
+
+        RecurringScheduleLock::query()->create([
+            'club_id' => $club->id,
+            'resource_id' => null,
+            'day_of_week' => 0,
+            'starts_at' => '06:00',
+            'ends_at' => '07:00',
+            'reason' => 'Facility inspection',
+            'created_by' => $owner->id,
+        ]);
+
+        // -----------------------------------------------------------------
+        // More announcements for the club feed.
+        // -----------------------------------------------------------------
+        Announcement::factory()->published()->create([
+            'club_id' => $club->id,
+            'created_by' => $owner->id,
+            'title' => 'New 1v1 and 2v2 open play formats',
+            'content' => 'We just added dedicated singles ladders and doubles knockouts to Open Play — check the schedule and register your slot.',
+            'show_on_dashboard' => true,
+            'show_on_home' => true,
+            'show_on_player_portal' => true,
+        ]);
+
+        Announcement::factory()->published()->create([
+            'club_id' => $club->id,
+            'created_by' => $owner->id,
+            'title' => 'Pro shop restock: new paddles in',
+            'content' => 'Fresh stock of Pro Series paddles, grip tape, and apparel is now available at the front desk.',
+            'show_on_dashboard' => true,
+            'show_on_home' => false,
+            'show_on_player_portal' => true,
+        ]);
+
+        // -----------------------------------------------------------------
+        // Audit log entries (Admin > Audit logs page).
+        // -----------------------------------------------------------------
+        $auditSpecs = [
+            ['user' => $owner, 'action' => 'booking.approved', 'type' => ResourceBooking::class, 'days' => 6],
+            ['user' => $owner, 'action' => 'booking.rejected', 'type' => ResourceBooking::class, 'days' => 5],
+            ['user' => $owner, 'action' => 'sale.completed', 'type' => Sale::class, 'days' => 4],
+            ['user' => $owner, 'action' => 'sale.voided', 'type' => Sale::class, 'days' => 3],
+            ['user' => $owner, 'action' => 'product.restocked', 'type' => Product::class, 'days' => 3],
+            ['user' => $owner, 'action' => 'announcement.published', 'type' => Announcement::class, 'days' => 2],
+            ['user' => $owner, 'action' => 'schedule.block_created', 'type' => ScheduleBlock::class, 'days' => 2],
+            ['user' => $owner, 'action' => 'open_play.bracket_generated', 'type' => ClubEvent::class, 'days' => 1],
+            ['user' => $members->first()->user, 'action' => 'auth.login', 'type' => null, 'days' => 1],
+            ['user' => $owner, 'action' => 'payment.marked_paid', 'type' => Payment::class, 'days' => 0],
+        ];
+
+        foreach ($auditSpecs as $spec) {
+            AuditLog::query()->create([
+                'user_id' => $spec['user']?->id,
+                'action' => $spec['action'],
+                'auditable_type' => $spec['type'],
+                'auditable_id' => $spec['type'] ? fake()->numberBetween(1, 10) : null,
+                'old_values' => null,
+                'new_values' => null,
+                'ip_address' => fake()->ipv4(),
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'created_at' => now()->subDays($spec['days']),
+                'updated_at' => now()->subDays($spec['days']),
             ]);
         }
     }
