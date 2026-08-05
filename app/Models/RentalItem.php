@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
  * @property string $sku
  * @property string|null $category
  * @property string $rate
+ * @property string|null $hourly_rate
  * @property string|null $deposit
  * @property int $total_quantity
  * @property int $available_quantity
@@ -32,6 +33,7 @@ use Illuminate\Support\Carbon;
     'sku',
     'category',
     'rate',
+    'hourly_rate',
     'deposit',
     'total_quantity',
     'available_quantity',
@@ -47,6 +49,7 @@ class RentalItem extends Model
         return [
             'status' => RentalItemStatus::class,
             'rate' => 'decimal:2',
+            'hourly_rate' => 'decimal:2',
             'deposit' => 'decimal:2',
         ];
     }

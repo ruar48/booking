@@ -9,6 +9,7 @@ use App\Models\RentalItem;
 use App\Models\RentalTransaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -54,13 +55,64 @@ class RentalMemberController extends Controller
         $validated = $request->validate([
             'rental_item_id' => ['required', 'integer', Rule::exists(RentalItem::class, 'id')],
             'quantity' => ['required', 'integer', 'min:1'],
+            'duration_type' => ['required', Rule::in(['daily', 'hourly'])],
+            'duration_hours' => ['required_if:duration_type,hourly', 'nullable', 'integer', 'min:1', 'max:12'],
+            'reserved_for' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
 
         $user = $request->user();
-        $rentalItem = RentalItem::query()->findOrFail($validated['rental_item_id']);
+        $rentalItem = RentalItem::query()->with('club')->findOrFail($validated['rental_item_id']);
 
         if (! $user->clubs()->where('clubs.id', $rentalItem->club_id)->exists()) {
             abort(403);
+        }
+
+        $durationType = $validated['duration_type'];
+        $durationHours = $durationType === 'hourly' ? (int) $validated['duration_hours'] : null;
+        $depositAmount = round((float) ($rentalItem->deposit ?? 0) * $validated['quantity'], 2);
+
+        $reservedFor = filled($validated['reserved_for'] ?? null)
+            ? Carbon::parse($validated['reserved_for'])->startOfDay()
+            : null;
+
+        if ($reservedFor && ! $reservedFor->isToday()) {
+            $this->rentalRepository->reserve([
+                ['rental_item_id' => $rentalItem->id, 'quantity' => $validated['quantity']],
+            ], [
+                'club_id' => $rentalItem->club_id,
+                'staff' => $user,
+                'renter_id' => $user->id,
+                'duration_type' => $durationType,
+                'duration_hours' => $durationHours,
+                'reserved_for' => $reservedFor,
+                'deposit_amount' => $depositAmount,
+            ]);
+
+            Inertia::flash('toast', [
+                'type' => 'success',
+                'message' => __('Reservation requested for :date. Staff will confirm it closer to the date.', [
+                    'date' => $reservedFor->format('M j'),
+                ]),
+            ]);
+
+            return to_route('rentals.mine');
+        }
+
+        $now = now();
+
+        if ($durationType === 'hourly') {
+            $dueAt = $now->clone()->addHours($durationHours);
+            $closing = $rentalItem->club?->closingTimeOn($now);
+
+            if ($closing && $closing->greaterThan($now) && $closing->lessThan($dueAt)) {
+                $dueAt = $closing;
+            }
+        } else {
+            $dueAt = $rentalItem->club?->closingTimeOn($now);
+
+            if ($dueAt === null || $dueAt->lessThanOrEqualTo($now)) {
+                $dueAt = $now->clone()->addHours(24);
+            }
         }
 
         try {
@@ -70,7 +122,10 @@ class RentalMemberController extends Controller
                 'club_id' => $rentalItem->club_id,
                 'staff' => $user,
                 'renter_id' => $user->id,
-                'deposit_amount' => round((float) ($rentalItem->deposit ?? 0) * $validated['quantity'], 2),
+                'due_at' => $dueAt,
+                'duration_type' => $durationType,
+                'duration_hours' => $durationHours,
+                'deposit_amount' => $depositAmount,
             ]);
         } catch (InsufficientRentalStockException $exception) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);

@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { PackageCheck } from 'lucide-react';
+import { CalendarCheck, PackageCheck } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { PageHeader } from '@/components/page-header';
@@ -16,7 +16,12 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { formatCurrency, formatDateTime } from '@/lib/format';
-import { index as transactionsIndex, returnItems as returnItemsRoute } from '@/routes/rentals/transactions';
+import { formatDurationLabel, formatReservedForLabel } from '@/lib/rental-display';
+import {
+    approve as approveRoute,
+    index as transactionsIndex,
+    returnItems as returnItemsRoute,
+} from '@/routes/rentals/transactions';
 import type { RentalTransaction } from '@/types/rentals';
 
 type Props = {
@@ -40,6 +45,18 @@ export default function RentalTransactionShow({ transaction }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const canReturn = transaction.status === 'active' || transaction.status === 'overdue';
+    const isReserved = transaction.status === 'reserved';
+
+    const approve = () => {
+        router.post(
+            approveRoute(transaction).url,
+            {},
+            {
+                onStart: () => setProcessing(true),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
 
     const setQuantity = (itemId: number, value: number, max: number) => {
         setReturnQuantities((prev) => ({
@@ -172,6 +189,23 @@ export default function RentalTransactionShow({ transaction }: Props) {
                                         Mark returned
                                     </Button>
                                 )}
+
+                                {isReserved && (
+                                    <div className="mt-4 space-y-2">
+                                        <p className="text-muted-foreground text-sm">
+                                            Reserved for{' '}
+                                            <span className="text-foreground font-medium">
+                                                {formatReservedForLabel(transaction.reserved_for)}
+                                            </span>
+                                            . Approving will check current stock and check the
+                                            equipment out immediately.
+                                        </p>
+                                        <Button type="button" onClick={approve} disabled={processing}>
+                                            <CalendarCheck className="size-4" />
+                                            Approve reservation
+                                        </Button>
+                                    </div>
+                                )}
                             </form>
                         </CardContent>
                     </Card>
@@ -192,9 +226,20 @@ export default function RentalTransactionShow({ transaction }: Props) {
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Due back</span>
-                                <span>{formatDateTime(transaction.due_at)}</span>
+                                <span className="text-muted-foreground">Duration</span>
+                                <span>{formatDurationLabel(transaction)}</span>
                             </div>
+                            {isReserved ? (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Reserved for</span>
+                                    <span>{formatReservedForLabel(transaction.reserved_for)}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between">
+                                    <span className="text-muted-foreground">Due back</span>
+                                    <span>{formatDateTime(transaction.due_at)}</span>
+                                </div>
+                            )}
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">Returned at</span>
                                 <span>{formatDateTime(transaction.returned_at)}</span>

@@ -8,6 +8,7 @@ enum RentalStatus: string
     case Returned = 'returned';
     case Overdue = 'overdue';
     case Lost = 'lost';
+    case Reserved = 'reserved';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum RentalStatus: string
             self::Returned => 'Returned',
             self::Overdue => 'Overdue',
             self::Lost => 'Lost',
+            self::Reserved => 'Reserved',
         };
     }
 }

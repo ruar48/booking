@@ -24,6 +24,7 @@ export default function RentalsCreate() {
         sku: '',
         category: '',
         rate: 0,
+        hourly_rate: '',
         deposit: '',
         total_quantity: 0,
         status: 'active' as 'active' | 'inactive',
@@ -116,6 +117,19 @@ export default function RentalsCreate() {
                                     required
                                 />
                                 <InputError message={errors.rate} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="hourly_rate">Hourly rate (optional)</Label>
+                                <Input
+                                    id="hourly_rate"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={data.hourly_rate}
+                                    onChange={(e) => setData('hourly_rate', e.target.value)}
+                                    placeholder="Leave blank to disable hourly rentals"
+                                />
+                                <InputError message={errors.hourly_rate} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="deposit">Deposit</Label>

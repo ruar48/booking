@@ -33,6 +33,11 @@
 
         <link rel="icon" href="/logos.png" sizes="any">
         <link rel="apple-touch-icon" href="/logos.png">
+        <link rel="manifest" href="/build/manifest.webmanifest">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Laravel') }}">
 
         @fonts
 

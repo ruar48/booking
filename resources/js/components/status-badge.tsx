@@ -24,6 +24,10 @@ const statusVariants: Record<string, string> = {
     unavailable: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
     active: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20',
     inactive: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 border-zinc-500/20',
+    reserved: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20',
+    overdue: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
+    returned: 'bg-zinc-500/10 text-zinc-700 dark:text-zinc-400 border-zinc-500/20',
+    lost: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20',
 };
 
 type StatusBadgeProps = {

@@ -18,6 +18,9 @@ use Illuminate\Support\Carbon;
  * @property string $reference_number
  * @property Carbon $rented_at
  * @property Carbon|null $due_at
+ * @property string $duration_type
+ * @property int|null $duration_hours
+ * @property Carbon|null $reserved_for
  * @property Carbon|null $returned_at
  * @property string $deposit_amount
  * @property string $total_amount
@@ -34,6 +37,9 @@ use Illuminate\Support\Carbon;
     'reference_number',
     'rented_at',
     'due_at',
+    'duration_type',
+    'duration_hours',
+    'reserved_for',
     'returned_at',
     'deposit_amount',
     'total_amount',
@@ -50,6 +56,7 @@ class RentalTransaction extends Model
             'total_amount' => 'decimal:2',
             'rented_at' => 'datetime',
             'due_at' => 'datetime',
+            'reserved_for' => 'date',
             'returned_at' => 'datetime',
         ];
     }

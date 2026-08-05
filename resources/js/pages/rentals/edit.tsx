@@ -29,6 +29,7 @@ export default function RentalsEdit({ rentalItem }: Props) {
         sku: rentalItem.sku,
         category: rentalItem.category ?? '',
         rate: rentalItem.rate,
+        hourly_rate: rentalItem.hourly_rate ?? '',
         deposit: rentalItem.deposit ?? '',
         total_quantity: rentalItem.total_quantity,
         status: rentalItem.status,
@@ -110,6 +111,19 @@ export default function RentalsEdit({ rentalItem }: Props) {
                                     required
                                 />
                                 <InputError message={errors.rate} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="hourly_rate">Hourly rate (optional)</Label>
+                                <Input
+                                    id="hourly_rate"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={data.hourly_rate}
+                                    onChange={(e) => setData('hourly_rate', e.target.value)}
+                                    placeholder="Leave blank to disable hourly rentals"
+                                />
+                                <InputError message={errors.hourly_rate} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="deposit">Deposit</Label>

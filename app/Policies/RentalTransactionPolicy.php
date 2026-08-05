@@ -30,4 +30,9 @@ class RentalTransactionPolicy
     {
         return $this->isClubAdmin($user, $rentalTransaction->club_id);
     }
+
+    public function approve(User $user, RentalTransaction $rentalTransaction): bool
+    {
+        return $this->isClubAdmin($user, $rentalTransaction->club_id);
+    }
 }

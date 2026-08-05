@@ -13,3 +13,4 @@ Route::post('rentals', [RentalController::class, 'store'])->name('rentals.store'
 Route::get('rentals/transactions', [RentalTransactionController::class, 'index'])->name('rentals.transactions.index');
 Route::get('rentals/transactions/{rental_transaction}', [RentalTransactionController::class, 'show'])->name('rentals.transactions.show');
 Route::patch('rentals/transactions/{rental_transaction}/return', [RentalTransactionController::class, 'returnItems'])->name('rentals.transactions.return-items');
+Route::post('rentals/transactions/{rental_transaction}/approve', [RentalTransactionController::class, 'approve'])->name('rentals.transactions.approve');

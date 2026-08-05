@@ -7,6 +7,7 @@ export type RentalItem = {
     sku: string;
     category?: string | null;
     rate: number;
+    hourly_rate?: number | null;
     deposit?: number | null;
     total_quantity: number;
     available_quantity: number;
@@ -55,10 +56,13 @@ export type RentalTransaction = {
     reference_number: string;
     rented_at: string;
     due_at?: string | null;
+    duration_type: 'daily' | 'hourly';
+    duration_hours?: number | null;
+    reserved_for?: string | null;
     returned_at?: string | null;
     deposit_amount: number;
     total_amount: number;
-    status: 'active' | 'returned' | 'overdue' | 'lost';
+    status: 'active' | 'returned' | 'overdue' | 'lost' | 'reserved';
     notes?: string | null;
     staff?: { id: number; name: string } | null;
     renter?: { id: number; name: string } | null;

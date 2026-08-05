@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Database\Factories\ClubFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -128,5 +129,17 @@ class Club extends Model
     public function trainingSessions(): HasMany
     {
         return $this->hasMany(TrainingSession::class);
+    }
+
+    public function closingTimeOn(CarbonInterface $date): ?CarbonInterface
+    {
+        $day = strtolower($date->format('l'));
+        $hours = $this->operating_hours[$day] ?? null;
+
+        if (! $hours || ! empty($hours['closed']) || empty($hours['close'])) {
+            return null;
+        }
+
+        return $date->copy()->setTimeFromTimeString($hours['close']);
     }
 }

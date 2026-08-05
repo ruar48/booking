@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-table';
 import type { LucideIcon } from 'lucide-react';
 import { Search } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { PaginationLinks } from '@/components/pagination-links';
@@ -33,6 +33,8 @@ type DataTableProps<TData, TValue> = {
     emptyTitle?: string;
     emptyDescription?: string;
     loading?: boolean;
+    filters?: ReactNode;
+    rowClassName?: (row: TData) => string | undefined;
 };
 
 export function DataTable<TData, TValue>({
@@ -46,6 +48,8 @@ export function DataTable<TData, TValue>({
     emptyTitle = 'No results found',
     emptyDescription = 'Try adjusting your search or filters.',
     loading = false,
+    filters,
+    rowClassName,
 }: DataTableProps<TData, TValue>) {
     const [internalSearch, setInternalSearch] = useState(searchValue ?? '');
 
@@ -62,17 +66,22 @@ export function DataTable<TData, TValue>({
 
     return (
         <div className="space-y-4">
-            {onSearch ? (
-                <div className="relative max-w-sm">
-                    <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                        placeholder={searchPlaceholder}
-                        value={searchValue ?? internalSearch}
-                        onChange={(event) =>
-                            handleSearchChange(event.target.value)
-                        }
-                        className="pl-9"
-                    />
+            {onSearch || filters ? (
+                <div className="flex flex-wrap items-center gap-2">
+                    {onSearch ? (
+                        <div className="relative max-w-sm flex-1 min-w-[200px]">
+                            <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                            <Input
+                                placeholder={searchPlaceholder}
+                                value={searchValue ?? internalSearch}
+                                onChange={(event) =>
+                                    handleSearchChange(event.target.value)
+                                }
+                                className="pl-9"
+                            />
+                        </div>
+                    ) : null}
+                    {filters}
                 </div>
             ) : null}
 
@@ -108,7 +117,10 @@ export function DataTable<TData, TValue>({
                             ))
                         ) : table.getRowModel().rows.length ? (
                             table.getRowModel().rows.map((row) => (
-                                <TableRow key={row.id}>
+                                <TableRow
+                                    key={row.id}
+                                    className={rowClassName?.(row.original)}
+                                >
                                     {row.getVisibleCells().map((cell) => (
                                         <TableCell key={cell.id}>
                                             {flexRender(

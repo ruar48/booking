@@ -26,6 +26,7 @@ trait RentalItemValidationRules
             ],
             'category' => ['nullable', 'string', 'max:100'],
             'rate' => ['required', 'numeric', 'min:0'],
+            'hourly_rate' => ['nullable', 'numeric', 'min:0'],
             'deposit' => ['nullable', 'numeric', 'min:0'],
             'total_quantity' => ['required', 'integer', 'min:0'],
             'status' => ['required', Rule::enum(RentalItemStatus::class)],
