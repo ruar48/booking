@@ -82,7 +82,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-export const show = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const show = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -97,7 +97,7 @@ show.definition = {
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-show.url = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+show.url = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_transaction: args }
     }
@@ -130,7 +130,7 @@ show.url = (args: { rental_transaction: number | { id: number } } | [rental_tran
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-show.get = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+show.get = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: show.url(args, options),
     method: 'get',
 })
@@ -139,7 +139,7 @@ show.get = (args: { rental_transaction: number | { id: number } } | [rental_tran
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-show.head = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+show.head = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: show.url(args, options),
     method: 'head',
 })
@@ -149,7 +149,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-    const showForm = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const showForm = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: show.url(args, options),
         method: 'get',
     })
@@ -159,7 +159,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-        showForm.get = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.get = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, options),
             method: 'get',
         })
@@ -168,7 +168,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
  * @see app/Http/Controllers/RentalTransactionController.php:47
  * @route '/rentals/transactions/{rental_transaction}'
  */
-        showForm.head = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        showForm.head = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: show.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -184,7 +184,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
  * @see app/Http/Controllers/RentalTransactionController.php:58
  * @route '/rentals/transactions/{rental_transaction}/return'
  */
-export const returnItems = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+export const returnItems = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: returnItems.url(args, options),
     method: 'patch',
 })
@@ -199,7 +199,7 @@ returnItems.definition = {
  * @see app/Http/Controllers/RentalTransactionController.php:58
  * @route '/rentals/transactions/{rental_transaction}/return'
  */
-returnItems.url = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+returnItems.url = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_transaction: args }
     }
@@ -232,7 +232,7 @@ returnItems.url = (args: { rental_transaction: number | { id: number } } | [rent
  * @see app/Http/Controllers/RentalTransactionController.php:58
  * @route '/rentals/transactions/{rental_transaction}/return'
  */
-returnItems.patch = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+returnItems.patch = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: returnItems.url(args, options),
     method: 'patch',
 })
@@ -242,7 +242,7 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
  * @see app/Http/Controllers/RentalTransactionController.php:58
  * @route '/rentals/transactions/{rental_transaction}/return'
  */
-    const returnItemsForm = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const returnItemsForm = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: returnItems.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PATCH',
@@ -257,7 +257,7 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
  * @see app/Http/Controllers/RentalTransactionController.php:58
  * @route '/rentals/transactions/{rental_transaction}/return'
  */
-        returnItemsForm.patch = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        returnItemsForm.patch = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: returnItems.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -273,7 +273,7 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
  * @see app/Http/Controllers/RentalTransactionController.php:75
  * @route '/rentals/transactions/{rental_transaction}/approve'
  */
-export const approve = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const approve = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approve.url(args, options),
     method: 'post',
 })
@@ -288,7 +288,7 @@ approve.definition = {
  * @see app/Http/Controllers/RentalTransactionController.php:75
  * @route '/rentals/transactions/{rental_transaction}/approve'
  */
-approve.url = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+approve.url = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_transaction: args }
     }
@@ -321,7 +321,7 @@ approve.url = (args: { rental_transaction: number | { id: number } } | [rental_t
  * @see app/Http/Controllers/RentalTransactionController.php:75
  * @route '/rentals/transactions/{rental_transaction}/approve'
  */
-approve.post = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+approve.post = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: approve.url(args, options),
     method: 'post',
 })
@@ -331,7 +331,7 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
  * @see app/Http/Controllers/RentalTransactionController.php:75
  * @route '/rentals/transactions/{rental_transaction}/approve'
  */
-    const approveForm = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const approveForm = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: approve.url(args, options),
         method: 'post',
     })
@@ -341,7 +341,7 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
  * @see app/Http/Controllers/RentalTransactionController.php:75
  * @route '/rentals/transactions/{rental_transaction}/approve'
  */
-        approveForm.post = (args: { rental_transaction: number | { id: number } } | [rental_transaction: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        approveForm.post = (args: { rental_transaction: string | number | { id: string | number } } | [rental_transaction: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: approve.url(args, options),
             method: 'post',
         })

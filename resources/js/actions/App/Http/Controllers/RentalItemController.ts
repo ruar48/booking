@@ -215,7 +215,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-export const edit = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+export const edit = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -230,7 +230,7 @@ edit.definition = {
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-edit.url = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+edit.url = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_item: args }
     }
@@ -263,7 +263,7 @@ edit.url = (args: { rental_item: number | { id: number } } | [rental_item: numbe
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-edit.get = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+edit.get = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     url: edit.url(args, options),
     method: 'get',
 })
@@ -272,7 +272,7 @@ edit.get = (args: { rental_item: number | { id: number } } | [rental_item: numbe
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-edit.head = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+edit.head = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: edit.url(args, options),
     method: 'head',
 })
@@ -282,7 +282,7 @@ edit.head = (args: { rental_item: number | { id: number } } | [rental_item: numb
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-    const editForm = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+    const editForm = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
         action: edit.url(args, options),
         method: 'get',
     })
@@ -292,7 +292,7 @@ edit.head = (args: { rental_item: number | { id: number } } | [rental_item: numb
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-        editForm.get = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.get = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, options),
             method: 'get',
         })
@@ -301,7 +301,7 @@ edit.head = (args: { rental_item: number | { id: number } } | [rental_item: numb
  * @see app/Http/Controllers/RentalItemController.php:57
  * @route '/rental-items/{rental_item}/edit'
  */
-        editForm.head = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        editForm.head = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
             action: edit.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'HEAD',
@@ -317,7 +317,7 @@ edit.head = (args: { rental_item: number | { id: number } } | [rental_item: numb
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-export const update = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+export const update = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -332,7 +332,7 @@ update.definition = {
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-update.url = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+update.url = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_item: args }
     }
@@ -365,7 +365,7 @@ update.url = (args: { rental_item: number | { id: number } } | [rental_item: num
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-update.put = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+update.put = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: update.url(args, options),
     method: 'put',
 })
@@ -374,7 +374,7 @@ update.put = (args: { rental_item: number | { id: number } } | [rental_item: num
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-update.patch = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+update.patch = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     url: update.url(args, options),
     method: 'patch',
 })
@@ -384,7 +384,7 @@ update.patch = (args: { rental_item: number | { id: number } } | [rental_item: n
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-    const updateForm = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const updateForm = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: update.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'PUT',
@@ -399,7 +399,7 @@ update.patch = (args: { rental_item: number | { id: number } } | [rental_item: n
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-        updateForm.put = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.put = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PUT',
@@ -413,7 +413,7 @@ update.patch = (args: { rental_item: number | { id: number } } | [rental_item: n
  * @see app/Http/Controllers/RentalItemController.php:68
  * @route '/rental-items/{rental_item}'
  */
-        updateForm.patch = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        updateForm.patch = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: update.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'PATCH',
@@ -429,7 +429,7 @@ update.patch = (args: { rental_item: number | { id: number } } | [rental_item: n
  * @see app/Http/Controllers/RentalItemController.php:77
  * @route '/rental-items/{rental_item}'
  */
-export const destroy = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+export const destroy = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -444,7 +444,7 @@ destroy.definition = {
  * @see app/Http/Controllers/RentalItemController.php:77
  * @route '/rental-items/{rental_item}'
  */
-destroy.url = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+destroy.url = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_item: args }
     }
@@ -477,7 +477,7 @@ destroy.url = (args: { rental_item: number | { id: number } } | [rental_item: nu
  * @see app/Http/Controllers/RentalItemController.php:77
  * @route '/rental-items/{rental_item}'
  */
-destroy.delete = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
+destroy.delete = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(args, options),
     method: 'delete',
 })
@@ -487,7 +487,7 @@ destroy.delete = (args: { rental_item: number | { id: number } } | [rental_item:
  * @see app/Http/Controllers/RentalItemController.php:77
  * @route '/rental-items/{rental_item}'
  */
-    const destroyForm = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const destroyForm = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: destroy.url(args, {
                     [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                         _method: 'DELETE',
@@ -502,7 +502,7 @@ destroy.delete = (args: { rental_item: number | { id: number } } | [rental_item:
  * @see app/Http/Controllers/RentalItemController.php:77
  * @route '/rental-items/{rental_item}'
  */
-        destroyForm.delete = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        destroyForm.delete = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: destroy.url(args, {
                         [options?.mergeQuery ? 'mergeQuery' : 'query']: {
                             _method: 'DELETE',
@@ -518,7 +518,7 @@ destroy.delete = (args: { rental_item: number | { id: number } } | [rental_item:
  * @see app/Http/Controllers/RentalItemController.php:88
  * @route '/rental-items/{rental_item}/adjust-stock'
  */
-export const adjustStock = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+export const adjustStock = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: adjustStock.url(args, options),
     method: 'post',
 })
@@ -533,7 +533,7 @@ adjustStock.definition = {
  * @see app/Http/Controllers/RentalItemController.php:88
  * @route '/rental-items/{rental_item}/adjust-stock'
  */
-adjustStock.url = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+adjustStock.url = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions) => {
     if (typeof args === 'string' || typeof args === 'number') {
         args = { rental_item: args }
     }
@@ -566,7 +566,7 @@ adjustStock.url = (args: { rental_item: number | { id: number } } | [rental_item
  * @see app/Http/Controllers/RentalItemController.php:88
  * @route '/rental-items/{rental_item}/adjust-stock'
  */
-adjustStock.post = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
+adjustStock.post = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: adjustStock.url(args, options),
     method: 'post',
 })
@@ -576,7 +576,7 @@ adjustStock.post = (args: { rental_item: number | { id: number } } | [rental_ite
  * @see app/Http/Controllers/RentalItemController.php:88
  * @route '/rental-items/{rental_item}/adjust-stock'
  */
-    const adjustStockForm = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+    const adjustStockForm = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
         action: adjustStock.url(args, options),
         method: 'post',
     })
@@ -586,7 +586,7 @@ adjustStock.post = (args: { rental_item: number | { id: number } } | [rental_ite
  * @see app/Http/Controllers/RentalItemController.php:88
  * @route '/rental-items/{rental_item}/adjust-stock'
  */
-        adjustStockForm.post = (args: { rental_item: number | { id: number } } | [rental_item: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        adjustStockForm.post = (args: { rental_item: string | number | { id: string | number } } | [rental_item: string | number | { id: string | number } ] | string | number | { id: string | number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
             action: adjustStock.url(args, options),
             method: 'post',
         })

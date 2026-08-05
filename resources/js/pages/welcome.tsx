@@ -172,6 +172,11 @@ function HeroLanding({
                     <div className="flex items-center gap-2">
                         <InstallAppButton
                             variant="outline"
+                            iconOnly
+                            className="border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:hidden"
+                        />
+                        <InstallAppButton
+                            variant="outline"
                             className="hidden border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:inline-flex"
                         />
                         {auth.user ? (
