@@ -45,8 +45,8 @@ type Props = {
 export default function Dashboard({ data }: Props) {
     const {
         stats,
-        resourceAvailability,
-        revenueChart,
+        resourceAvailability = [],
+        revenueChart = [],
         recentBookings,
         openPlaySessions = [],
         announcements,
