@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
 export const search = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ search.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
 search.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ search.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
 search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
 search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
     const searchForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
         searchForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\OpenPlayController::search
- * @see app/Http/Controllers/OpenPlayController.php:109
+ * @see app/Http/Controllers/OpenPlayController.php:135
  * @route '/open-play/players/search'
  */
         searchForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -172,7 +172,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -190,7 +190,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -200,7 +200,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -210,7 +210,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -219,7 +219,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\OpenPlayController::create
- * @see app/Http/Controllers/OpenPlayController.php:41
+ * @see app/Http/Controllers/OpenPlayController.php:67
  * @route '/open-play/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -235,7 +235,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::store
- * @see app/Http/Controllers/OpenPlayController.php:52
+ * @see app/Http/Controllers/OpenPlayController.php:78
  * @route '/open-play'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -250,7 +250,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::store
- * @see app/Http/Controllers/OpenPlayController.php:52
+ * @see app/Http/Controllers/OpenPlayController.php:78
  * @route '/open-play'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -259,7 +259,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::store
- * @see app/Http/Controllers/OpenPlayController.php:52
+ * @see app/Http/Controllers/OpenPlayController.php:78
  * @route '/open-play'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -269,7 +269,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::store
- * @see app/Http/Controllers/OpenPlayController.php:52
+ * @see app/Http/Controllers/OpenPlayController.php:78
  * @route '/open-play'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -279,7 +279,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::store
- * @see app/Http/Controllers/OpenPlayController.php:52
+ * @see app/Http/Controllers/OpenPlayController.php:78
  * @route '/open-play'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -290,7 +290,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
 export const edit = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -305,7 +305,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
 edit.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -338,7 +338,7 @@ edit.url = (args: { open_play: number | { id: number } } | [open_play: number | 
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
 edit.get = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -347,7 +347,7 @@ edit.get = (args: { open_play: number | { id: number } } | [open_play: number | 
 })
 /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
 edit.head = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -357,7 +357,7 @@ edit.head = (args: { open_play: number | { id: number } } | [open_play: number |
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
     const editForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -367,7 +367,7 @@ edit.head = (args: { open_play: number | { id: number } } | [open_play: number |
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
         editForm.get = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -376,7 +376,7 @@ edit.head = (args: { open_play: number | { id: number } } | [open_play: number |
         })
             /**
 * @see \App\Http\Controllers\OpenPlayController::edit
- * @see app/Http/Controllers/OpenPlayController.php:61
+ * @see app/Http/Controllers/OpenPlayController.php:87
  * @route '/open-play/{open_play}/edit'
  */
         editForm.head = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -392,7 +392,7 @@ edit.head = (args: { open_play: number | { id: number } } | [open_play: number |
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
 export const update = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -407,7 +407,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
 update.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -440,7 +440,7 @@ update.url = (args: { open_play: number | { id: number } } | [open_play: number 
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
 update.put = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -449,7 +449,7 @@ update.put = (args: { open_play: number | { id: number } } | [open_play: number 
 })
 /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
 update.patch = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -459,7 +459,7 @@ update.patch = (args: { open_play: number | { id: number } } | [open_play: numbe
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
     const updateForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -474,7 +474,7 @@ update.patch = (args: { open_play: number | { id: number } } | [open_play: numbe
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
         updateForm.put = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -488,7 +488,7 @@ update.patch = (args: { open_play: number | { id: number } } | [open_play: numbe
         })
             /**
 * @see \App\Http\Controllers\OpenPlayController::update
- * @see app/Http/Controllers/OpenPlayController.php:70
+ * @see app/Http/Controllers/OpenPlayController.php:96
  * @route '/open-play/{open_play}'
  */
         updateForm.patch = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -504,7 +504,7 @@ update.patch = (args: { open_play: number | { id: number } } | [open_play: numbe
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::destroy
- * @see app/Http/Controllers/OpenPlayController.php:79
+ * @see app/Http/Controllers/OpenPlayController.php:105
  * @route '/open-play/{open_play}'
  */
 export const destroy = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -519,7 +519,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::destroy
- * @see app/Http/Controllers/OpenPlayController.php:79
+ * @see app/Http/Controllers/OpenPlayController.php:105
  * @route '/open-play/{open_play}'
  */
 destroy.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -552,7 +552,7 @@ destroy.url = (args: { open_play: number | { id: number } } | [open_play: number
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::destroy
- * @see app/Http/Controllers/OpenPlayController.php:79
+ * @see app/Http/Controllers/OpenPlayController.php:105
  * @route '/open-play/{open_play}'
  */
 destroy.delete = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -562,7 +562,7 @@ destroy.delete = (args: { open_play: number | { id: number } } | [open_play: num
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::destroy
- * @see app/Http/Controllers/OpenPlayController.php:79
+ * @see app/Http/Controllers/OpenPlayController.php:105
  * @route '/open-play/{open_play}'
  */
     const destroyForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -577,7 +577,7 @@ destroy.delete = (args: { open_play: number | { id: number } } | [open_play: num
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::destroy
- * @see app/Http/Controllers/OpenPlayController.php:79
+ * @see app/Http/Controllers/OpenPlayController.php:105
  * @route '/open-play/{open_play}'
  */
         destroyForm.delete = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -593,7 +593,7 @@ destroy.delete = (args: { open_play: number | { id: number } } | [open_play: num
     destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
 export const manage = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -608,7 +608,7 @@ manage.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
 manage.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -641,7 +641,7 @@ manage.url = (args: { open_play: number | { id: number } } | [open_play: number 
 
 /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
 manage.get = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -650,7 +650,7 @@ manage.get = (args: { open_play: number | { id: number } } | [open_play: number 
 })
 /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
 manage.head = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -660,7 +660,7 @@ manage.head = (args: { open_play: number | { id: number } } | [open_play: number
 
     /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
     const manageForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -670,7 +670,7 @@ manage.head = (args: { open_play: number | { id: number } } | [open_play: number
 
             /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
         manageForm.get = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -679,7 +679,7 @@ manage.head = (args: { open_play: number | { id: number } } | [open_play: number
         })
             /**
 * @see \App\Http\Controllers\OpenPlayController::manage
- * @see app/Http/Controllers/OpenPlayController.php:90
+ * @see app/Http/Controllers/OpenPlayController.php:116
  * @route '/open-play/{open_play}/manage'
  */
         manageForm.head = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

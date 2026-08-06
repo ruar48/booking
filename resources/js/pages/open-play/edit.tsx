@@ -192,7 +192,10 @@ export default function OpenPlayEdit({ session }: Props) {
                                     onValueChange={(v) =>
                                         setData(
                                             'bracket_format',
-                                            v as 'round_robin' | 'single_elimination',
+                                            v as
+                                                | 'round_robin'
+                                                | 'single_elimination'
+                                                | 'double_elimination',
                                         )
                                     }
                                 >
@@ -203,6 +206,9 @@ export default function OpenPlayEdit({ session }: Props) {
                                         <SelectItem value="round_robin">Round robin</SelectItem>
                                         <SelectItem value="single_elimination">
                                             Single elimination
+                                        </SelectItem>
+                                        <SelectItem value="double_elimination">
+                                            Double elimination
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>

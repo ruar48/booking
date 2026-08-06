@@ -32,7 +32,7 @@ class UpdateOpenPlayRequest extends FormRequest
             'price_per_player' => ['nullable', 'numeric', 'min:0'],
             'max_players' => ['nullable', 'integer', 'min:1', 'max:100'],
             'skill_level' => ['required', 'string', Rule::in(['all_levels', 'beginner', 'intermediate', 'advanced'])],
-            'bracket_format' => ['required', new Enum(TournamentFormat::class), 'not_in:double_elimination'],
+            'bracket_format' => ['required', new Enum(TournamentFormat::class)],
             'bracket_generation' => ['required', new Enum(BracketGenerationMode::class)],
             'team_size' => ['required', new Enum(TeamSize::class)],
         ];

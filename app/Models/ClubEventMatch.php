@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BracketSide;
 use App\Enums\MatchStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $winner_registration_id
  * @property int $round
  * @property int|null $bracket_position
+ * @property BracketSide|null $bracket_side
  * @property MatchStatus $status
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -31,6 +33,7 @@ use Illuminate\Support\Carbon;
     'winner_registration_id',
     'round',
     'bracket_position',
+    'bracket_side',
     'status',
 ])]
 class ClubEventMatch extends Model
@@ -39,6 +42,7 @@ class ClubEventMatch extends Model
     {
         return [
             'status' => MatchStatus::class,
+            'bracket_side' => BracketSide::class,
         ];
     }
 

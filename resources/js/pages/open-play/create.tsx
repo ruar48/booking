@@ -193,6 +193,9 @@ export default function OpenPlayCreate({ club }: Props) {
                                         <SelectItem value="single_elimination">
                                             Single elimination
                                         </SelectItem>
+                                        <SelectItem value="double_elimination">
+                                            Double elimination
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.bracket_format} />

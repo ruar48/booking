@@ -111,6 +111,64 @@ export function roundLabel(round: number, totalRounds: number): string {
     return `Round ${round}`;
 }
 
+export function losersRoundLabel(round: number, totalLosersRounds: number): string {
+    if (round === totalLosersRounds) {
+        return 'Losers Final';
+    }
+
+    return `Losers Round ${round}`;
+}
+
+export function finalMatchLabel(round: number): string {
+    return round >= 2 ? 'Bracket Reset' : 'Grand Final';
+}
+
+export function matchRoundLabel(match: ClubEventMatch, matches: ClubEventMatch[]): string {
+    if (match.bracket_side === 'losers') {
+        const losersRounds = matches
+            .filter((m) => m.bracket_side === 'losers')
+            .map((m) => m.round);
+        const totalLosersRounds = losersRounds.length > 0 ? Math.max(...losersRounds) : match.round;
+
+        return losersRoundLabel(match.round, totalLosersRounds);
+    }
+
+    if (match.bracket_side === 'final') {
+        return finalMatchLabel(match.round);
+    }
+
+    const relevantRounds = matches
+        .filter((m) => m.bracket_side !== 'losers' && m.bracket_side !== 'final')
+        .map((m) => m.round);
+    const totalRounds = relevantRounds.length > 0 ? Math.max(...relevantRounds) : match.round;
+
+    return roundLabel(match.round, totalRounds);
+}
+
+export function matchesByBracketSide(matches: ClubEventMatch[]): {
+    winners: ClubEventMatch[];
+    losers: ClubEventMatch[];
+    final: ClubEventMatch[];
+} {
+    const winners: ClubEventMatch[] = [];
+    const losers: ClubEventMatch[] = [];
+    const final: ClubEventMatch[] = [];
+
+    for (const match of matches) {
+        if (match.bracket_side === 'losers') {
+            losers.push(match);
+        } else if (match.bracket_side === 'final') {
+            final.push(match);
+        } else {
+            winners.push(match);
+        }
+    }
+
+    final.sort((a, b) => a.round - b.round);
+
+    return { winners, losers, final };
+}
+
 export function isEntryInMatch(match: ClubEventMatch, registrationId: number): boolean {
     return match.entry1_id === registrationId || match.entry2_id === registrationId;
 }

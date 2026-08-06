@@ -34,7 +34,10 @@ import {
     bracketSlotLabel,
     computeStandings,
     entryLabel,
+    finalMatchLabel,
     groupByRound,
+    losersRoundLabel,
+    matchesByBracketSide,
     roundLabel,
 } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
@@ -364,7 +367,15 @@ function BracketConnector({ isTop }: { isTop: boolean }) {
     );
 }
 
-function BracketTree({ matches, totalRounds }: { matches: ClubEventMatch[]; totalRounds: number }) {
+function BracketTree({
+    matches,
+    totalRounds,
+    labelForRound = roundLabel,
+}: {
+    matches: ClubEventMatch[];
+    totalRounds: number;
+    labelForRound?: (round: number, totalRounds: number) => string;
+}) {
     const rounds = groupByRound(matches);
     const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
 
@@ -374,7 +385,7 @@ function BracketTree({ matches, totalRounds }: { matches: ClubEventMatch[]; tota
                 {roundNumbers.map((round, roundIndex) => (
                     <div key={round} className="flex w-56 shrink-0 flex-col">
                         <h5 className="text-muted-foreground mb-3 text-center text-xs font-semibold uppercase">
-                            {roundLabel(round, totalRounds)}
+                            {labelForRound(round, totalRounds)}
                         </h5>
                         <div className="flex flex-col">
                             {rounds.get(round)!.map((match) => (
@@ -395,6 +406,88 @@ function BracketTree({ matches, totalRounds }: { matches: ClubEventMatch[]; tota
                     </div>
                 ))}
             </div>
+        </div>
+    );
+}
+
+// The losers bracket doesn't halve its match count every round (it alternates
+// "internal" and "receiving" rounds), so the winners-bracket connector-line
+// geometry doesn't apply here — render it as plain columns instead.
+function SimpleBracketColumns({
+    matches,
+    labelForRound,
+}: {
+    matches: ClubEventMatch[];
+    labelForRound: (round: number) => string;
+}) {
+    const rounds = groupByRound(matches);
+    const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+
+    return (
+        <div className="overflow-x-auto pb-2">
+            <div className="flex gap-6">
+                {roundNumbers.map((round) => (
+                    <div key={round} className="flex w-56 shrink-0 flex-col gap-4">
+                        <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
+                            {labelForRound(round)}
+                        </h5>
+                        {rounds.get(round)!.map((match) => (
+                            <BracketMatchCard key={match.id} match={match} />
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function DoubleEliminationBracket({ matches }: { matches: ClubEventMatch[] }) {
+    const { winners, losers, final } = matchesByBracketSide(matches);
+    const totalWbRounds = winners.length > 0 ? Math.max(...winners.map((m) => m.round)) : 0;
+    const totalLbRounds = losers.length > 0 ? Math.max(...losers.map((m) => m.round)) : 0;
+    const lastFinalMatch = final[final.length - 1];
+    const champion =
+        lastFinalMatch?.status === 'completed' ? (lastFinalMatch.winner ?? null) : null;
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h4 className="mb-3 text-sm font-semibold">Winners bracket</h4>
+                <BracketTree matches={winners} totalRounds={totalWbRounds} />
+            </div>
+
+            {losers.length > 0 && (
+                <div>
+                    <h4 className="mb-3 text-sm font-semibold">Losers bracket</h4>
+                    <SimpleBracketColumns
+                        matches={losers}
+                        labelForRound={(round) => losersRoundLabel(round, totalLbRounds)}
+                    />
+                </div>
+            )}
+
+            {final.length > 0 && (
+                <div>
+                    <h4 className="mb-3 text-sm font-semibold">Finals</h4>
+                    <div className="flex gap-6">
+                        {final.map((match) => (
+                            <div key={match.id} className="flex w-56 shrink-0 flex-col gap-3">
+                                <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
+                                    {finalMatchLabel(match.round)}
+                                </h5>
+                                <BracketMatchCard match={match} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {champion && (
+                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                    <Trophy className="size-5" />
+                    <span className="font-semibold">Champion: {entryLabel(champion)}</span>
+                </div>
+            )}
         </div>
     );
 }
@@ -739,16 +832,20 @@ export default function OpenPlayManage({ session }: Props) {
                                     ? 'Manual matchups'
                                     : session.bracket_format === 'single_elimination'
                                       ? 'Single elimination bracket'
-                                      : session.bracket_format === 'round_robin'
-                                        ? 'Round robin bracket'
-                                        : 'Bracket'}
+                                      : session.bracket_format === 'double_elimination'
+                                        ? 'Double elimination bracket'
+                                        : session.bracket_format === 'round_robin'
+                                          ? 'Round robin bracket'
+                                          : 'Bracket'}
                             </CardTitle>
                             <CardDescription>
                                 {session.bracket_generation === 'manual'
                                     ? "Build the pairing list yourself below, then enter each match's final score."
                                     : session.bracket_format === 'single_elimination'
                                       ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — lose once and you are out. Enter each match score to advance the winner.`
-                                      : `Every entry plays every other entry once (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}). Enter each match's final score to record the winner.`}
+                                      : session.bracket_format === 'double_elimination'
+                                        ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — a loss drops an entry to the losers bracket; lose twice and you are out. Enter each match score to advance the winner.`
+                                        : `Every entry plays every other entry once (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}). Enter each match's final score to record the winner.`}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -848,7 +945,9 @@ export default function OpenPlayManage({ session }: Props) {
                                                 No bracket yet. Generate a{' '}
                                                 {session.bracket_format === 'single_elimination'
                                                     ? 'single elimination'
-                                                    : 'round robin'}{' '}
+                                                    : session.bracket_format === 'double_elimination'
+                                                      ? 'double elimination'
+                                                      : 'round robin'}{' '}
                                                 bracket from the {registrations.length} registered{' '}
                                                 {registrations.length === 1 ? 'entry' : 'entries'}.
                                             </p>
@@ -873,7 +972,8 @@ export default function OpenPlayManage({ session }: Props) {
                             ) : (
                                 <>
                                     <div className="flex justify-end gap-2">
-                                        {session.bracket_format === 'single_elimination' && (
+                                        {(session.bracket_format === 'single_elimination' ||
+                                            session.bracket_format === 'double_elimination') && (
                                             <Button
                                                 type="button"
                                                 variant="outline"
@@ -904,6 +1004,8 @@ export default function OpenPlayManage({ session }: Props) {
                                                 </div>
                                             )}
                                         </>
+                                    ) : session.bracket_format === 'double_elimination' ? (
+                                        <DoubleEliminationBracket matches={matches} />
                                     ) : (
                                         <>
                                             <Table>
@@ -972,12 +1074,20 @@ export default function OpenPlayManage({ session }: Props) {
                         <DialogTitle>{session.title} — Bracket</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto pt-2">
-                        <BracketTree matches={matches} totalRounds={totalRounds} />
-                        {champion && (
-                            <div className="mt-6 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
-                                <Trophy className="size-5" />
-                                <span className="font-semibold">Champion: {entryLabel(champion)}</span>
-                            </div>
+                        {session.bracket_format === 'double_elimination' ? (
+                            <DoubleEliminationBracket matches={matches} />
+                        ) : (
+                            <>
+                                <BracketTree matches={matches} totalRounds={totalRounds} />
+                                {champion && (
+                                    <div className="mt-6 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                                        <Trophy className="size-5" />
+                                        <span className="font-semibold">
+                                            Champion: {entryLabel(champion)}
+                                        </span>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </DialogContent>

@@ -19,8 +19,12 @@ import {
     bracketSlotLabel,
     computeStandings,
     entryLabel,
+    finalMatchLabel,
     groupByRound,
     isEntryInMatch,
+    losersRoundLabel,
+    matchesByBracketSide,
+    matchRoundLabel,
     roundLabel,
 } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
@@ -137,6 +141,92 @@ function ReadOnlyBracketTree({
     );
 }
 
+function ReadOnlySimpleBracketColumns({
+    matches,
+    labelForRound,
+    registrationId,
+}: {
+    matches: ClubEventMatch[];
+    labelForRound: (round: number) => string;
+    registrationId: number;
+}) {
+    const rounds = groupByRound(matches);
+    const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+
+    return (
+        <div className="overflow-x-auto pb-2">
+            <div className="flex gap-6">
+                {roundNumbers.map((round) => (
+                    <div key={round} className="flex w-56 shrink-0 flex-col gap-4">
+                        <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
+                            {labelForRound(round)}
+                        </h5>
+                        {rounds.get(round)!.map((match) => (
+                            <ReadOnlyMatchCard
+                                key={match.id}
+                                match={match}
+                                registrationId={registrationId}
+                            />
+                        ))}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function ReadOnlyDoubleEliminationBracket({
+    matches,
+    registrationId,
+}: {
+    matches: ClubEventMatch[];
+    registrationId: number;
+}) {
+    const { winners, losers, final } = matchesByBracketSide(matches);
+    const totalWbRounds = winners.length > 0 ? Math.max(...winners.map((m) => m.round)) : 0;
+    const totalLbRounds = losers.length > 0 ? Math.max(...losers.map((m) => m.round)) : 0;
+
+    return (
+        <div className="space-y-8">
+            <div>
+                <h4 className="mb-3 text-sm font-semibold">Winners bracket</h4>
+                <ReadOnlyBracketTree
+                    matches={winners}
+                    totalRounds={totalWbRounds}
+                    registrationId={registrationId}
+                />
+            </div>
+
+            {losers.length > 0 && (
+                <div>
+                    <h4 className="mb-3 text-sm font-semibold">Losers bracket</h4>
+                    <ReadOnlySimpleBracketColumns
+                        matches={losers}
+                        labelForRound={(round) => losersRoundLabel(round, totalLbRounds)}
+                        registrationId={registrationId}
+                    />
+                </div>
+            )}
+
+            {final.length > 0 && (
+                <div>
+                    <h4 className="mb-3 text-sm font-semibold">Finals</h4>
+                    <div className="flex gap-6">
+                        {final.map((match) => (
+                            <div key={match.id} className="flex w-56 shrink-0 flex-col gap-3">
+                                <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
+                                    {finalMatchLabel(match.round)}
+                                </h5>
+                                <ReadOnlyMatchCard match={match} registrationId={registrationId} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function rankMedal(rank: number): string {
     if (rank === 1) {
         return '🥇';
@@ -214,16 +304,30 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
         streak += 1;
     }
 
+    const isDoubleElim = session.bracket_format === 'double_elimination';
     const totalRounds = matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 0;
-    const finalMatch = matches.find((m) => m.round === totalRounds);
-    const champion =
-        session.bracket_format === 'single_elimination' && finalMatch?.status === 'completed'
-            ? (finalMatch.winner ?? null)
-            : null;
+
+    const champion = (() => {
+        if (session.bracket_format === 'single_elimination') {
+            const finalMatch = matches.find((m) => m.round === totalRounds);
+
+            return finalMatch?.status === 'completed' ? (finalMatch.winner ?? null) : null;
+        }
+
+        if (isDoubleElim) {
+            const { final } = matchesByBracketSide(matches);
+            const lastFinalMatch = final[final.length - 1];
+
+            return lastFinalMatch?.status === 'completed' ? (lastFinalMatch.winner ?? null) : null;
+        }
+
+        return null;
+    })();
     const amChampion = champion?.id === registrationId;
 
     const isDoubles = session.team_size === 'doubles';
     const isSingleElim = session.bracket_format === 'single_elimination';
+    const hasBracketTree = isSingleElim || isDoubleElim;
 
     const progressPct = myMatches.length > 0
         ? Math.round((pastMatches.length / myMatches.length) * 100)
@@ -269,7 +373,11 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                             </div>
                             <h1 className="text-2xl font-bold sm:text-3xl">🏓 {session.title}</h1>
                             <p className="text-sm text-white/70">
-                                {isSingleElim ? 'Single Elimination Bracket' : 'Round Robin Tournament'}
+                                {isSingleElim
+                                    ? 'Single Elimination Bracket'
+                                    : isDoubleElim
+                                      ? 'Double Elimination Bracket'
+                                      : 'Round Robin Tournament'}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 pt-1">
                                 <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
@@ -352,7 +460,13 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                     <StatCard
                         icon={Layers}
                         label="Format"
-                        value={isSingleElim ? 'Single Elim' : 'Round Robin'}
+                        value={
+                            isSingleElim
+                                ? 'Single Elim'
+                                : isDoubleElim
+                                  ? 'Double Elim'
+                                  : 'Round Robin'
+                        }
                         sub={session.target_score ? `First to ${session.target_score}` : undefined}
                     />
                 </div>
@@ -399,7 +513,7 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 p-4">
                                 <div>
                                     <p className="text-xs font-medium text-blue-700">
-                                        {roundLabel(nextMatch.round, totalRounds)}
+                                        {matchRoundLabel(nextMatch, matches)}
                                     </p>
                                     <p className="font-semibold text-blue-950">
                                         vs{' '}
@@ -416,23 +530,30 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                     </CardContent>
                 </Card>
 
-                {isSingleElim && matches.length > 0 ? (
+                {hasBracketTree && matches.length > 0 ? (
                     <Card>
                         <CardHeader>
                             <CardTitle>Bracket</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <ReadOnlyBracketTree
-                                matches={matches}
-                                totalRounds={totalRounds}
-                                registrationId={registrationId}
-                            />
+                            {isDoubleElim ? (
+                                <ReadOnlyDoubleEliminationBracket
+                                    matches={matches}
+                                    registrationId={registrationId}
+                                />
+                            ) : (
+                                <ReadOnlyBracketTree
+                                    matches={matches}
+                                    totalRounds={totalRounds}
+                                    registrationId={registrationId}
+                                />
+                            )}
                         </CardContent>
                     </Card>
                 ) : null}
 
                 {/* Standings */}
-                {!isSingleElim && standings.length > 0 && (
+                {!hasBracketTree && standings.length > 0 && (
                     <Card>
                         <CardHeader>
                             <CardTitle>Standings</CardTitle>
@@ -538,7 +659,7 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                                                         <Badge variant="outline">Upcoming</Badge>
                                                     )}
                                                     <span className="text-muted-foreground text-xs">
-                                                        {roundLabel(match.round, totalRounds)}
+                                                        {matchRoundLabel(match, matches)}
                                                     </span>
                                                 </div>
                                                 <p className="mt-1 text-sm font-medium">

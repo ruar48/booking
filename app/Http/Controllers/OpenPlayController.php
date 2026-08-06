@@ -15,17 +15,35 @@ use Inertia\Response;
 
 class OpenPlayController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', ClubEvent::class);
 
         $clubId = Club::query()->where('is_active', true)->oldest()->value('id');
 
+        $search = $request->string('search')->value() ?: null;
+        $status = $request->string('status')->value() ?: null;
+        $bracketFormat = $request->string('bracket_format')->value() ?: null;
+        $dateFrom = $request->string('date_from')->value() ?: null;
+        $dateTo = $request->string('date_to')->value() ?: null;
+        $sort = $request->string('sort')->value() === 'latest' ? 'latest' : 'upcoming';
+
         $sessions = ClubEvent::query()
             ->when($clubId !== null, fn ($query) => $query->where('club_id', $clubId))
+            ->when($search !== null, fn ($query) => $query->where('title', 'like', "%{$search}%"))
+            ->when($status === 'upcoming', fn ($query) => $query->where('starts_at', '>=', now()))
+            ->when($status === 'past', fn ($query) => $query->where('starts_at', '<', now()))
+            ->when($bracketFormat !== null, fn ($query) => $query->where('bracket_format', $bracketFormat))
+            ->when($dateFrom !== null, fn ($query) => $query->whereDate('starts_at', '>=', $dateFrom))
+            ->when($dateTo !== null, fn ($query) => $query->whereDate('starts_at', '<=', $dateTo))
             ->withCount('registrations')
-            ->orderBy('starts_at')
-            ->paginate(15);
+            ->when(
+                $sort === 'latest',
+                fn ($query) => $query->orderByDesc('starts_at'),
+                fn ($query) => $query->orderBy('starts_at'),
+            )
+            ->paginate(15)
+            ->withQueryString();
 
         $upcomingCount = ClubEvent::query()
             ->when($clubId !== null, fn ($query) => $query->where('club_id', $clubId))
@@ -35,6 +53,14 @@ class OpenPlayController extends Controller
         return Inertia::render('open-play/index', [
             'sessions' => $sessions,
             'upcomingCount' => $upcomingCount,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'bracket_format' => $bracketFormat,
+                'date_from' => $dateFrom,
+                'date_to' => $dateTo,
+                'sort' => $sort,
+            ],
         ]);
     }
 
