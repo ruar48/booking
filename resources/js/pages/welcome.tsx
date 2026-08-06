@@ -34,6 +34,7 @@ import type {
     BookedSlot,
     Club,
     ClubEvent,
+    DateOverride,
     Resource,
 } from '@/types/booking';
 
@@ -50,6 +51,7 @@ type Props = {
     announcements?: Announcement[];
     openPlayEvents?: ClubEvent[];
     bookedSlots?: BookedSlot[];
+    dateOverrides?: DateOverride[];
 };
 
 const DAY_ORDER = [
@@ -503,11 +505,13 @@ function BookCourtTab({
     courts,
     club,
     bookedSlots,
+    dateOverrides,
     isAuthenticated,
 }: {
     courts: Resource[];
     club: Club | null;
     bookedSlots: BookedSlot[];
+    dateOverrides: DateOverride[];
     isAuthenticated: boolean;
 }) {
     return (
@@ -515,6 +519,7 @@ function BookCourtTab({
             courts={courts}
             club={club}
             bookedSlots={bookedSlots}
+            dateOverrides={dateOverrides}
             isAuthenticated={isAuthenticated}
         />
     );
@@ -639,6 +644,7 @@ export default function Welcome({
     announcements = [],
     openPlayEvents = [],
     bookedSlots = [],
+    dateOverrides = [],
 }: Props) {
     const { auth } = usePage().props;
     const businessName = club?.name ?? brand.name;
@@ -789,6 +795,7 @@ export default function Welcome({
                                             courts={courts}
                                             club={club}
                                             bookedSlots={bookedSlots}
+                                            dateOverrides={dateOverrides}
                                             isAuthenticated={!!auth.user}
                                         />
                                     </TabsContent>

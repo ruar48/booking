@@ -8,6 +8,7 @@ use App\Enums\ResourceStatus;
 use App\Events\BookingApproved;
 use App\Events\BookingCancelled;
 use App\Exceptions\BookingConflictException;
+use App\Models\DateOverride;
 use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
@@ -153,28 +154,24 @@ class ResourceBookingService
             throw new BookingConflictException('This time slot is locked.');
         }
 
-        $operatingHours = $resource->club?->operating_hours;
+        // Dates are closed for booking by default: a resource can only be booked
+        // on a date an admin has explicitly opened (with hours) via the booking
+        // calendar. Absence of a DateOverride row means the date is closed.
+        $dateOverride = DateOverride::query()
+            ->where('club_id', $resource->club_id)
+            ->whereDate('date', $startsAt->toDateString())
+            ->first();
 
-        if (! empty($operatingHours)) {
-            $day = strtolower($startsAt->format('l'));
-            $dayHours = $operatingHours[$day] ?? null;
+        if ($dateOverride === null || $dateOverride->is_closed) {
+            throw new BookingConflictException('This date is closed for bookings.');
+        }
 
-            if ($dayHours !== null) {
-                if (! empty($dayHours['closed'])) {
-                    throw new BookingConflictException('This time is outside operating hours.');
-                }
+        if ($dateOverride->open_time && $dateOverride->close_time) {
+            $openAt = $startsAt->clone()->setTimeFromTimeString($dateOverride->open_time);
+            $closeAt = $startsAt->clone()->setTimeFromTimeString($dateOverride->close_time);
 
-                $open = $dayHours['open'] ?? null;
-                $close = $dayHours['close'] ?? null;
-
-                if ($open && $close) {
-                    $openAt = $startsAt->clone()->setTimeFromTimeString($open);
-                    $closeAt = $startsAt->clone()->setTimeFromTimeString($close);
-
-                    if ($startsAt->lt($openAt) || $endsAt->gt($closeAt)) {
-                        throw new BookingConflictException('This time is outside operating hours.');
-                    }
-                }
+            if ($startsAt->lt($openAt) || $endsAt->gt($closeAt)) {
+                throw new BookingConflictException('This time is outside operating hours.');
             }
         }
 

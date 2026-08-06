@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     addMonths,
     eachDayOfInterval,
@@ -13,31 +13,63 @@ import {
     subMonths,
 } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState } from 'react';
 
+import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { calendar, create, show, index as bookingsIndex } from '@/routes/bookings';
-import type { ResourceBooking } from '@/types/booking';
+import { closeDate, reopenDate } from '@/routes/bookings/calendar';
+import type { DateOverride, ResourceBooking } from '@/types/booking';
+
+type OperatingHours = Record<
+    string,
+    { open: string | null; close: string | null; closed: boolean }
+> | null;
 
 type Props = {
     bookings: ResourceBooking[];
+    dateOverrides: DateOverride[];
+    operatingHours: OperatingHours;
     filters: {
         club_id?: number | null;
         start?: string;
         end?: string;
     };
 };
+
+function defaultHoursFor(date: string, operatingHours: OperatingHours) {
+    const weekday = format(parseISO(date), 'EEEE').toLowerCase();
+    const day = operatingHours?.[weekday];
+
+    return {
+        open: day?.open ?? '07:00',
+        close: day?.close ?? '22:00',
+    };
+}
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -49,9 +81,10 @@ const statusDotClasses: Record<string, string> = {
     completed: 'bg-blue-500',
 };
 
-export default function BookingsCalendar({ bookings, filters }: Props) {
+export default function BookingsCalendar({ bookings, dateOverrides, operatingHours, filters }: Props) {
     const anchorDate = filters.start ? parseISO(filters.start) : new Date();
     const [monthCursor, setMonthCursor] = useState(startOfMonth(anchorDate));
+    const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
     const grouped = useMemo(() => {
         const map = new Map<string, ResourceBooking[]>();
@@ -69,6 +102,16 @@ export default function BookingsCalendar({ bookings, filters }: Props) {
 
         return map;
     }, [bookings]);
+
+    const overridesByDate = useMemo(() => {
+        const map = new Map<string, DateOverride>();
+
+        for (const override of dateOverrides) {
+            map.set(override.date.split('T')[0], override);
+        }
+
+        return map;
+    }, [dateOverrides]);
 
     const days = useMemo(() => {
         const gridStart = startOfWeek(startOfMonth(monthCursor));
@@ -162,16 +205,28 @@ export default function BookingsCalendar({ bookings, filters }: Props) {
                                 const inMonth = isSameMonth(day, monthCursor);
                                 const visible = dayBookings.slice(0, 3);
                                 const overflow = dayBookings.length - visible.length;
+                                const override = overridesByDate.get(key);
+                                const isOpenDay = override?.is_closed === false;
 
                                 return (
                                     <div
                                         key={key}
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => setSelectedDate(key)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                setSelectedDate(key);
+                                            }
+                                        }}
                                         className={cn(
-                                            'bg-background flex min-h-28 flex-col gap-1 p-1.5 sm:min-h-32',
+                                            'bg-background outline-none flex min-h-28 cursor-pointer flex-col gap-1 p-1.5 text-left transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-32',
                                             !inMonth && 'bg-muted/40',
+                                            !isOpenDay && 'bg-destructive/5 hover:bg-destructive/10',
                                         )}
                                     >
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between gap-1">
                                             <span
                                                 className={cn(
                                                     'text-xs font-medium',
@@ -192,7 +247,22 @@ export default function BookingsCalendar({ bookings, filters }: Props) {
                                             )}
                                         </div>
 
-                                        <div className="flex flex-1 flex-col gap-0.5">
+                                        <Badge
+                                            variant={isOpenDay ? 'default' : 'outline'}
+                                            className={cn(
+                                                'h-4 w-fit px-1.5 text-[10px] font-medium',
+                                                isOpenDay
+                                                    ? 'bg-emerald-600 hover:bg-emerald-600'
+                                                    : 'text-destructive border-destructive/40',
+                                            )}
+                                        >
+                                            {isOpenDay ? 'Open' : 'Closed'}
+                                        </Badge>
+
+                                        <div
+                                            className="flex flex-1 flex-col gap-0.5"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
                                             {visible.map((booking) => (
                                                 <Popover key={booking.id}>
                                                     <PopoverTrigger asChild>
@@ -256,7 +326,150 @@ export default function BookingsCalendar({ bookings, filters }: Props) {
                     </CardContent>
                 </Card>
             </div>
+
+            {selectedDate && (
+                <DateOverrideDialog
+                    date={selectedDate}
+                    override={overridesByDate.get(selectedDate)}
+                    dayBookings={grouped.get(selectedDate) ?? []}
+                    operatingHours={operatingHours}
+                    onClose={() => setSelectedDate(null)}
+                />
+            )}
         </>
+    );
+}
+
+function DateOverrideDialog({
+    date,
+    override,
+    dayBookings,
+    operatingHours,
+    onClose,
+}: {
+    date: string;
+    override?: DateOverride;
+    dayBookings: ResourceBooking[];
+    operatingHours: OperatingHours;
+    onClose: () => void;
+}) {
+    const wasOpen = override?.is_closed === false;
+    const [isOpen, setIsOpen] = useState(wasOpen);
+    const suggested = defaultHoursFor(date, operatingHours);
+
+    const openForm = useForm({
+        date,
+        open_time: override?.open_time?.slice(0, 5) ?? suggested.open ?? '07:00',
+        close_time: override?.close_time?.slice(0, 5) ?? suggested.close ?? '22:00',
+    });
+
+    const closeForm = useForm({
+        date,
+        reason: override?.reason ?? '',
+    });
+
+    function submit(e: FormEvent) {
+        e.preventDefault();
+
+        if (isOpen) {
+            openForm.post(reopenDate().url, { preserveScroll: true, onSuccess: onClose });
+        } else {
+            closeForm.post(closeDate().url, { preserveScroll: true, onSuccess: onClose });
+        }
+    }
+
+    const processing = openForm.processing || closeForm.processing;
+
+    return (
+        <Dialog open onOpenChange={(open) => !open && onClose()}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{format(parseISO(date), 'MMMM d, yyyy')}</DialogTitle>
+                    <DialogDescription>
+                        Dates are closed for booking by default. Open this date and set its
+                        hours before members can book it.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form onSubmit={submit} className="space-y-4">
+                    <div className="flex items-center justify-between rounded-lg border p-3">
+                        <div>
+                            <p className="text-sm font-medium">
+                                {isOpen ? 'Open for bookings' : 'Closed for bookings'}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                                {isOpen
+                                    ? 'Members can book this date within the hours below.'
+                                    : 'No one can book this date.'}
+                            </p>
+                        </div>
+                        <Switch checked={isOpen} onCheckedChange={setIsOpen} />
+                    </div>
+
+                    {isOpen ? (
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                                <Label htmlFor="open_time">Open</Label>
+                                <Input
+                                    id="open_time"
+                                    type="time"
+                                    value={openForm.data.open_time}
+                                    onChange={(e) => openForm.setData('open_time', e.target.value)}
+                                />
+                                <InputError message={openForm.errors.open_time} />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="close_time">Close</Label>
+                                <Input
+                                    id="close_time"
+                                    type="time"
+                                    value={openForm.data.close_time}
+                                    onChange={(e) => openForm.setData('close_time', e.target.value)}
+                                />
+                                <InputError message={openForm.errors.close_time} />
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            {dayBookings.length > 0 && (
+                                <Alert variant="destructive">
+                                    <AlertTitle>
+                                        {dayBookings.length} existing booking
+                                        {dayBookings.length !== 1 ? 's' : ''} on this date
+                                    </AlertTitle>
+                                    <AlertDescription>
+                                        Closing this date only blocks new bookings — existing
+                                        bookings won&apos;t be cancelled automatically. Review
+                                        them from the calendar first if needed.
+                                    </AlertDescription>
+                                </Alert>
+                            )}
+
+                            <div className="space-y-1">
+                                <Label htmlFor="reason">Reason (optional)</Label>
+                                <Textarea
+                                    id="reason"
+                                    value={closeForm.data.reason}
+                                    onChange={(e) => closeForm.setData('reason', e.target.value)}
+                                    placeholder="e.g. Public holiday, maintenance"
+                                />
+                                <InputError message={closeForm.errors.reason} />
+                            </div>
+                        </>
+                    )}
+
+                    <DialogFooter>
+                        <Button
+                            type="submit"
+                            variant={isOpen ? 'default' : 'destructive'}
+                            disabled={processing}
+                        >
+                            {isOpen ? 'Save & open date' : 'Close this date'}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     );
 }
 

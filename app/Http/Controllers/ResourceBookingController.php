@@ -11,6 +11,7 @@ use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
 use App\Models\Club;
+use App\Models\DateOverride;
 use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
@@ -191,10 +192,91 @@ class ResourceBookingController extends Controller
         $start = $request->filled('start') ? Carbon::parse($request->input('start')) : null;
         $end = $request->filled('end') ? Carbon::parse($request->input('end')) : null;
 
+        $club = $this->activeClub();
+
+        $dateOverrides = $club
+            ? DateOverride::query()
+                ->where('club_id', $club->id)
+                ->whereBetween('date', [
+                    ($start ?? now()->startOfMonth())->toDateString(),
+                    ($end ?? now()->endOfMonth())->toDateString(),
+                ])
+                ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason'])
+            : collect();
+
         return Inertia::render('bookings/calendar', [
             'bookings' => $this->resourceBookingRepository->getForCalendar($clubId, $start, $end),
+            'dateOverrides' => $dateOverrides,
+            'operatingHours' => $club?->operating_hours,
             'filters' => $request->only(['club_id', 'start', 'end']),
         ]);
+    }
+
+    public function closeDate(Request $request): RedirectResponse
+    {
+        $this->authorize('viewAny', ResourceBooking::class);
+
+        $club = $this->activeClub();
+
+        abort_if($club === null, 404);
+
+        $validated = $request->validate([
+            'date' => ['required', 'date'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        DateOverride::query()->updateOrCreate(
+            ['club_id' => $club->id, 'date' => $validated['date']],
+            [
+                'is_closed' => true,
+                'open_time' => null,
+                'close_time' => null,
+                'reason' => $validated['reason'] ?? null,
+                'created_by' => $request->user()->id,
+            ],
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Date closed. Members cannot book on this date until it is reopened.')]);
+
+        return back();
+    }
+
+    public function reopenDate(Request $request): RedirectResponse
+    {
+        $this->authorize('viewAny', ResourceBooking::class);
+
+        $club = $this->activeClub();
+
+        abort_if($club === null, 404);
+
+        $validated = $request->validate([
+            'date' => ['required', 'date'],
+            'open_time' => ['required', 'date_format:H:i'],
+            'close_time' => ['required', 'date_format:H:i', 'after:open_time'],
+        ]);
+
+        DateOverride::query()->updateOrCreate(
+            ['club_id' => $club->id, 'date' => $validated['date']],
+            [
+                'is_closed' => false,
+                'open_time' => $validated['open_time'],
+                'close_time' => $validated['close_time'],
+                'reason' => null,
+                'created_by' => $request->user()->id,
+            ],
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Date opened for bookings.')]);
+
+        return back();
+    }
+
+    private function activeClub(): ?Club
+    {
+        return Club::query()
+            ->where('is_active', true)
+            ->oldest()
+            ->first();
     }
 
     /**
@@ -258,12 +340,20 @@ class ResourceBookingController extends Controller
                 ->get(['id', 'resource_id', 'day_of_week', 'starts_at', 'ends_at', 'reason'])
             : collect();
 
+        $dateOverrides = $clubId
+            ? DateOverride::query()
+                ->where('club_id', $clubId)
+                ->where('date', '>=', now()->startOfDay())
+                ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason'])
+            : collect();
+
         return [
             'club' => $club,
             'resources' => $resources,
             'bookedSlots' => $bookedSlots,
             'scheduleBlocks' => $scheduleBlocks,
             'recurringLocks' => $recurringLocks,
+            'dateOverrides' => $dateOverrides,
             'canManage' => request()->user()?->isVenueAdmin() ?? false,
         ];
     }

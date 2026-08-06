@@ -115,6 +115,15 @@ export type ScheduleBlock = {
     creator?: { id: number; name: string } | null;
 };
 
+export type DateOverride = {
+    id: number;
+    date: string;
+    is_closed: boolean;
+    open_time: string | null;
+    close_time: string | null;
+    reason?: string | null;
+};
+
 export type RecurringScheduleLock = {
     id: number;
     resource_id: number | null;

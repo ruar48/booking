@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { addDays, format, parseISO, subDays } from 'date-fns';
-import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +9,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
-import type { BookedSlot, Club, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
+import type { BookedSlot, Club, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
 
 export type WalkInCustomerPayload =
     | { mode: 'existing'; user_id: number }
@@ -29,6 +29,7 @@ type Props = {
     bookedSlots: BookedSlot[];
     scheduleBlocks?: ScheduleBlock[];
     recurringLocks?: RecurringScheduleLock[];
+    dateOverrides?: DateOverride[];
     isAuthenticated: boolean;
     processing?: boolean;
     errors?: Record<string, string>;
@@ -89,8 +90,8 @@ function buildBookingRuns(
 
             runs.push({
                 resource_id: courtId,
-                starts_at: `${selectedDate}T${minutesToSlot(runStart)}:00`,
-                ends_at: `${selectedDate}T${minutesToSlot(runEnd)}:00`,
+                starts_at: new Date(`${selectedDate}T${minutesToSlot(runStart)}:00`).toISOString(),
+                ends_at: new Date(`${selectedDate}T${minutesToSlot(runEnd)}:00`).toISOString(),
             });
         };
 
@@ -224,10 +225,10 @@ function capitalize(value: string): string {
 
 export function CourtScheduleGrid({
     courts,
-    club,
     bookedSlots,
     scheduleBlocks = [],
     recurringLocks = [],
+    dateOverrides = [],
     isAuthenticated,
     processing = false,
     errors = {},
@@ -250,21 +251,18 @@ export function CourtScheduleGrid({
         [courts, selectedSport],
     );
 
-    const dayKey = format(
-        parseISO(`${selectedDate}T12:00:00`),
-        'EEEE',
-    ).toLowerCase();
-    const dayHours = club?.operating_hours?.[dayKey as keyof typeof club.operating_hours];
-    const isClosedToday = dayHours?.closed === true;
-    const timeSlots =
-        dayHours && dayHours.open && dayHours.close
-            ? generateTimeSlots(dayHours.open, dayHours.close)
-            : generateTimeSlots('07:00', '23:00');
-
-    const bookingDeadline = format(
-        addDays(new Date(), BOOKING_WINDOW_DAYS),
-        'EEE, MMM d, yyyy',
+    const dateOverride = useMemo(
+        () => dateOverrides.find((override) => override.date.split('T')[0] === selectedDate),
+        [dateOverrides, selectedDate],
     );
+    // Dates are closed for booking unless an admin has explicitly opened them
+    // with hours, so no override (or one still marked closed) means closed.
+    const isOpenToday = dateOverride?.is_closed === false;
+    const isClosedToday = !isOpenToday;
+    const timeSlots =
+        isOpenToday && dateOverride?.open_time && dateOverride?.close_time
+            ? generateTimeSlots(dateOverride.open_time.slice(0, 5), dateOverride.close_time.slice(0, 5))
+            : [];
 
     const selectedKeys = useMemo(
         () => new Set(selections.map((s) => selectionKey(s.courtId, s.slot))),
@@ -379,15 +377,13 @@ export function CourtScheduleGrid({
                 </Button>
             </div>
 
-            <div className="flex flex-wrap items-start gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-                <Info className="mt-0.5 size-4 shrink-0 text-brand-court" />
+            <div className="flex flex-wrap items-center gap-2">
                 <Badge
                     variant="secondary"
                     className="bg-sky-100 text-sky-800 uppercase"
                 >
                     {isAuthenticated ? 'Member' : 'Non-member'}
                 </Badge>
-                <span>Bookings are available until {bookingDeadline}.</span>
             </div>
 
             <div className="flex flex-wrap gap-4 text-xs font-medium text-slate-600">
@@ -432,7 +428,15 @@ export function CourtScheduleGrid({
 
             {isClosedToday ? (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500">
-                    Closed on {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE')}
+                    <p>
+                        Bookings are closed on{' '}
+                        {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d')}
+                    </p>
+                    {dateOverride?.reason && (
+                        <p className="mt-1 text-xs font-normal text-slate-400">
+                            {dateOverride.reason}
+                        </p>
+                    )}
                 </div>
             ) : visibleCourts.length === 0 ? (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500">

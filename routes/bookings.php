@@ -7,6 +7,8 @@ Route::post('bookings/bulk', [ResourceBookingController::class, 'storeBulk'])->n
 
 Route::middleware('venue.admin')->group(function () {
     Route::get('bookings/calendar', [ResourceBookingController::class, 'calendar'])->name('bookings.calendar');
+    Route::post('bookings/calendar/close-date', [ResourceBookingController::class, 'closeDate'])->name('bookings.calendar.close-date');
+    Route::post('bookings/calendar/reopen-date', [ResourceBookingController::class, 'reopenDate'])->name('bookings.calendar.reopen-date');
     Route::patch('bookings/{booking}/mark-paid', [ResourceBookingController::class, 'markPaid'])->name('bookings.mark-paid');
     Route::get('bookings/customers/search', [ResourceBookingController::class, 'searchCustomers'])->name('bookings.customers.search');
     Route::post('bookings/walk-in', [ResourceBookingController::class, 'storeWalkIn'])->name('bookings.store-walk-in');

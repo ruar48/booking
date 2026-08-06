@@ -6,6 +6,7 @@ use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Models\Club;
 use App\Models\ClubEvent;
+use App\Models\DateOverride;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
@@ -62,6 +63,13 @@ class HomeController extends Controller
                 ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
             : collect();
 
+        $dateOverrides = $clubId
+            ? DateOverride::query()
+                ->where('club_id', $clubId)
+                ->where('date', '>=', now()->startOfDay())
+                ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason'])
+            : collect();
+
         $bookingsToday = $clubId
             ? ResourceBooking::query()
                 ->whereHas('resource', fn ($query) => $query->where('club_id', $clubId))
@@ -76,6 +84,7 @@ class HomeController extends Controller
             'announcements' => $announcements,
             'openPlayEvents' => $openPlayEvents,
             'bookedSlots' => $bookedSlots,
+            'dateOverrides' => $dateOverrides,
             'stats' => [
                 'courts' => $courts->count(),
                 'members' => $clubId
