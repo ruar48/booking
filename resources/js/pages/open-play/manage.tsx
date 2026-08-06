@@ -87,6 +87,8 @@ function MatchRow({
                 entry2_score: Number(score2),
             },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onError: (errors) => setError(Object.values(errors)[0] as string),
                 onFinish: () => setProcessing(false),
             },
@@ -187,6 +189,8 @@ function ManualMatchupForm({
             storeBracketMatch(session).url,
             { entry1_id: Number(entry1Id), entry2_id: Number(entry2Id) },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
                     setEntry1Id('');
                     setEntry2Id('');
@@ -268,6 +272,8 @@ function BracketMatchCard({ match }: { match: ClubEventMatch }) {
                 entry2_score: Number(score2),
             },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onError: (errors) => setError(Object.values(errors)[0] as string),
                 onFinish: () => setProcessing(false),
             },
@@ -440,6 +446,8 @@ export default function OpenPlayManage({ session }: Props) {
                 partner_player_id: needsPartnerSelection ? (partnerPlayer?.id ?? null) : null,
             },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
                     setPrimaryPlayer(null);
                     setPartnerPlayer(null);
@@ -453,21 +461,42 @@ export default function OpenPlayManage({ session }: Props) {
 
     const runPairRandomly = () => {
         setPairingProcessing(true);
-        router.post(pairRandomly(session).url, {}, { onFinish: () => setPairingProcessing(false) });
+        router.post(
+            pairRandomly(session).url,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setPairingProcessing(false),
+            },
+        );
     };
 
     const removeRegistration = (registration: ClubEventRegistration) => {
-        router.delete(destroyRegistration(registration).url);
-    };
-
-    const toggleRegistrationPaid = (registration: ClubEventRegistration) => {
-        router.patch(updateRegistrationPayment(registration).url, {
-            payment_status: registration.payment_status === 'paid' ? 'unpaid' : 'paid',
+        router.delete(destroyRegistration(registration).url, {
+            preserveScroll: true,
+            preserveState: true,
         });
     };
 
+    const toggleRegistrationPaid = (registration: ClubEventRegistration) => {
+        router.patch(
+            updateRegistrationPayment(registration).url,
+            {
+                payment_status: registration.payment_status === 'paid' ? 'unpaid' : 'paid',
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+            },
+        );
+    };
+
     const removeMatch = (match: ClubEventMatch) => {
-        router.delete(destroyBracketMatch(match).url);
+        router.delete(destroyBracketMatch(match).url, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     const saveTargetScore = (event: FormEvent) => {
@@ -477,18 +506,32 @@ export default function OpenPlayManage({ session }: Props) {
         router.patch(
             updateTargetScore(session).url,
             { target_score: Number(targetScore) },
-            { onFinish: () => setTargetProcessing(false) },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setTargetProcessing(false),
+            },
         );
     };
 
     const runGenerateBracket = () => {
         setBracketProcessing(true);
-        router.post(generateBracket(session).url, {}, { onFinish: () => setBracketProcessing(false) });
+        router.post(
+            generateBracket(session).url,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setBracketProcessing(false),
+            },
+        );
     };
 
     const runResetBracket = () => {
         setBracketProcessing(true);
         router.delete(resetBracket(session).url, {
+            preserveScroll: true,
+            preserveState: true,
             onFinish: () => {
                 setBracketProcessing(false);
                 setResetOpen(false);

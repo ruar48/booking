@@ -27,7 +27,7 @@ export default function SaleShow({ sale }: Props) {
             return;
         }
 
-        router.patch(`/pos/sales/${sale.id}/void`);
+        router.patch(`/pos/sales/${sale.id}/void`, {}, { preserveScroll: true });
     };
 
     return (

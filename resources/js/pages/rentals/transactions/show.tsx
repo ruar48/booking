@@ -52,6 +52,8 @@ export default function RentalTransactionShow({ transaction }: Props) {
             approveRoute(transaction).url,
             {},
             {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setProcessing(true),
                 onFinish: () => setProcessing(false),
             },
@@ -83,6 +85,8 @@ export default function RentalTransactionShow({ transaction }: Props) {
             returnItemsRoute(transaction).url,
             { items: payload },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onStart: () => setProcessing(true),
                 onFinish: () => setProcessing(false),
             },

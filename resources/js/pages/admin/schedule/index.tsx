@@ -179,13 +179,17 @@ export default function AdminScheduleIndex({ club, resources, scheduleBlocks, re
                 ends_at: toTimeString(slot.end),
                 reason: 'Reserved by owner',
             },
-            { onFinish: () => setTogglingSlot(null) },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setTogglingSlot(null),
+            },
         );
     };
 
     const submitHours = (event: FormEvent) => {
         event.preventDefault();
-        hoursForm.put(updateHours().url);
+        hoursForm.put(updateHours().url, { preserveScroll: true });
     };
 
     const updateDay = (day: keyof OperatingHours, patch: Partial<DayHours>) => {
@@ -213,6 +217,8 @@ export default function AdminScheduleIndex({ club, resources, scheduleBlocks, re
                 reason: blockForm.data.reason || null,
             },
             {
+                preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
                     blockForm.reset();
                     setBlockDate('');
@@ -227,7 +233,10 @@ export default function AdminScheduleIndex({ club, resources, scheduleBlocks, re
     };
 
     const removeBlock = (block: ScheduleBlock) => {
-        router.delete(destroyBlock(block.id).url);
+        router.delete(destroyBlock(block.id).url, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
 
     const formatRange = (block: ScheduleBlock) => {

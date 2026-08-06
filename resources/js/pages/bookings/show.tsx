@@ -139,7 +139,10 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                             {canMarkPaid ? (
                                 <Button
                                     onClick={() =>
-                                        router.patch(markPaid(booking).url)
+                                        router.patch(markPaid(booking).url, {}, {
+                                            preserveScroll: true,
+                                            preserveState: true,
+                                        })
                                     }
                                 >
                                     Mark as paid
@@ -311,9 +314,11 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                 confirmLabel="Cancel booking"
                 variant="destructive"
                 onConfirm={() =>
-                    router.patch(cancel(booking).url, {
-                        cancellation_reason: reason || undefined,
-                    })
+                    router.patch(
+                        cancel(booking).url,
+                        { cancellation_reason: reason || undefined },
+                        { preserveScroll: true, preserveState: true },
+                    )
                 }
             >
                 <Textarea

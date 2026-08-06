@@ -25,7 +25,7 @@ export default function PaymentsShow({ payment }: Props) {
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
-        patch(markPaid(payment).url);
+        patch(markPaid(payment).url, { preserveScroll: true });
     };
 
     return (
