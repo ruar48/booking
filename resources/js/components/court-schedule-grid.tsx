@@ -13,7 +13,7 @@ import {
     subDays,
     subMonths,
 } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -401,10 +401,16 @@ export function CourtScheduleGrid({
                     <PopoverTrigger asChild>
                         <button
                             type="button"
-                            className="flex items-center gap-2 rounded-md px-3 py-1.5 text-center text-lg font-bold text-brand-navy transition-colors hover:bg-slate-100 sm:text-xl"
+                            className="group flex flex-col items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-center transition-colors hover:border-brand-lime hover:bg-slate-50"
                         >
-                            <CalendarDays className="size-4 shrink-0 text-brand-court" />
-                            {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy')}
+                            <span className="flex items-center gap-2 text-lg font-bold text-brand-navy sm:text-xl">
+                                <CalendarDays className="size-4 shrink-0 text-brand-court" />
+                                {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy')}
+                                <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-aria-expanded:rotate-180" />
+                            </span>
+                            <span className="text-xs font-medium text-brand-court underline underline-offset-2">
+                                Choose a different date
+                            </span>
                         </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-72" align="center">
