@@ -22,6 +22,7 @@ import {
     finalMatchLabel,
     groupByRound,
     isEntryInMatch,
+    losersBracketRoundHeights,
     losersRoundLabel,
     matchesByBracketSide,
     matchRoundLabel,
@@ -58,9 +59,17 @@ function BracketConnector({ isTop }: { isTop: boolean }) {
     );
 }
 
+// See manage.tsx's DirectBracketConnector — used for a losers-bracket round
+// that forwards 1:1 into the next round rather than merging pairs.
+function DirectBracketConnector() {
+    return <span className="absolute left-full top-1/2 h-0.5 w-6 -translate-y-1/2 bg-slate-400" />;
+}
+
 function ReadOnlyMatchCard({ match, registrationId }: { match: ClubEventMatch; registrationId: number }) {
     const completed = match.status === 'completed';
-    const isBye = match.entry2_id === null && completed;
+    // A completed match with an empty slot is a bye or walkover — see
+    // manage.tsx's BracketMatchCard for why this can happen on either side.
+    const isBye = (match.entry1_id === null || match.entry2_id === null) && completed;
     const entry1Won = completed && match.winner_registration_id === match.entry1_id;
     const entry2Won = completed && match.winner_registration_id === match.entry2_id;
     const isMine = isEntryInMatch(match, registrationId);
@@ -90,7 +99,13 @@ function ReadOnlyMatchCard({ match, registrationId }: { match: ClubEventMatch; r
                 <span className="truncate">{bracketSlotLabel(match, 'entry2')}</span>
                 {match.entry2_score !== null && <span className="font-mono">{match.entry2_score}</span>}
             </div>
-            {isBye && <p className="text-muted-foreground mt-1 text-xs">Bye — advanced automatically</p>}
+            {isBye && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                    {match.bracket_side === 'losers'
+                        ? 'Walkover — no opponent dropped into this slot'
+                        : 'Bye — advanced automatically'}
+                </p>
+            )}
             {!completed && match.entry1_id !== null && match.entry2_id !== null && (
                 <p className="text-muted-foreground mt-1 text-xs">Not played yet</p>
             )}
@@ -141,7 +156,9 @@ function ReadOnlyBracketTree({
     );
 }
 
-function ReadOnlySimpleBracketColumns({
+// See manage.tsx's LosersBracketTree for why this alternates between direct
+// (1:1) and merge (pairing) round transitions instead of always doubling.
+function ReadOnlyLosersBracketTree({
     matches,
     labelForRound,
     registrationId,
@@ -152,24 +169,47 @@ function ReadOnlySimpleBracketColumns({
 }) {
     const rounds = groupByRound(matches);
     const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+    const heights = losersBracketRoundHeights(matches);
 
     return (
         <div className="overflow-x-auto pb-2">
             <div className="flex gap-6">
-                {roundNumbers.map((round) => (
-                    <div key={round} className="flex w-56 shrink-0 flex-col gap-4">
-                        <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
-                            {labelForRound(round)}
-                        </h5>
-                        {rounds.get(round)!.map((match) => (
-                            <ReadOnlyMatchCard
-                                key={match.id}
-                                match={match}
-                                registrationId={registrationId}
-                            />
-                        ))}
-                    </div>
-                ))}
+                {roundNumbers.map((round, roundIndex) => {
+                    const nextRound = roundNumbers[roundIndex + 1];
+                    const hasNext = nextRound !== undefined;
+                    const isMergeTransition =
+                        hasNext && rounds.get(nextRound)!.length < rounds.get(round)!.length;
+
+                    return (
+                        <div key={round} className="flex w-56 shrink-0 flex-col">
+                            <h5 className="text-muted-foreground mb-3 text-center text-xs font-semibold uppercase">
+                                {labelForRound(round)}
+                            </h5>
+                            <div className="flex flex-col">
+                                {rounds.get(round)!.map((match) => (
+                                    <div
+                                        key={match.id}
+                                        className="relative flex items-center justify-center"
+                                        style={{ height: BRACKET_SLOT_HEIGHT * heights.get(round)! }}
+                                    >
+                                        <ReadOnlyMatchCard
+                                            match={match}
+                                            registrationId={registrationId}
+                                        />
+                                        {hasNext &&
+                                            (isMergeTransition ? (
+                                                <BracketConnector
+                                                    isTop={(match.bracket_position ?? 0) % 2 === 0}
+                                                />
+                                            ) : (
+                                                <DirectBracketConnector />
+                                            ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -200,7 +240,7 @@ function ReadOnlyDoubleEliminationBracket({
             {losers.length > 0 && (
                 <div>
                     <h4 className="mb-3 text-sm font-semibold">Losers bracket</h4>
-                    <ReadOnlySimpleBracketColumns
+                    <ReadOnlyLosersBracketTree
                         matches={losers}
                         labelForRound={(round) => losersRoundLabel(round, totalLbRounds)}
                         registrationId={registrationId}

@@ -36,6 +36,7 @@ import {
     entryLabel,
     finalMatchLabel,
     groupByRound,
+    losersBracketRoundHeights,
     losersRoundLabel,
     matchesByBracketSide,
     roundLabel,
@@ -255,7 +256,11 @@ function BracketMatchCard({ match }: { match: ClubEventMatch }) {
     const [error, setError] = useState<string | null>(null);
 
     const completed = match.status === 'completed';
-    const isBye = match.entry2_id === null && completed;
+    // A completed match with an empty slot is a bye or walkover — the entry
+    // it's paired against never existed (winners-bracket bye) or never
+    // produced a loser to send here (losers-bracket sibling was itself a
+    // bye), so the filled entry advances automatically.
+    const isBye = (match.entry1_id === null || match.entry2_id === null) && completed;
     const canScore = match.entry1_id !== null && match.entry2_id !== null && !completed;
     const entry1Won = completed && match.winner_registration_id === match.entry1_id;
     const entry2Won = completed && match.winner_registration_id === match.entry2_id;
@@ -333,7 +338,13 @@ function BracketMatchCard({ match }: { match: ClubEventMatch }) {
                     Save score
                 </Button>
             )}
-            {isBye && <p className="text-muted-foreground mt-1 text-xs">Bye — advances automatically</p>}
+            {isBye && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                    {match.bracket_side === 'losers'
+                        ? 'Walkover — no opponent dropped into this slot'
+                        : 'Bye — advances automatically'}
+                </p>
+            )}
             {error && <p className="text-destructive mt-1 text-xs">{error}</p>}
         </div>
     );
@@ -365,6 +376,14 @@ function BracketConnector({ isTop }: { isTop: boolean }) {
             )}
         </>
     );
+}
+
+// Used for a losers-bracket "direct" round transition, where every match
+// forwards 1:1 into the same-position match in the next round (no pairing/
+// merging) — both columns share the same slot height, so a single straight
+// line across the gap is enough.
+function DirectBracketConnector() {
+    return <span className="absolute left-full top-1/2 h-0.5 w-6 -translate-y-1/2 bg-slate-400" />;
 }
 
 function BracketTree({
@@ -410,10 +429,12 @@ function BracketTree({
     );
 }
 
-// The losers bracket doesn't halve its match count every round (it alternates
-// "internal" and "receiving" rounds), so the winners-bracket connector-line
-// geometry doesn't apply here — render it as plain columns instead.
-function SimpleBracketColumns({
+// The losers bracket alternates "direct" rounds (each match forwards 1:1
+// into the next round, same match count) and "merge" rounds (two adjacent
+// matches pair into one, halving the count) — so unlike the winners bracket,
+// slot height only doubles on a merge transition, and a direct transition
+// gets a plain straight connector instead of the top/bottom merge shape.
+function LosersBracketTree({
     matches,
     labelForRound,
 }: {
@@ -422,20 +443,44 @@ function SimpleBracketColumns({
 }) {
     const rounds = groupByRound(matches);
     const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+    const heights = losersBracketRoundHeights(matches);
 
     return (
         <div className="overflow-x-auto pb-2">
             <div className="flex gap-6">
-                {roundNumbers.map((round) => (
-                    <div key={round} className="flex w-56 shrink-0 flex-col gap-4">
-                        <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
-                            {labelForRound(round)}
-                        </h5>
-                        {rounds.get(round)!.map((match) => (
-                            <BracketMatchCard key={match.id} match={match} />
-                        ))}
-                    </div>
-                ))}
+                {roundNumbers.map((round, roundIndex) => {
+                    const nextRound = roundNumbers[roundIndex + 1];
+                    const hasNext = nextRound !== undefined;
+                    const isMergeTransition =
+                        hasNext && rounds.get(nextRound)!.length < rounds.get(round)!.length;
+
+                    return (
+                        <div key={round} className="flex w-56 shrink-0 flex-col">
+                            <h5 className="text-muted-foreground mb-3 text-center text-xs font-semibold uppercase">
+                                {labelForRound(round)}
+                            </h5>
+                            <div className="flex flex-col">
+                                {rounds.get(round)!.map((match) => (
+                                    <div
+                                        key={match.id}
+                                        className="relative flex items-center justify-center"
+                                        style={{ height: BRACKET_SLOT_HEIGHT * heights.get(round)! }}
+                                    >
+                                        <BracketMatchCard match={match} />
+                                        {hasNext &&
+                                            (isMergeTransition ? (
+                                                <BracketConnector
+                                                    isTop={(match.bracket_position ?? 0) % 2 === 0}
+                                                />
+                                            ) : (
+                                                <DirectBracketConnector />
+                                            ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
@@ -459,7 +504,7 @@ function DoubleEliminationBracket({ matches }: { matches: ClubEventMatch[] }) {
             {losers.length > 0 && (
                 <div>
                     <h4 className="mb-3 text-sm font-semibold">Losers bracket</h4>
-                    <SimpleBracketColumns
+                    <LosersBracketTree
                         matches={losers}
                         labelForRound={(round) => losersRoundLabel(round, totalLbRounds)}
                     />

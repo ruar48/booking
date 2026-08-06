@@ -72,7 +72,11 @@ export function bracketSlotLabel(match: ClubEventMatch, slot: 'entry1' | 'entry2
         return entryLabel(entry);
     }
 
-    if (slot === 'entry2' && match.status === 'completed') {
+    // A completed match with an empty slot is a bye or walkover — the other
+    // entrant either had no round-1 opponent (a winners-bracket bye) or had
+    // no losers-bracket opponent because their sibling winners-bracket match
+    // was itself a bye and produced no loser to pair them against.
+    if (match.status === 'completed') {
         return 'Bye';
     }
 
@@ -167,6 +171,36 @@ export function matchesByBracketSide(matches: ClubEventMatch[]): {
     final.sort((a, b) => a.round - b.round);
 
     return { winners, losers, final };
+}
+
+// Unlike the winners bracket (whose match count halves every round), the
+// losers bracket alternates: a "direct" round forwards each match 1:1 into
+// the next round at the same match count, then a "merge" round pairs two
+// adjacent matches into one, halving the count. Slot height only needs to
+// double on a merge transition — this walks the actual match counts per
+// round (rather than assuming the theoretical bracket-size formula) so it
+// stays correct even when some losers-round-1 slots were never created
+// because both their feeding winners-bracket matches were byes.
+export function losersBracketRoundHeights(matches: ClubEventMatch[]): Map<number, number> {
+    const rounds = groupByRound(matches);
+    const roundNumbers = [...rounds.keys()].sort((a, b) => a - b);
+    const heights = new Map<number, number>();
+
+    let multiplier = 1;
+    let previousCount: number | null = null;
+
+    for (const round of roundNumbers) {
+        const count = rounds.get(round)!.length;
+
+        if (previousCount !== null && count < previousCount) {
+            multiplier *= previousCount / count;
+        }
+
+        heights.set(round, multiplier);
+        previousCount = count;
+    }
+
+    return heights;
 }
 
 export function isEntryInMatch(match: ClubEventMatch, registrationId: number): boolean {
