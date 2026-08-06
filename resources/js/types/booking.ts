@@ -75,6 +75,7 @@ export type ClubEventRegistration = {
     club_event_id: number;
     player_id: number;
     partner_player_id: number | null;
+    payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded' | 'failed';
     player?: Player;
     partner?: Player | null;
     creator?: { id: number; name: string } | null;

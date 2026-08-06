@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::store
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:19
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:20
  * @route '/open-play/{open_play}/registrations'
  */
 export const store = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::store
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:19
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:20
  * @route '/open-play/{open_play}/registrations'
  */
 store.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -49,7 +49,7 @@ store.url = (args: { open_play: number | { id: number } } | [open_play: number |
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::store
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:19
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:20
  * @route '/open-play/{open_play}/registrations'
  */
 store.post = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -59,7 +59,7 @@ store.post = (args: { open_play: number | { id: number } } | [open_play: number 
 
     /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::store
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:19
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:20
  * @route '/open-play/{open_play}/registrations'
  */
     const storeForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -69,7 +69,7 @@ store.post = (args: { open_play: number | { id: number } } | [open_play: number 
 
             /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::store
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:19
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:20
  * @route '/open-play/{open_play}/registrations'
  */
         storeForm.post = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -80,7 +80,7 @@ store.post = (args: { open_play: number | { id: number } } | [open_play: number 
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::pairRandom
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:46
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:47
  * @route '/open-play/{open_play}/registrations/pair-random'
  */
 export const pairRandom = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -95,7 +95,7 @@ pairRandom.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::pairRandom
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:46
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:47
  * @route '/open-play/{open_play}/registrations/pair-random'
  */
 pairRandom.url = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -128,7 +128,7 @@ pairRandom.url = (args: { open_play: number | { id: number } } | [open_play: num
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::pairRandom
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:46
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:47
  * @route '/open-play/{open_play}/registrations/pair-random'
  */
 pairRandom.post = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -138,7 +138,7 @@ pairRandom.post = (args: { open_play: number | { id: number } } | [open_play: nu
 
     /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::pairRandom
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:46
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:47
  * @route '/open-play/{open_play}/registrations/pair-random'
  */
     const pairRandomForm = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -148,7 +148,7 @@ pairRandom.post = (args: { open_play: number | { id: number } } | [open_play: nu
 
             /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::pairRandom
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:46
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:47
  * @route '/open-play/{open_play}/registrations/pair-random'
  */
         pairRandomForm.post = (args: { open_play: number | { id: number } } | [open_play: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -159,7 +159,7 @@ pairRandom.post = (args: { open_play: number | { id: number } } | [open_play: nu
     pairRandom.form = pairRandomForm
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::destroy
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:62
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:63
  * @route '/open-play-registrations/{registration}'
  */
 export const destroy = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -174,7 +174,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::destroy
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:62
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:63
  * @route '/open-play-registrations/{registration}'
  */
 destroy.url = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -207,7 +207,7 @@ destroy.url = (args: { registration: number | { id: number } } | [registration: 
 
 /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::destroy
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:62
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:63
  * @route '/open-play-registrations/{registration}'
  */
 destroy.delete = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -217,7 +217,7 @@ destroy.delete = (args: { registration: number | { id: number } } | [registratio
 
     /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::destroy
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:62
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:63
  * @route '/open-play-registrations/{registration}'
  */
     const destroyForm = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -232,7 +232,7 @@ destroy.delete = (args: { registration: number | { id: number } } | [registratio
 
             /**
 * @see \App\Http\Controllers\OpenPlayRegistrationController::destroy
- * @see app/Http/Controllers/OpenPlayRegistrationController.php:62
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:63
  * @route '/open-play-registrations/{registration}'
  */
         destroyForm.delete = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -246,6 +246,95 @@ destroy.delete = (args: { registration: number | { id: number } } | [registratio
         })
     
     destroy.form = destroyForm
-const OpenPlayRegistrationController = { store, pairRandom, destroy }
+/**
+* @see \App\Http\Controllers\OpenPlayRegistrationController::updatePayment
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:74
+ * @route '/open-play-registrations/{registration}/payment'
+ */
+export const updatePayment = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updatePayment.url(args, options),
+    method: 'patch',
+})
+
+updatePayment.definition = {
+    methods: ["patch"],
+    url: '/open-play-registrations/{registration}/payment',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\OpenPlayRegistrationController::updatePayment
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:74
+ * @route '/open-play-registrations/{registration}/payment'
+ */
+updatePayment.url = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { registration: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { registration: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    registration: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        registration: typeof args.registration === 'object'
+                ? args.registration.id
+                : args.registration,
+                }
+
+    return updatePayment.definition.url
+            .replace('{registration}', parsedArgs.registration.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\OpenPlayRegistrationController::updatePayment
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:74
+ * @route '/open-play-registrations/{registration}/payment'
+ */
+updatePayment.patch = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: updatePayment.url(args, options),
+    method: 'patch',
+})
+
+    /**
+* @see \App\Http\Controllers\OpenPlayRegistrationController::updatePayment
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:74
+ * @route '/open-play-registrations/{registration}/payment'
+ */
+    const updatePaymentForm = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: updatePayment.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\OpenPlayRegistrationController::updatePayment
+ * @see app/Http/Controllers/OpenPlayRegistrationController.php:74
+ * @route '/open-play-registrations/{registration}/payment'
+ */
+        updatePaymentForm.patch = (args: { registration: number | { id: number } } | [registration: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: updatePayment.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    updatePayment.form = updatePaymentForm
+const OpenPlayRegistrationController = { store, pairRandom, destroy, updatePayment }
 
 export default OpenPlayRegistrationController

@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { Maximize2, Trophy, UserPlus, X } from 'lucide-react';
+import { CircleDollarSign, Maximize2, Trophy, UserPlus, X } from 'lucide-react';
 import type { FormEvent} from 'react';
 import { useState } from 'react';
 
@@ -29,7 +29,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { formatDate, formatTime } from '@/lib/format';
+import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import {
     bracketSlotLabel,
     computeStandings,
@@ -47,6 +47,7 @@ import {
     destroy as destroyRegistration,
     pairRandom as pairRandomly,
     store as storeRegistration,
+    updatePayment as updateRegistrationPayment,
 } from '@/routes/open-play/registrations';
 import { update as updateTargetScore } from '@/routes/open-play/target-score';
 import type { ClubEvent, ClubEventMatch, ClubEventRegistration, Player } from '@/types/booking';
@@ -394,6 +395,7 @@ function BracketTree({ matches, totalRounds }: { matches: ClubEventMatch[]; tota
 
 export default function OpenPlayManage({ session }: Props) {
     const registrations = session.registrations ?? [];
+    const paidCount = registrations.filter((r) => r.payment_status === 'paid').length;
     const matches = session.matches ?? [];
     const standings = computeStandings(registrations, matches);
     const totalRounds = matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 0;
@@ -458,6 +460,12 @@ export default function OpenPlayManage({ session }: Props) {
         router.delete(destroyRegistration(registration).url);
     };
 
+    const toggleRegistrationPaid = (registration: ClubEventRegistration) => {
+        router.patch(updateRegistrationPayment(registration).url, {
+            payment_status: registration.payment_status === 'paid' ? 'unpaid' : 'paid',
+        });
+    };
+
     const removeMatch = (match: ClubEventMatch) => {
         router.delete(destroyBracketMatch(match).url);
     };
@@ -512,6 +520,13 @@ export default function OpenPlayManage({ session }: Props) {
                                 {isDoublesSession
                                     ? '2v2 doubles — register each team as a pair.'
                                     : '1v1 singles.'}
+                                {!!session.price_per_player && (
+                                    <>
+                                        {' '}
+                                        · {formatCurrency(session.price_per_player)} entry fee ·{' '}
+                                        {paidCount} of {registrations.length} paid
+                                    </>
+                                )}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -601,6 +616,7 @@ export default function OpenPlayManage({ session }: Props) {
                                 <TableHeader>
                                     <TableRow>
                                         <TableHead>Entry</TableHead>
+                                        {!!session.price_per_player && <TableHead>Payment</TableHead>}
                                         <TableHead>Added by</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
@@ -608,7 +624,10 @@ export default function OpenPlayManage({ session }: Props) {
                                 <TableBody>
                                     {registrations.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="text-muted-foreground text-center">
+                                            <TableCell
+                                                colSpan={session.price_per_player ? 4 : 3}
+                                                className="text-muted-foreground text-center"
+                                            >
                                                 No players registered yet.
                                             </TableCell>
                                         </TableRow>
@@ -626,6 +645,30 @@ export default function OpenPlayManage({ session }: Props) {
                                                         </Badge>
                                                     )}
                                                 </TableCell>
+                                                {!!session.price_per_player && (
+                                                    <TableCell>
+                                                        <Button
+                                                            type="button"
+                                                            size="sm"
+                                                            variant={
+                                                                registration.payment_status === 'paid'
+                                                                    ? 'secondary'
+                                                                    : 'outline'
+                                                            }
+                                                            className={cn(
+                                                                'h-7 px-2 text-xs',
+                                                                registration.payment_status === 'paid' &&
+                                                                    'border-emerald-200 bg-emerald-100 text-emerald-800 hover:bg-emerald-200',
+                                                            )}
+                                                            onClick={() => toggleRegistrationPaid(registration)}
+                                                        >
+                                                            <CircleDollarSign className="size-3.5" />
+                                                            {registration.payment_status === 'paid'
+                                                                ? 'Paid'
+                                                                : 'Mark paid'}
+                                                        </Button>
+                                                    </TableCell>
+                                                )}
                                                 <TableCell>{registration.creator?.name ?? '—'}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button

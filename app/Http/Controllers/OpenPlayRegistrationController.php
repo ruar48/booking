@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Models\ClubEvent;
 use App\Models\ClubEventRegistration;
 use App\Models\Player;
@@ -66,6 +67,26 @@ class OpenPlayRegistrationController extends Controller
         $registration->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Registration removed.')]);
+
+        return back();
+    }
+
+    public function updatePayment(Request $request, ClubEventRegistration $registration): RedirectResponse
+    {
+        $this->authorize('update', $registration->clubEvent);
+
+        $validated = $request->validate([
+            'payment_status' => ['required', 'string', 'in:unpaid,paid'],
+        ]);
+
+        $registration->update(['payment_status' => PaymentStatus::from($validated['payment_status'])]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $validated['payment_status'] === 'paid'
+                ? __('Marked as paid.')
+                : __('Marked as unpaid.'),
+        ]);
 
         return back();
     }

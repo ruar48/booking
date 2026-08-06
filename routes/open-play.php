@@ -21,5 +21,6 @@ Route::prefix('open-play/{open_play}')->name('open-play.')->group(function () {
 });
 
 Route::delete('open-play-registrations/{registration}', [OpenPlayRegistrationController::class, 'destroy'])->name('open-play.registrations.destroy');
+Route::patch('open-play-registrations/{registration}/payment', [OpenPlayRegistrationController::class, 'updatePayment'])->name('open-play.registrations.update-payment');
 Route::patch('open-play-matches/{match}/score', [OpenPlayMatchController::class, 'updateScore'])->name('open-play.matches.update-score');
 Route::delete('open-play-bracket-matches/{match}', [OpenPlayBracketMatchController::class, 'destroy'])->name('open-play.bracket-matches.destroy');
