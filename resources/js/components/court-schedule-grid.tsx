@@ -1,10 +1,24 @@
 import { router } from '@inertiajs/react';
-import { addDays, format, parseISO, subDays } from 'date-fns';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+    addDays,
+    addMonths,
+    eachDayOfInterval,
+    endOfMonth,
+    endOfWeek,
+    format,
+    isSameMonth,
+    parseISO,
+    startOfMonth,
+    startOfWeek,
+    subDays,
+    subMonths,
+} from 'date-fns';
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
@@ -15,7 +29,7 @@ export type WalkInCustomerPayload =
     | { mode: 'existing'; user_id: number }
     | { mode: 'new'; name: string; phone: string };
 
-const BOOKING_WINDOW_DAYS = 9;
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 type SlotSelection = {
     courtId: number;
@@ -236,10 +250,13 @@ export function CourtScheduleGrid({
     markPaid = false,
 }: Props) {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const maxDate = format(addDays(new Date(), BOOKING_WINDOW_DAYS), 'yyyy-MM-dd');
     const [selectedDate, setSelectedDate] = useState(today);
     const [selections, setSelections] = useState<SlotSelection[]>([]);
     const [selectedSport, setSelectedSport] = useState<Resource['sport']>('pickleball');
+    const [datePickerOpen, setDatePickerOpen] = useState(false);
+    const [monthCursor, setMonthCursor] = useState(() =>
+        startOfMonth(parseISO(`${today}T12:00:00`)),
+    );
 
     const availableSports = useMemo(
         () => [...new Set(courts.map((court) => court.sport))],
@@ -251,10 +268,22 @@ export function CourtScheduleGrid({
         [courts, selectedSport],
     );
 
-    const dateOverride = useMemo(
-        () => dateOverrides.find((override) => override.date.split('T')[0] === selectedDate),
-        [dateOverrides, selectedDate],
-    );
+    const calendarDays = useMemo(() => {
+        const gridStart = startOfWeek(startOfMonth(monthCursor));
+        const gridEnd = endOfWeek(endOfMonth(monthCursor));
+
+        return eachDayOfInterval({ start: gridStart, end: gridEnd });
+    }, [monthCursor]);
+
+    const overridesByDate = useMemo(() => {
+        const map = new Map<string, DateOverride>();
+        for (const override of dateOverrides) {
+            map.set(override.date.split('T')[0], override);
+        }
+        return map;
+    }, [dateOverrides]);
+
+    const dateOverride = overridesByDate.get(selectedDate);
     // Dates are closed for booking unless an admin has explicitly opened them
     // with hours, so no override (or one still marked closed) means closed.
     const isOpenToday = dateOverride?.is_closed === false;
@@ -306,6 +335,13 @@ export function CourtScheduleGrid({
 
     const clearSelections = () => setSelections([]);
 
+    const selectDate = (dateStr: string) => {
+        setSelectedDate(dateStr);
+        setSelections([]);
+        setDatePickerOpen(false);
+        setMonthCursor(startOfMonth(parseISO(`${dateStr}T12:00:00`)));
+    };
+
     const shiftDate = (direction: -1 | 1) => {
         const next =
             direction === 1
@@ -313,12 +349,11 @@ export function CourtScheduleGrid({
                 : subDays(parseISO(`${selectedDate}T12:00:00`), 1);
         const nextStr = format(next, 'yyyy-MM-dd');
 
-        if (nextStr < today || nextStr > maxDate) {
+        if (nextStr < today) {
             return;
         }
 
-        setSelectedDate(nextStr);
-        setSelections([]);
+        selectDate(nextStr);
     };
 
     const submitBookings = () => {
@@ -362,15 +397,112 @@ export function CourtScheduleGrid({
                 >
                     <ChevronLeft className="size-4" />
                 </Button>
-                <h3 className="text-center text-lg font-bold text-brand-navy sm:text-xl">
-                    {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy')}
-                </h3>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                        <button
+                            type="button"
+                            className="flex items-center gap-2 rounded-md px-3 py-1.5 text-center text-lg font-bold text-brand-navy transition-colors hover:bg-slate-100 sm:text-xl"
+                        >
+                            <CalendarDays className="size-4 shrink-0 text-brand-court" />
+                            {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy')}
+                        </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72" align="center">
+                        <div className="mb-2 flex items-center justify-between">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-7"
+                                onClick={() => setMonthCursor((cursor) => subMonths(cursor, 1))}
+                                disabled={
+                                    format(monthCursor, 'yyyy-MM') <=
+                                    format(parseISO(`${today}T12:00:00`), 'yyyy-MM')
+                                }
+                                aria-label="Previous month"
+                            >
+                                <ChevronLeft className="size-4" />
+                            </Button>
+                            <p className="text-sm font-semibold text-brand-navy">
+                                {format(monthCursor, 'MMMM yyyy')}
+                            </p>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="size-7"
+                                onClick={() => setMonthCursor((cursor) => addMonths(cursor, 1))}
+                                aria-label="Next month"
+                            >
+                                <ChevronRight className="size-4" />
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-y-1 text-center text-[10px] font-medium text-slate-400">
+                            {WEEKDAYS.map((weekday) => (
+                                <div key={weekday}>{weekday}</div>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-7 gap-y-1">
+                            {calendarDays.map((day) => {
+                                const dateStr = format(day, 'yyyy-MM-dd');
+                                const inMonth = isSameMonth(day, monthCursor);
+                                const isPast = dateStr < today;
+                                const dayOverride = overridesByDate.get(dateStr);
+                                const isOpenDate = dayOverride?.is_closed === false;
+                                const isSelected = dateStr === selectedDate;
+
+                                return (
+                                    <button
+                                        key={dateStr}
+                                        type="button"
+                                        disabled={isPast}
+                                        onClick={() => selectDate(dateStr)}
+                                        className={cn(
+                                            'mx-auto flex size-9 flex-col items-center justify-center gap-0.5 rounded-md text-xs transition-colors',
+                                            !inMonth && 'text-slate-300',
+                                            isPast && 'cursor-not-allowed text-slate-300',
+                                            !isPast &&
+                                                inMonth &&
+                                                'text-brand-navy hover:bg-slate-100',
+                                            isSelected &&
+                                                'bg-brand-lime/25 ring-1 ring-brand-lime',
+                                        )}
+                                    >
+                                        <span className="font-semibold">{format(day, 'd')}</span>
+                                        {!isPast && (
+                                            <span
+                                                className={cn(
+                                                    'size-1.5 rounded-full',
+                                                    isOpenDate
+                                                        ? 'bg-emerald-500'
+                                                        : 'bg-slate-300',
+                                                )}
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="mt-3 flex items-center gap-3 border-t border-slate-100 pt-2 text-[10px] text-slate-500">
+                            <span className="flex items-center gap-1">
+                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                Open
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span className="size-1.5 rounded-full bg-slate-300" />
+                                Closed
+                            </span>
+                        </div>
+                    </PopoverContent>
+                </Popover>
                 <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     onClick={() => shiftDate(1)}
-                    disabled={selectedDate >= maxDate}
                     aria-label="Next day"
                 >
                     <ChevronRight className="size-4" />
