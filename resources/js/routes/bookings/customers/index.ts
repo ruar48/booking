@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
- * @see app/Http/Controllers/ResourceBookingController.php:130
+ * @see app/Http/Controllers/ResourceBookingController.php:135
  * @route '/bookings/customers/search'
  */
 export const search = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ search.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
- * @see app/Http/Controllers/ResourceBookingController.php:130
+ * @see app/Http/Controllers/ResourceBookingController.php:135
  * @route '/bookings/customers/search'
  */
 search.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ search.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
- * @see app/Http/Controllers/ResourceBookingController.php:130
+ * @see app/Http/Controllers/ResourceBookingController.php:135
  * @route '/bookings/customers/search'
  */
 search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
- * @see app/Http/Controllers/ResourceBookingController.php:130
+ * @see app/Http/Controllers/ResourceBookingController.php:135
  * @route '/bookings/customers/search'
  */
 search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({

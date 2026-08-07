@@ -1,6 +1,5 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../wayfinder'
 import transactions from './transactions'
-import report611039 from './report'
 /**
 * @see \App\Http\Controllers\RentalMemberController::browse
  * @see app/Http/Controllers/RentalMemberController.php:23
@@ -200,7 +199,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
 /**
 * @see \App\Http\Controllers\RentalTransactionController::report
- * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @see app/Http/Controllers/RentalTransactionController.php:44
  * @route '/rentals/report'
  */
 export const report = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -215,7 +214,7 @@ report.definition = {
 
 /**
 * @see \App\Http\Controllers\RentalTransactionController::report
- * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @see app/Http/Controllers/RentalTransactionController.php:44
  * @route '/rentals/report'
  */
 report.url = (options?: RouteQueryOptions) => {
@@ -224,7 +223,7 @@ report.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RentalTransactionController::report
- * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @see app/Http/Controllers/RentalTransactionController.php:44
  * @route '/rentals/report'
  */
 report.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -233,7 +232,7 @@ report.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\RentalTransactionController::report
- * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @see app/Http/Controllers/RentalTransactionController.php:44
  * @route '/rentals/report'
  */
 report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -247,7 +246,7 @@ rent: Object.assign(rent, rent),
 checkout: Object.assign(checkout, checkout),
 store: Object.assign(store, store),
 transactions: Object.assign(transactions, transactions),
-report: Object.assign(report, report611039),
+report: Object.assign(report, report),
 }
 
 export default rentals
