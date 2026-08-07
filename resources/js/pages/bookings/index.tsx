@@ -1,12 +1,25 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Calendar, Eye, Plus, X } from 'lucide-react';
-import { useCallback } from 'react';
+import { format, isToday, isTomorrow, parseISO } from 'date-fns';
+import {
+    Calendar,
+    CalendarCheck,
+    CalendarClock,
+    Eye,
+    Plus,
+    Wallet,
+    WalletCards,
+    X,
+} from 'lucide-react';
+import { useCallback, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -15,14 +28,17 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { formatCurrency, formatDateTime } from '@/lib/format';
+import { Textarea } from '@/components/ui/textarea';
+import { formatCurrency } from '@/lib/format';
+import { cn } from '@/lib/utils';
 import {
     calendar as bookingsCalendar,
+    cancel,
     create,
     index as bookingsIndex,
     show,
 } from '@/routes/bookings';
-import type { Resource, ResourceBooking, Paginated } from '@/types/booking';
+import type { BookingStats, Resource, ResourceBooking, Paginated } from '@/types/booking';
 
 type BookingFilters = {
     search?: string;
@@ -37,14 +53,41 @@ type Props = {
     canManage?: boolean;
     filters?: BookingFilters;
     resources?: Pick<Resource, 'id' | 'name'>[];
+    stats?: BookingStats | null;
+    nextBooking?: ResourceBooking | null;
 };
+
+const ROW_TINT: Record<string, string> = {
+    pending: 'bg-amber-500/[0.04] hover:bg-amber-500/[0.07]',
+    approved: 'bg-blue-500/[0.04] hover:bg-blue-500/[0.07]',
+    completed: 'bg-emerald-500/[0.04] hover:bg-emerald-500/[0.07]',
+    cancelled: 'bg-muted/40',
+    rejected: 'bg-red-500/[0.04] hover:bg-red-500/[0.07]',
+};
+
+function scheduleLabel(booking: ResourceBooking) {
+    const start = parseISO(booking.starts_at);
+    const end = parseISO(booking.ends_at);
+    const dayLabel = isToday(start)
+        ? 'Today'
+        : isTomorrow(start)
+          ? 'Tomorrow'
+          : format(start, 'MMM d, yyyy');
+
+    return `${dayLabel} • ${format(start, 'h:mm a')} – ${format(end, 'h:mm a')}`;
+}
 
 export default function BookingsIndex({
     bookings,
     canManage = false,
     filters = {},
     resources = [],
+    stats = null,
+    nextBooking = null,
 }: Props) {
+    const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(null);
+    const [cancelReason, setCancelReason] = useState('');
+
     const applyFilters = useCallback(
         (next: Partial<BookingFilters>) => {
             router.get(
@@ -81,11 +124,42 @@ export default function BookingsIndex({
         );
     };
 
+    const canCancelBooking = useCallback(
+        (booking: ResourceBooking) =>
+            canManage
+                ? !['cancelled', 'completed', 'rejected'].includes(booking.status)
+                : ['pending', 'approved'].includes(booking.status),
+        [canManage],
+    );
+
+    const confirmCancel = () => {
+        if (!cancelTarget) {
+            return;
+        }
+
+        router.patch(
+            cancel(cancelTarget).url,
+            { cancellation_reason: cancelReason || undefined },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setCancelTarget(null);
+                    setCancelReason('');
+                },
+            },
+        );
+    };
+
     const columns: ColumnDef<ResourceBooking>[] = [
         {
             accessorKey: 'resource',
             header: 'Court',
-            cell: ({ row }) => row.original.resource?.name ?? '—',
+            cell: ({ row }) => (
+                <span className="font-medium">
+                    {row.original.resource?.name ?? '—'}
+                </span>
+            ),
         },
         ...(canManage
             ? [
@@ -107,14 +181,23 @@ export default function BookingsIndex({
               ]
             : []),
         {
-            accessorKey: 'starts_at',
-            header: 'Start',
-            cell: ({ row }) => formatDateTime(row.original.starts_at),
+            id: 'schedule',
+            header: 'Schedule',
+            cell: ({ row }) => (
+                <span className="text-sm">{scheduleLabel(row.original)}</span>
+            ),
         },
         {
-            accessorKey: 'ends_at',
-            header: 'End',
-            cell: ({ row }) => formatDateTime(row.original.ends_at),
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => <StatusBadge status={row.original.status} />,
+        },
+        {
+            accessorKey: 'payment_status',
+            header: 'Payment',
+            cell: ({ row }) => (
+                <StatusBadge status={row.original.payment_status ?? 'unpaid'} />
+            ),
         },
         {
             accessorKey: 'amount',
@@ -125,32 +208,26 @@ export default function BookingsIndex({
                     : '—',
         },
         {
-            accessorKey: 'payment_status',
-            header: 'Payment',
-            cell: ({ row }) => (
-                <StatusBadge status={row.original.payment_status ?? 'unpaid'} />
-            ),
-        },
-        ...(canManage
-            ? [
-                  {
-                      accessorKey: 'status',
-                      header: 'Status',
-                      cell: ({ row }) => (
-                          <StatusBadge status={row.original.status} />
-                      ),
-                  } as ColumnDef<ResourceBooking>,
-              ]
-            : []),
-        {
             id: 'actions',
             header: '',
             cell: ({ row }) => (
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href={show(row.original)}>
-                        <Eye className="size-4" />
-                    </Link>
-                </Button>
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={show(row.original)}>
+                            <Eye className="size-4" />
+                        </Link>
+                    </Button>
+                    {canCancelBooking(row.original) && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setCancelTarget(row.original)}
+                        >
+                            <X className="size-4" />
+                        </Button>
+                    )}
+                </div>
             ),
         },
     ];
@@ -185,6 +262,78 @@ export default function BookingsIndex({
                         </div>
                     }
                 />
+
+                {!canManage && stats && (
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                        <StatCard
+                            label="Upcoming"
+                            value={stats.upcoming}
+                            icon={CalendarClock}
+                            iconClassName="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                        />
+                        <StatCard
+                            label="Total bookings"
+                            value={stats.total}
+                            icon={CalendarCheck}
+                            iconClassName="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                        />
+                        <StatCard
+                            label="Unpaid"
+                            value={formatCurrency(stats.unpaid)}
+                            icon={Wallet}
+                            iconClassName="bg-red-500/10 text-red-600 dark:text-red-400"
+                        />
+                        <StatCard
+                            label="Total paid"
+                            value={formatCurrency(stats.paid)}
+                            icon={WalletCards}
+                            iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                        />
+                    </div>
+                )}
+
+                {!canManage && nextBooking && (
+                    <Card className="border-primary/30 bg-primary/[0.03] dark:bg-primary/[0.06]">
+                        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-4">
+                                <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-full">
+                                    <CalendarClock className="size-5" />
+                                </div>
+                                <div className="space-y-1.5">
+                                    <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+                                        Next booking
+                                    </p>
+                                    <p className="text-lg leading-none font-semibold">
+                                        {nextBooking.resource?.name ?? 'Court'}
+                                    </p>
+                                    <p className="text-muted-foreground text-sm">
+                                        {scheduleLabel(nextBooking)}
+                                    </p>
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                        <StatusBadge status={nextBooking.status} />
+                                        <StatusBadge
+                                            status={nextBooking.payment_status ?? 'unpaid'}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex shrink-0 gap-2">
+                                <Button variant="outline" asChild>
+                                    <Link href={show(nextBooking)}>View details</Link>
+                                </Button>
+                                {canCancelBooking(nextBooking) && (
+                                    <Button
+                                        variant="destructive"
+                                        onClick={() => setCancelTarget(nextBooking)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <DataTable
                     columns={columns}
                     data={bookings.data}
@@ -192,6 +341,18 @@ export default function BookingsIndex({
                     searchPlaceholder="Search by booked by..."
                     searchValue={filters.search}
                     onSearch={(value) => applyFilters({ search: value || undefined })}
+                    rowClassName={(row) => ROW_TINT[row.status]}
+                    renderCard={
+                        canManage
+                            ? undefined
+                            : (booking) => (
+                                  <BookingCard
+                                      booking={booking}
+                                      canCancel={canCancelBooking(booking)}
+                                      onCancel={() => setCancelTarget(booking)}
+                                  />
+                              )
+                    }
                     filters={
                         <div className="flex flex-wrap items-center gap-2">
                             <Select
@@ -290,10 +451,109 @@ export default function BookingsIndex({
                     }
                     emptyIcon={Calendar}
                     emptyTitle="No bookings yet"
-                    emptyDescription="Create a booking to reserve a court."
+                    emptyDescription="Reserve your first court to see it here."
                 />
             </div>
+
+            <ConfirmDialog
+                open={cancelTarget !== null}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setCancelTarget(null);
+                        setCancelReason('');
+                    }
+                }}
+                title="Cancel booking"
+                description="Provide an optional reason for cancellation."
+                confirmLabel="Cancel booking"
+                variant="destructive"
+                onConfirm={confirmCancel}
+            >
+                <Textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Reason for cancellation (optional)"
+                    rows={3}
+                />
+            </ConfirmDialog>
         </>
+    );
+}
+
+function StatCard({
+    label,
+    value,
+    icon: Icon,
+    iconClassName,
+}: {
+    label: string;
+    value: string | number;
+    icon: LucideIcon;
+    iconClassName: string;
+}) {
+    return (
+        <Card className="gap-0 py-4">
+            <CardContent className="flex items-center justify-between px-4">
+                <div>
+                    <p className="text-muted-foreground text-xs font-medium">{label}</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
+                </div>
+                <div className={cn('rounded-md p-2', iconClassName)}>
+                    <Icon className="size-4" />
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function BookingCard({
+    booking,
+    canCancel,
+    onCancel,
+}: {
+    booking: ResourceBooking;
+    canCancel: boolean;
+    onCancel: () => void;
+}) {
+    return (
+        <Card>
+            <CardContent className="space-y-3 px-4">
+                <div className="flex items-start justify-between gap-2">
+                    <div>
+                        <p className="font-medium">{booking.resource?.name ?? '—'}</p>
+                        <p className="text-muted-foreground text-sm">
+                            {scheduleLabel(booking)}
+                        </p>
+                    </div>
+                    <span className="font-semibold tabular-nums">
+                        {booking.amount != null ? formatCurrency(booking.amount) : '—'}
+                    </span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <StatusBadge status={booking.status} />
+                    <StatusBadge status={booking.payment_status ?? 'unpaid'} />
+                </div>
+                <div className="flex gap-2 pt-1">
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <Link href={show(booking)}>
+                            <Eye className="size-4" />
+                            View
+                        </Link>
+                    </Button>
+                    {canCancel && (
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1"
+                            onClick={onCancel}
+                        >
+                            <X className="size-4" />
+                            Cancel
+                        </Button>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 

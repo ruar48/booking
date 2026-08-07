@@ -39,14 +39,17 @@ class ResourceBookingController extends Controller
 
         $user = $request->user();
         $filters = $request->only(['search', 'status', 'payment_status', 'resource_id', 'date']);
+        $canManage = $user->isVenueAdmin();
 
         return Inertia::render('bookings/index', [
             'bookings' => $this->resourceBookingRepository->paginateForUser($user, $filters),
-            'canManage' => $user->isVenueAdmin(),
+            'canManage' => $canManage,
             'filters' => $filters,
-            'resources' => $user->isVenueAdmin()
+            'resources' => $canManage
                 ? Resource::query()->orderBy('name')->get(['id', 'name'])
                 : [],
+            'stats' => $canManage ? null : $this->resourceBookingRepository->statsForUser($user),
+            'nextBooking' => $canManage ? null : $this->resourceBookingRepository->nextBookingForUser($user),
         ]);
     }
 

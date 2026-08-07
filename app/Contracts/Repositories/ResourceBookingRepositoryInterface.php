@@ -32,4 +32,11 @@ interface ResourceBookingRepositoryInterface
         ?Carbon $start = null,
         ?Carbon $end = null,
     ): Collection;
+
+    /**
+     * @return array{upcoming: int, total: int, unpaid: float, paid: float}
+     */
+    public function statsForUser(\App\Models\User $user): array;
+
+    public function nextBookingForUser(\App\Models\User $user): ?ResourceBooking;
 }

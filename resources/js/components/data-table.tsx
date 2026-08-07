@@ -20,6 +20,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import type { Paginated } from '@/types/booking';
 
 type DataTableProps<TData, TValue> = {
@@ -35,6 +36,7 @@ type DataTableProps<TData, TValue> = {
     loading?: boolean;
     filters?: ReactNode;
     rowClassName?: (row: TData) => string | undefined;
+    renderCard?: (row: TData) => ReactNode;
 };
 
 export function DataTable<TData, TValue>({
@@ -50,6 +52,7 @@ export function DataTable<TData, TValue>({
     loading = false,
     filters,
     rowClassName,
+    renderCard,
 }: DataTableProps<TData, TValue>) {
     const [internalSearch, setInternalSearch] = useState(searchValue ?? '');
 
@@ -85,7 +88,40 @@ export function DataTable<TData, TValue>({
                 </div>
             ) : null}
 
-            <div className="rounded-xl border">
+            {renderCard ? (
+                <div className="sm:hidden">
+                    {loading ? (
+                        <div className="grid gap-3">
+                            {Array.from({ length: 3 }).map((_, index) => (
+                                <Skeleton key={index} className="h-24 w-full rounded-xl" />
+                            ))}
+                        </div>
+                    ) : data.length ? (
+                        <div className="grid gap-3">
+                            {data.map((row, index) => (
+                                <div key={index}>{renderCard(row)}</div>
+                            ))}
+                        </div>
+                    ) : EmptyIcon ? (
+                        <EmptyState
+                            icon={EmptyIcon}
+                            title={emptyTitle}
+                            description={emptyDescription}
+                        />
+                    ) : (
+                        <div className="text-muted-foreground rounded-xl border p-8 text-center text-sm">
+                            {emptyTitle}
+                        </div>
+                    )}
+                </div>
+            ) : null}
+
+            <div
+                className={cn(
+                    'rounded-xl border',
+                    renderCard ? 'hidden sm:block' : undefined,
+                )}
+            >
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

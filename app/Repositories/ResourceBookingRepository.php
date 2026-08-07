@@ -117,4 +117,30 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
             ->orderBy('starts_at')
             ->get();
     }
+
+    public function statsForUser(User $user): array
+    {
+        $base = fn () => ResourceBooking::query()->where('user_id', $user->id);
+
+        return [
+            'upcoming' => $base()
+                ->where('starts_at', '>=', now())
+                ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
+                ->count(),
+            'total' => $base()->count(),
+            'unpaid' => (float) $base()->where('payment_status', 'unpaid')->sum('amount'),
+            'paid' => (float) $base()->where('payment_status', 'paid')->sum('amount'),
+        ];
+    }
+
+    public function nextBookingForUser(User $user): ?ResourceBooking
+    {
+        return ResourceBooking::query()
+            ->where('user_id', $user->id)
+            ->where('starts_at', '>=', now())
+            ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
+            ->with('resource')
+            ->orderBy('starts_at')
+            ->first();
+    }
 }

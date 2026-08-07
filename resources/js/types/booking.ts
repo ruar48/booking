@@ -168,6 +168,13 @@ export type ResourceBooking = {
     updated_at?: string;
 };
 
+export type BookingStats = {
+    upcoming: number;
+    total: number;
+    unpaid: number;
+    paid: number;
+};
+
 export type Tournament = {
     id: number;
     name: string;
