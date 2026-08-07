@@ -25,6 +25,8 @@ use App\Policies\TournamentPolicy;
 use App\Policies\TrainingSessionPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -66,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->configureDefaults();
         $this->configureEventListeners();
+        $this->configureMail();
     }
 
     protected function registerPolicies(): void
@@ -100,5 +103,23 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Customize the content of framework-generated emails.
+     */
+    protected function configureMail(): void
+    {
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url): MailMessage {
+            return (new MailMessage)
+                ->subject('Verify Your Email Address')
+                ->greeting('Hello '.$notifiable->name.'!')
+                ->line('Thanks for signing up for '.config('app.name').'. Please confirm your email address to activate your account.')
+                ->action('Verify Email Address', $url)
+                ->line('This verification link will expire in 60 minutes.')
+                ->line("Can't find the email? Check your spam or junk folder — verification emails sometimes end up there by mistake.")
+                ->line('If you did not create an account, no further action is required.')
+                ->salutation('Regards, '.config('app.name'));
+        });
     }
 }

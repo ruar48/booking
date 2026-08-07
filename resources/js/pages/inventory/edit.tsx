@@ -1,10 +1,11 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import { Boxes, FileText, Package, Tag } from 'lucide-react';
 import { FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -48,9 +49,15 @@ export default function InventoryEdit({ product }: Props) {
                     title={`Edit ${product.name}`}
                     description="Update pricing, stock, and status"
                 />
-                <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
+                <form onSubmit={submit} className="mx-auto w-full max-w-3xl space-y-6">
                     <Card>
-                        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Package className="size-4" />
+                                Product details
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">
                                 <Label htmlFor="name">Name</Label>
                                 <Input
@@ -80,7 +87,7 @@ export default function InventoryEdit({ product }: Props) {
                                 />
                                 <InputError message={errors.category} />
                             </div>
-                            <div className="grid gap-2">
+                            <div className="grid gap-2 sm:col-span-2">
                                 <Label>Status</Label>
                                 <Select
                                     value={data.status}
@@ -91,7 +98,7 @@ export default function InventoryEdit({ product }: Props) {
                                         )
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full sm:w-56">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -104,31 +111,67 @@ export default function InventoryEdit({ product }: Props) {
                                 </Select>
                                 <InputError message={errors.status} />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Tag className="size-4" />
+                                Pricing
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="price">Price</Label>
-                                <Input
-                                    id="price"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={data.price}
-                                    onChange={(e) => setData('price', Number(e.target.value))}
-                                    required
-                                />
+                                <div className="relative">
+                                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm">
+                                        ₱
+                                    </span>
+                                    <Input
+                                        id="price"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className="pl-7"
+                                        value={data.price}
+                                        onChange={(e) =>
+                                            setData('price', Number(e.target.value))
+                                        }
+                                        required
+                                    />
+                                </div>
                                 <InputError message={errors.price} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="cost">Cost</Label>
-                                <Input
-                                    id="cost"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={data.cost}
-                                    onChange={(e) => setData('cost', e.target.value)}
-                                />
+                                <div className="relative">
+                                    <span className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm">
+                                        ₱
+                                    </span>
+                                    <Input
+                                        id="cost"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        className="pl-7"
+                                        value={data.cost}
+                                        onChange={(e) => setData('cost', e.target.value)}
+                                    />
+                                </div>
                                 <InputError message={errors.cost} />
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Boxes className="size-4" />
+                                Stock
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2">
                                 <Label htmlFor="stock_quantity">Stock quantity</Label>
                                 <Input
@@ -157,8 +200,21 @@ export default function InventoryEdit({ product }: Props) {
                                 />
                                 <InputError message={errors.low_stock_threshold} />
                             </div>
-                            <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="description">Description</Label>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <FileText className="size-4" />
+                                Description
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-2">
+                                <Label htmlFor="description" className="sr-only">
+                                    Description
+                                </Label>
                                 <Textarea
                                     id="description"
                                     value={data.description}
@@ -169,8 +225,9 @@ export default function InventoryEdit({ product }: Props) {
                             </div>
                         </CardContent>
                     </Card>
+
                     <div className="flex justify-end gap-2">
-                        <Button variant="outline" asChild>
+                        <Button type="button" variant="outline" asChild>
                             <Link href={productsIndex()}>Back</Link>
                         </Button>
                         <Button type="submit" disabled={processing}>
