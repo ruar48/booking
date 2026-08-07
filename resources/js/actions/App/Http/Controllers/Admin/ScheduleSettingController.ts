@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::index
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
@@ -42,41 +42,6 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
@@ -111,37 +76,6 @@ updateHours.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     method: 'put',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
- * @route '/admin/schedule/hours'
- */
-    const updateHoursForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: updateHours.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
- * @route '/admin/schedule/hours'
- */
-        updateHoursForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: updateHours.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    updateHours.form = updateHoursForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::storeBlock
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
@@ -176,27 +110,6 @@ storeBlock.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::storeBlock
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
- * @route '/admin/schedule/blocks'
- */
-    const storeBlockForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: storeBlock.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::storeBlock
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
- * @route '/admin/schedule/blocks'
- */
-        storeBlockForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: storeBlock.url(options),
-            method: 'post',
-        })
-    
-    storeBlock.form = storeBlockForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroyBlock
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
@@ -255,37 +168,6 @@ destroyBlock.delete = (args: { block: number | { id: number } } | [block: number
     method: 'delete',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::destroyBlock
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
- * @route '/admin/schedule/blocks/{block}'
- */
-    const destroyBlockForm = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: destroyBlock.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'DELETE',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::destroyBlock
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
- * @route '/admin/schedule/blocks/{block}'
- */
-        destroyBlockForm.delete = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: destroyBlock.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'DELETE',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    destroyBlock.form = destroyBlockForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
@@ -319,28 +201,6 @@ toggle.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     url: toggle.url(options),
     method: 'post',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
- * @route '/admin/schedule/recurring-locks/toggle'
- */
-    const toggleForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: toggle.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
- * @route '/admin/schedule/recurring-locks/toggle'
- */
-        toggleForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: toggle.url(options),
-            method: 'post',
-        })
-    
-    toggle.form = toggleForm
 const ScheduleSettingController = { index, updateHours, storeBlock, destroyBlock, toggle }
 
 export default ScheduleSettingController
