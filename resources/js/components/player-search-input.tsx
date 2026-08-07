@@ -50,9 +50,11 @@ export function PlayerSearchInput({
 
     if (selected) {
         return (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
                 <Label className="text-muted-foreground text-xs">{label}</Label>
-                <Badge variant="secondary">{selected.user?.name ?? `Player #${selected.id}`}</Badge>
+                <Badge variant="secondary" className="max-w-full truncate">
+                    {selected.user?.name ?? `Player #${selected.id}`}
+                </Badge>
                 <Button type="button" variant="ghost" size="sm" onClick={onClear}>
                     Change
                 </Button>

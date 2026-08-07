@@ -7,6 +7,7 @@ use App\Enums\RentalMovementType;
 use App\Exceptions\InsufficientRentalStockException;
 use App\Models\RentalItem;
 use App\Models\RentalStockMovement;
+use App\Models\RentalTransactionItem;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,13 @@ class RentalItemRepository implements RentalItemRepositoryInterface
 {
     public function paginate(?string $search = null, bool $lowStockOnly = false, int $perPage = 15): LengthAwarePaginator
     {
-        return RentalItem::query()
+        $revenueSubquery = RentalTransactionItem::query()
+            ->selectRaw('COALESCE(SUM(quantity * rate), 0)')
+            ->whereColumn('rental_item_id', 'rental_items.id');
+
+        $paginator = RentalItem::query()
+            ->select('rental_items.*')
+            ->selectSub($revenueSubquery, 'revenue')
             ->when(
                 filled($search),
                 fn ($query) => $query->where(function ($query) use ($search): void {
@@ -31,6 +38,12 @@ class RentalItemRepository implements RentalItemRepositoryInterface
             )
             ->latest()
             ->paginate($perPage);
+
+        $paginator->getCollection()->each(
+            fn (RentalItem $item) => $item->setAttribute('revenue', (float) $item->getAttribute('revenue')),
+        );
+
+        return $paginator;
     }
 
     public function find(int $id): RentalItem

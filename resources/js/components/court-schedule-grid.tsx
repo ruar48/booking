@@ -385,11 +385,12 @@ export function CourtScheduleGrid({
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-2 sm:gap-3">
                 <Button
                     type="button"
                     variant="outline"
                     size="icon"
+                    className="shrink-0"
                     onClick={() => shiftDate(-1)}
                     disabled={selectedDate <= today}
                     aria-label="Previous day"
@@ -400,9 +401,9 @@ export function CourtScheduleGrid({
                     <PopoverTrigger asChild>
                         <button
                             type="button"
-                            className="group flex flex-col items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-center transition-colors hover:border-brand-lime hover:bg-slate-50"
+                            className="group flex min-w-0 flex-col items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-center transition-colors hover:border-brand-lime hover:bg-slate-50"
                         >
-                            <span className="flex items-center gap-2 text-lg font-bold text-brand-navy sm:text-xl">
+                            <span className="flex min-w-0 flex-wrap items-center justify-center gap-2 text-base font-bold text-brand-navy sm:text-lg md:text-xl">
                                 <CalendarDays className="size-4 shrink-0 text-brand-court" />
                                 {format(parseISO(`${selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy')}
                                 <ChevronDown className="size-4 shrink-0 text-slate-400 transition-transform group-aria-expanded:rotate-180" />
@@ -412,7 +413,7 @@ export function CourtScheduleGrid({
                             </span>
                         </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72" align="center">
+                    <PopoverContent className="w-72 max-w-[calc(100vw-2rem)]" align="center">
                         <div className="mb-2 flex items-center justify-between">
                             <Button
                                 type="button"
@@ -507,6 +508,7 @@ export function CourtScheduleGrid({
                     type="button"
                     variant="outline"
                     size="icon"
+                    className="shrink-0"
                     onClick={() => shiftDate(1)}
                     aria-label="Next day"
                 >

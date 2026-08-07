@@ -43,4 +43,22 @@ interface RentalRepositoryInterface
      * @param  array<int, array{rental_transaction_item_id: int, quantity_returned: int}>  $returnLines
      */
     public function returnItems(RentalTransaction $transaction, array $returnLines, User $actor): RentalTransaction;
+
+    /**
+     * @return array{
+     *     kpis: array{
+     *         revenue: array{value: float, trend_pct: float|null},
+     *         rentals_count: array{value: int, trend_pct: float|null},
+     *         avg_rental: array{value: float, trend_pct: float|null},
+     *         active_rentals: array{value: int},
+     *     },
+     *     revenue_by_day: array<int, array{date: string, revenue: float}>,
+     *     rentals_by_day: array<int, array{date: string, count: int}>,
+     *     equipment_revenue: array<int, array{rental_item_id: int, rental_item_name: string, quantity_rented: int, revenue: float}>,
+     *     heatmap: array<int, array{day_of_week: int, hour: int, count: int}>,
+     *     inventory_alerts: array<int, array{id: int, name: string, available_quantity: int, total_quantity: int, status: string}>,
+     *     recent_rentals: array<int, array{id: int, reference_number: string, renter_name: string, item_summary: string, total_amount: float, rented_at: string|null, status: string}>,
+     * }
+     */
+    public function revenueReport(CarbonInterface $start, CarbonInterface $end): array;
 }
