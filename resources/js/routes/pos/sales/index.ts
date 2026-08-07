@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\PosController::store
  * @see app/Http/Controllers/PosController.php:45
@@ -33,6 +33,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\PosController::store
+ * @see app/Http/Controllers/PosController.php:45
+ * @route '/pos/sales'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\PosController::store
+ * @see app/Http/Controllers/PosController.php:45
+ * @route '/pos/sales'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\PosController::voidMethod
  * @see app/Http/Controllers/PosController.php:67
@@ -91,6 +112,37 @@ voidMethod.patch = (args: { sale: number | { id: number } } | [sale: number | { 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\PosController::voidMethod
+ * @see app/Http/Controllers/PosController.php:67
+ * @route '/pos/sales/{sale}/void'
+ */
+    const voidMethodForm = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: voidMethod.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\PosController::voidMethod
+ * @see app/Http/Controllers/PosController.php:67
+ * @route '/pos/sales/{sale}/void'
+ */
+        voidMethodForm.patch = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: voidMethod.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    voidMethod.form = voidMethodForm
 /**
 * @see \App\Http\Controllers\SaleController::index
  * @see app/Http/Controllers/SaleController.php:17
@@ -134,6 +186,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\SaleController::index
+ * @see app/Http/Controllers/SaleController.php:17
+ * @route '/pos/sales'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\SaleController::index
+ * @see app/Http/Controllers/SaleController.php:17
+ * @route '/pos/sales'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\SaleController::index
+ * @see app/Http/Controllers/SaleController.php:17
+ * @route '/pos/sales'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\SaleController::show
  * @see app/Http/Controllers/SaleController.php:29
@@ -200,6 +287,42 @@ show.head = (args: { sale: number | { id: number } } | [sale: number | { id: num
     url: show.url(args, options),
     method: 'head',
 })
+
+    /**
+* @see \App\Http\Controllers\SaleController::show
+ * @see app/Http/Controllers/SaleController.php:29
+ * @route '/pos/sales/{sale}'
+ */
+    const showForm = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\SaleController::show
+ * @see app/Http/Controllers/SaleController.php:29
+ * @route '/pos/sales/{sale}'
+ */
+        showForm.get = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\SaleController::show
+ * @see app/Http/Controllers/SaleController.php:29
+ * @route '/pos/sales/{sale}'
+ */
+        showForm.head = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 const sales = {
     store: Object.assign(store, store),
 void: Object.assign(voidMethod, voidMethod),
