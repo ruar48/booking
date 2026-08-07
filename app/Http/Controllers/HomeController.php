@@ -9,6 +9,7 @@ use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Models\Setting;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -55,11 +56,27 @@ class HomeController extends Controller
             'openPlaySessions' => $openPlaySessions,
             'bookedSlots' => $bookedSlots,
             'dateOverrides' => $dateOverrides,
+            'venue' => $this->venueProfile(),
             'stats' => [
                 'courts' => $courts->count(),
                 'members' => Player::query()->where('is_active', true)->count(),
                 'bookings_today' => $bookingsToday,
             ],
         ]);
+    }
+
+    private function venueProfile(): array
+    {
+        $profile = Setting::query()
+            ->where('group', 'venue')
+            ->where('key', 'profile')
+            ->value('value') ?? [];
+
+        $operatingHours = Setting::query()
+            ->where('group', 'schedule')
+            ->where('key', 'operating_hours')
+            ->value('value');
+
+        return [...$profile, 'operating_hours' => $operatingHours];
     }
 }

@@ -8,8 +8,11 @@ import {
     Clock,
     Grid3x3,
     ImageIcon,
+    Info,
+    Mail,
     MapPin,
     Megaphone,
+    Phone,
     Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -32,6 +35,7 @@ import type {
     DateOverride,
     OpenPlaySession,
     Resource,
+    VenueProfile,
 } from '@/types/booking';
 
 type HomeStats = {
@@ -41,6 +45,7 @@ type HomeStats = {
 };
 
 type Props = {
+    venue?: VenueProfile | null;
     courts: Resource[];
     stats: HomeStats;
     announcements?: Announcement[];
@@ -48,6 +53,47 @@ type Props = {
     bookedSlots?: BookedSlot[];
     dateOverrides?: DateOverride[];
 };
+
+const DAY_ORDER = [
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+] as const;
+
+const DAY_LABELS: Record<(typeof DAY_ORDER)[number], string> = {
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+    sunday: 'Sunday',
+};
+
+function venueAddress(venue: VenueProfile): string {
+    return [venue.address_line_1, venue.city, venue.state, venue.postal_code]
+        .filter(Boolean)
+        .join(', ');
+}
+
+function formatHoursRange(open?: string | null, close?: string | null): string {
+    if (!open || !close) {
+        return 'Closed';
+    }
+
+    const toLabel = (time: string) => {
+        const [hour, minute] = time.split(':').map(Number);
+        const date = new Date();
+        date.setHours(hour, minute, 0, 0);
+        return format(date, 'ha').toLowerCase();
+    };
+
+    return `${toLabel(open)} to ${toLabel(close)}`;
+}
 
 function formatSkillLevel(level?: string): string {
     if (!level || level === 'all_levels') {
@@ -66,11 +112,13 @@ const courtGradients = [
 ];
 
 function HeroLanding({
+    venue,
     businessName,
     stats,
     onExplore,
     onBook,
 }: {
+    venue?: VenueProfile | null;
     businessName: string;
     stats: HomeStats;
     onExplore: () => void;
@@ -172,7 +220,8 @@ function HeroLanding({
                             <span className="text-brand-lime">{businessName}</span>
                         </h1>
                         <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
-                            Reserve Court 1 or Court 2 online. Simple scheduling for open play and private sessions.
+                            {venue?.description ??
+                                'Reserve Court 1 or Court 2 online. Simple scheduling for open play and private sessions.'}
                         </p>
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                             <Button
@@ -194,6 +243,12 @@ function HeroLanding({
                                 </Button>
                             )}
                         </div>
+                        {venue && venueAddress(venue) && (
+                            <p className="mt-6 flex items-center gap-2 text-sm text-white/60">
+                                <MapPin className="size-4 shrink-0 text-brand-lime" />
+                                {venueAddress(venue)}
+                            </p>
+                        )}
                     </div>
 
                     <div className="flex justify-center overflow-hidden">
@@ -232,6 +287,104 @@ function HeroLanding({
                 </button>
             </div>
         </section>
+    );
+}
+
+function AboutTab({ venue }: { venue: VenueProfile }) {
+    const hours = venue.operating_hours ?? {};
+    const amenities = venue.amenities ?? [];
+
+    return (
+        <div className="grid gap-4 lg:grid-cols-2">
+            <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="flex flex-row items-center gap-2 pb-3">
+                    <Info className="size-5 text-brand-court" />
+                    <CardTitle className="text-base">About</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm leading-relaxed text-slate-600">
+                    {(venue.description ?? '').split('\n').map((paragraph, index) => (
+                        <p key={index}>{paragraph}</p>
+                    ))}
+                </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+                <Card className="border-slate-200 shadow-sm">
+                    <CardContent className="space-y-3 pt-6 text-sm">
+                        {venue.phone && (
+                            <div className="flex items-center gap-3">
+                                <Phone className="size-4 text-brand-court" />
+                                <a href={`tel:${venue.phone}`} className="hover:underline">
+                                    {venue.phone}
+                                </a>
+                            </div>
+                        )}
+                        {venue.email && (
+                            <div className="flex items-center gap-3">
+                                <Mail className="size-4 text-brand-court" />
+                                <a href={`mailto:${venue.email}`} className="hover:underline">
+                                    {venue.email}
+                                </a>
+                            </div>
+                        )}
+                        {venueAddress(venue) && (
+                            <div className="flex items-start gap-3">
+                                <MapPin className="mt-0.5 size-4 shrink-0 text-brand-court" />
+                                <span>{venueAddress(venue)}</span>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
+                <Card className="border-slate-200 shadow-sm">
+                    <CardHeader className="flex flex-row items-center gap-2 pb-3">
+                        <Clock className="size-5 text-brand-court" />
+                        <CardTitle className="text-base">Operating hours</CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-2 sm:grid-cols-2">
+                        {DAY_ORDER.map((day) => {
+                            const schedule = hours[day];
+                            if (!schedule) {
+                                return null;
+                            }
+
+                            return (
+                                <div
+                                    key={day}
+                                    className="flex justify-between gap-4 text-sm"
+                                >
+                                    <span className="font-medium text-slate-700">
+                                        {DAY_LABELS[day]}
+                                    </span>
+                                    <span className="text-slate-500">
+                                        {formatHoursRange(schedule.open, schedule.close)}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </CardContent>
+                </Card>
+
+                {amenities.length > 0 && (
+                    <Card className="border-slate-200 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-base">Amenities</CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-wrap gap-2">
+                            {amenities.map((amenity) => (
+                                <Badge
+                                    key={amenity}
+                                    variant="secondary"
+                                    className="bg-slate-100 text-slate-600"
+                                >
+                                    {amenity}
+                                </Badge>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+        </div>
     );
 }
 
@@ -360,7 +513,7 @@ function BookCourtTab({
     );
 }
 
-function PhotosTab({ courts }: { courts: Resource[] }) {
+function PhotosTab({ courts, gallery = [] }: { courts: Resource[]; gallery?: string[] }) {
     return (
         <div className="space-y-6">
             <Card className="border-slate-200 shadow-sm">
@@ -369,6 +522,18 @@ function PhotosTab({ courts }: { courts: Resource[] }) {
                     <CardTitle className="text-base">Gallery</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {gallery.length > 0 ? (
+                        <div className="grid gap-3 sm:grid-cols-2">
+                            {gallery.map((photo, index) => (
+                                <img
+                                    key={index}
+                                    src={photo}
+                                    alt=""
+                                    className="aspect-video rounded-lg object-cover"
+                                />
+                            ))}
+                        </div>
+                    ) : (
                         <div className="grid gap-3 sm:grid-cols-2">
                             {courts.map((court, index) => (
                                 <div
@@ -384,6 +549,7 @@ function PhotosTab({ courts }: { courts: Resource[] }) {
                                 </div>
                             ))}
                         </div>
+                    )}
                 </CardContent>
             </Card>
 
@@ -460,6 +626,7 @@ function NewsTab({ announcements }: { announcements: Announcement[] }) {
 }
 
 export default function Welcome({
+    venue,
     courts,
     stats,
     announcements = [],
@@ -469,7 +636,7 @@ export default function Welcome({
 }: Props) {
     const { auth } = usePage().props;
     const businessName = brand.name;
-    const [activeTab, setActiveTab] = useState('book');
+    const [activeTab, setActiveTab] = useState('about');
     const venueSection = useRef<HTMLElement>(null);
     const [venueVisible, setVenueVisible] = useState(false);
 
@@ -494,7 +661,7 @@ export default function Welcome({
         return () => observer.disconnect();
     }, []);
 
-    const scrollToVenue = (tab = 'book') => {
+    const scrollToVenue = (tab = 'about') => {
         setActiveTab(tab);
         venueSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -505,9 +672,10 @@ export default function Welcome({
 
             <div className="overflow-x-hidden bg-slate-100 text-brand-navy">
                 <HeroLanding
+                    venue={venue}
                     businessName={businessName}
                     stats={stats}
-                    onExplore={() => scrollToVenue('photos')}
+                    onExplore={() => scrollToVenue('about')}
                     onBook={() => scrollToVenue('book')}
                 />
 
@@ -534,9 +702,16 @@ export default function Welcome({
                                 <h2 className="text-2xl font-extrabold text-brand-navy">
                                     {businessName}
                                 </h2>
-                                <p className="mt-2 text-sm text-slate-500">
-                                    {stats.courts} pickleball courts · Online booking
-                                </p>
+                                {venue && venueAddress(venue) ? (
+                                    <p className="mt-1 flex items-center justify-center gap-1 text-sm text-slate-500">
+                                        <MapPin className="size-3.5" />
+                                        {venueAddress(venue)}
+                                    </p>
+                                ) : (
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        {stats.courts} pickleball courts · Online booking
+                                    </p>
+                                )}
                                 <Button
                                     className="mt-4 bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
                                     onClick={() => setActiveTab('book')}
@@ -552,7 +727,13 @@ export default function Welcome({
                                 className="gap-0"
                             >
                                 <div className="border-y border-slate-200 bg-slate-50 px-2 py-2 sm:px-4">
-                                    <TabsList className="grid h-auto w-full grid-cols-4 gap-1 bg-transparent p-0">
+                                    <TabsList className="grid h-auto w-full grid-cols-5 gap-1 bg-transparent p-0">
+                                        <TabsTrigger
+                                            value="about"
+                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                        >
+                                            About
+                                        </TabsTrigger>
                                         <TabsTrigger
                                             value="open-play"
                                             className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
@@ -581,6 +762,16 @@ export default function Welcome({
                                 </div>
 
                                 <div className="p-4 sm:p-6">
+                                    <TabsContent value="about" className="mt-0">
+                                        {venue ? (
+                                            <AboutTab venue={venue} />
+                                        ) : (
+                                            <p className="text-sm text-slate-500">
+                                                Venue information is not available.
+                                            </p>
+                                        )}
+                                    </TabsContent>
+
                                     <TabsContent value="open-play" className="mt-0">
                                         <OpenPlayTab
                                             sessions={openPlaySessions}
@@ -598,7 +789,7 @@ export default function Welcome({
                                     </TabsContent>
 
                                     <TabsContent value="photos" className="mt-0">
-                                        <PhotosTab courts={courts} />
+                                        <PhotosTab courts={courts} gallery={venue?.gallery ?? []} />
                                     </TabsContent>
 
                                     <TabsContent value="news" className="mt-0">

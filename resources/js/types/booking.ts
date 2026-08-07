@@ -340,6 +340,20 @@ export type Setting = {
     value: unknown;
 };
 
+export type VenueProfile = {
+    description?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    address_line_1?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postal_code?: string | null;
+    country?: string | null;
+    operating_hours?: Record<string, { open: string; close: string } | null> | null;
+    amenities?: string[] | null;
+    gallery?: string[] | null;
+};
+
 export type UserSession = {
     id: string;
     ip_address?: string | null;

@@ -58,6 +58,29 @@ class DemoDataSeeder extends Seeder
             ],
         ]);
 
+        Setting::query()->create([
+            'group' => 'venue',
+            'key' => 'profile',
+            'value' => [
+                'phone' => '+1 (555) 010-2026',
+                'email' => 'owner@galaangramos.test',
+                'address_line_1' => '123 Court Lane',
+                'city' => 'Ramos',
+                'state' => 'Pangasinan',
+                'postal_code' => '2411',
+                'country' => 'PH',
+                'description' => 'Welcome to Galaang-Ramos Pickleball — your neighborhood spot for open play and court reservations. We run two indoor acrylic courts with lighting, perfect for beginners and competitive players alike. Book Court 1 or Court 2 online anytime.',
+                'amenities' => [
+                    'Parking',
+                    'Comfort rooms',
+                    'Changing areas',
+                    'Water station',
+                    'Court lighting',
+                ],
+                'gallery' => [],
+            ],
+        ]);
+
         $courts = Resource::factory()
             ->count(2)
             ->sequence(
