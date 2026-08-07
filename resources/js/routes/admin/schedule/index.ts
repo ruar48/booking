@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 import blocks from './blocks'
 import recurringLocks from './recurring-locks'
 /**
@@ -44,41 +44,6 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::index
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:19
- * @route '/admin/schedule'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
@@ -112,38 +77,6 @@ updateHours.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     url: updateHours.url(options),
     method: 'put',
 })
-
-    /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
- * @route '/admin/schedule/hours'
- */
-    const updateHoursForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: updateHours.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
- * @route '/admin/schedule/hours'
- */
-        updateHoursForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: updateHours.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    updateHours.form = updateHoursForm
 const schedule = {
     index: Object.assign(index, index),
 updateHours: Object.assign(updateHours, updateHours),
