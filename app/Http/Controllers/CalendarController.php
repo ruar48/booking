@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
+use App\Models\OpenPlaySession;
 use App\Models\Tournament;
 use App\Models\TrainingSession;
 use Illuminate\Http\Request;
@@ -32,6 +33,12 @@ class CalendarController extends Controller
             'trainingSessions' => TrainingSession::query()
                 ->with(['coach.user', 'court'])
                 ->whereBetween('scheduled_at', [$start, $end])
+                ->get(),
+            'events' => OpenPlaySession::query()
+                ->where('starts_at', '<', $end)
+                ->where(function ($q) use ($start) {
+                    $q->whereNull('ends_at')->orWhere('ends_at', '>', $start);
+                })
                 ->get(),
             'filters' => [
                 'start' => $start->toDateString(),

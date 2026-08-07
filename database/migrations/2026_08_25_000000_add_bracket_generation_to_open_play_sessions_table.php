@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('club_events', function (Blueprint $table) {
+        Schema::table('open_play_sessions', function (Blueprint $table) {
             $table->string('bracket_generation')->default('automatic')->after('bracket_format');
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('club_events', function (Blueprint $table) {
+        Schema::table('open_play_sessions', function (Blueprint $table) {
             $table->dropColumn('bracket_generation');
         });
     }

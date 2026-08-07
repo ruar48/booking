@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('club_event_registrations', function (Blueprint $table) {
-            $table->string('payment_status')->default('unpaid')->after('partner_player_id');
+        Schema::table('open_play_matches', function (Blueprint $table) {
+            $table->string('bracket_side')->nullable()->after('bracket_position');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('club_event_registrations', function (Blueprint $table) {
-            $table->dropColumn('payment_status');
+        Schema::table('open_play_matches', function (Blueprint $table) {
+            $table->dropColumn('bracket_side');
         });
     }
 };

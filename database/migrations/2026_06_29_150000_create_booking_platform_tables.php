@@ -295,9 +295,8 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        Schema::create('club_events', function (Blueprint $table) {
+        Schema::create('open_play_sessions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('club_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->text('description')->nullable();
             $table->timestamp('starts_at');
@@ -347,7 +346,7 @@ return new class extends Migration
         Schema::dropIfExists('login_history');
         Schema::dropIfExists('audit_logs');
         Schema::dropIfExists('settings');
-        Schema::dropIfExists('club_events');
+        Schema::dropIfExists('open_play_sessions');
         Schema::dropIfExists('announcements');
         Schema::dropIfExists('payments');
         Schema::dropIfExists('training_drills');

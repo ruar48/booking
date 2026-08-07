@@ -20,6 +20,54 @@ export type PaginationLink = {
     active: boolean;
 };
 
+export type OpenPlaySession = {
+    id: number;
+    title: string;
+    description?: string | null;
+    starts_at: string;
+    ends_at?: string | null;
+    location?: string | null;
+    price_per_player?: number | null;
+    max_players?: number | null;
+    target_score: number;
+    bracket_format: 'single_elimination' | 'double_elimination' | 'round_robin' | null;
+    bracket_generation: 'automatic' | 'random' | 'manual';
+    team_size: 'singles' | 'doubles';
+    skill_level?: string;
+    registrations_count?: number;
+    registrations?: OpenPlayRegistration[];
+    matches?: OpenPlayMatch[];
+};
+
+export type OpenPlayRegistration = {
+    id: number;
+    open_play_session_id: number;
+    player_id: number;
+    partner_player_id: number | null;
+    payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded' | 'failed';
+    player?: Player;
+    partner?: Player | null;
+    creator?: { id: number; name: string } | null;
+    created_at?: string;
+};
+
+export type OpenPlayMatch = {
+    id: number;
+    open_play_session_id: number;
+    entry1_id: number | null;
+    entry2_id: number | null;
+    entry1_score: number | null;
+    entry2_score: number | null;
+    winner_registration_id: number | null;
+    round: number;
+    bracket_position: number | null;
+    bracket_side: 'winners' | 'losers' | 'final' | null;
+    status: 'scheduled' | 'in_progress' | 'completed' | 'walkover' | 'forfeit' | 'cancelled';
+    entry1?: OpenPlayRegistration | null;
+    entry2?: OpenPlayRegistration | null;
+    winner?: OpenPlayRegistration | null;
+};
+
 export type BookedSlot = {
     id: number;
     resource_id: number;
@@ -331,6 +379,7 @@ export type DashboardData = {
     resourceAvailability: Resource[];
     revenueChart: RevenueChartPoint[];
     recentBookings?: ResourceBooking[];
+    openPlaySessions?: OpenPlaySession[];
     announcements?: Announcement[];
 };
 

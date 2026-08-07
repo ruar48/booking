@@ -1,11 +1,16 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import { format, parseISO } from 'date-fns';
 import {
     ArrowRight,
     Calendar,
+    CalendarDays,
     ChevronDown,
+    Clock,
     Grid3x3,
     ImageIcon,
+    MapPin,
     Megaphone,
+    Users,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -17,14 +22,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { brand } from '@/lib/brand';
-import { formatDate } from '@/lib/format';
+import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { dashboard, login } from '@/routes';
+import { dashboard, login, register } from '@/routes';
 import { index as bookingsIndex } from '@/routes/bookings';
 import type {
     Announcement,
     BookedSlot,
     DateOverride,
+    OpenPlaySession,
     Resource,
 } from '@/types/booking';
 
@@ -38,9 +44,21 @@ type Props = {
     courts: Resource[];
     stats: HomeStats;
     announcements?: Announcement[];
+    openPlaySessions?: OpenPlaySession[];
     bookedSlots?: BookedSlot[];
     dateOverrides?: DateOverride[];
 };
+
+function formatSkillLevel(level?: string): string {
+    if (!level || level === 'all_levels') {
+        return 'All levels';
+    }
+
+    return level
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
 
 const courtGradients = [
     'from-brand-court to-brand-navy',
@@ -217,6 +235,110 @@ function HeroLanding({
     );
 }
 
+function OpenPlayTab({
+    sessions,
+    isAuthenticated,
+}: {
+    sessions: OpenPlaySession[];
+    isAuthenticated: boolean;
+}) {
+    const grouped = sessions.reduce<Record<string, OpenPlaySession[]>>((acc, session) => {
+        const day = session.starts_at.split('T')[0];
+        acc[day] = acc[day] ?? [];
+        acc[day].push(session);
+        return acc;
+    }, {});
+
+    const days = Object.keys(grouped).sort();
+
+    if (!days.length) {
+        return (
+            <Card className="border-slate-200 shadow-sm">
+                <CardContent className="py-12 text-center text-sm text-slate-500">
+                    No open play sessions scheduled yet. Check back soon.
+                </CardContent>
+            </Card>
+        );
+    }
+
+    return (
+        <div className="space-y-6">
+            {days.map((day) => (
+                <div key={day}>
+                    <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                        <CalendarDays className="size-4 text-brand-court" />
+                        {format(parseISO(`${day}T12:00:00`), 'EEEE, MMMM d')}
+                    </div>
+                    <div className="space-y-3">
+                        {grouped[day].map((session) => (
+                            <Card key={session.id} className="border-slate-200 shadow-sm">
+                                <CardContent className="pt-6">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <h3 className="font-bold text-slate-800">
+                                                    {session.title}
+                                                </h3>
+                                                <Badge variant="secondary">
+                                                    {formatSkillLevel(session.skill_level)}
+                                                </Badge>
+                                            </div>
+                                            <ul className="space-y-1.5 text-sm text-slate-600">
+                                                <li className="flex items-center gap-2">
+                                                    <Clock className="size-4 text-brand-court" />
+                                                    {formatTime(session.starts_at)}
+                                                    {session.ends_at &&
+                                                        ` – ${formatTime(session.ends_at)}`}
+                                                </li>
+                                                {session.location && (
+                                                    <li className="flex items-center gap-2">
+                                                        <MapPin className="size-4 text-brand-court" />
+                                                        {session.location}
+                                                    </li>
+                                                )}
+                                                {session.max_players && (
+                                                    <li className="flex items-center gap-2">
+                                                        <Users className="size-4 text-brand-court" />
+                                                        0/{session.max_players} players
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                        <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                                            {session.price_per_player != null && (
+                                                <p className="text-sm font-semibold text-slate-700">
+                                                    {formatCurrency(session.price_per_player)}{' '}
+                                                    <span className="font-normal text-slate-500">
+                                                        per player
+                                                    </span>
+                                                </p>
+                                            )}
+                                            <Button
+                                                asChild
+                                                className="bg-brand-lime font-semibold text-brand-navy hover:bg-brand-lime-dark"
+                                            >
+                                                <Link
+                                                    href={
+                                                        isAuthenticated
+                                                            ? dashboard()
+                                                            : register()
+                                                    }
+                                                >
+                                                    Register
+                                                </Link>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
 function BookCourtTab({
     courts,
     bookedSlots,
@@ -341,6 +463,7 @@ export default function Welcome({
     courts,
     stats,
     announcements = [],
+    openPlaySessions = [],
     bookedSlots = [],
     dateOverrides = [],
 }: Props) {
@@ -429,7 +552,13 @@ export default function Welcome({
                                 className="gap-0"
                             >
                                 <div className="border-y border-slate-200 bg-slate-50 px-2 py-2 sm:px-4">
-                                    <TabsList className="grid h-auto w-full grid-cols-3 gap-1 bg-transparent p-0">
+                                    <TabsList className="grid h-auto w-full grid-cols-4 gap-1 bg-transparent p-0">
+                                        <TabsTrigger
+                                            value="open-play"
+                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                        >
+                                            Open play
+                                        </TabsTrigger>
                                         <TabsTrigger
                                             value="book"
                                             className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
@@ -452,6 +581,13 @@ export default function Welcome({
                                 </div>
 
                                 <div className="p-4 sm:p-6">
+                                    <TabsContent value="open-play" className="mt-0">
+                                        <OpenPlayTab
+                                            sessions={openPlaySessions}
+                                            isAuthenticated={!!auth.user}
+                                        />
+                                    </TabsContent>
+
                                     <TabsContent value="book" className="mt-0">
                                         <BookCourtTab
                                             courts={courts}

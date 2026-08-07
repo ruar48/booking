@@ -13,7 +13,7 @@ return new class extends Migration
             $table->json('gallery')->nullable()->after('amenities');
         });
 
-        Schema::table('club_events', function (Blueprint $table) {
+        Schema::table('open_play_sessions', function (Blueprint $table) {
             $table->decimal('price_per_player', 8, 2)->nullable()->after('location');
             $table->unsignedSmallInteger('max_players')->nullable()->after('price_per_player');
             $table->string('skill_level')->default('all_levels')->after('max_players');
@@ -22,7 +22,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('club_events', function (Blueprint $table) {
+        Schema::table('open_play_sessions', function (Blueprint $table) {
             $table->dropColumn(['price_per_player', 'max_players', 'skill_level']);
         });
 

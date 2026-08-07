@@ -19,6 +19,7 @@ class DashboardService
             'resourceAvailability' => $this->dashboardRepository->getResourceAvailability(),
             'revenueChart' => $this->dashboardRepository->getRevenueChart(),
             'recentBookings' => $this->dashboardRepository->getRecentBookings(),
+            'openPlaySessions' => $this->dashboardRepository->getUpcomingOpenPlay(),
             'announcements' => $this->announcementRepository->getPublished()
                 ->filter(fn ($announcement) => $announcement->show_on_dashboard)
                 ->take(5)

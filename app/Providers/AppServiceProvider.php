@@ -6,6 +6,7 @@ use App\Listeners\LogSuccessfulLogin;
 use App\Models\Announcement;
 use App\Models\Coach;
 use App\Models\GameMatch;
+use App\Models\OpenPlaySession;
 use App\Models\Payment;
 use App\Models\Player;
 use App\Models\Resource;
@@ -15,6 +16,7 @@ use App\Models\TrainingSession;
 use App\Policies\AnnouncementPolicy;
 use App\Policies\CoachPolicy;
 use App\Policies\GameMatchPolicy;
+use App\Policies\OpenPlaySessionPolicy;
 use App\Policies\PaymentPolicy;
 use App\Policies\PlayerPolicy;
 use App\Policies\ResourceBookingPolicy;
@@ -42,6 +44,7 @@ class AppServiceProvider extends ServiceProvider
         Tournament::class => TournamentPolicy::class,
         GameMatch::class => GameMatchPolicy::class,
         Announcement::class => AnnouncementPolicy::class,
+        OpenPlaySession::class => OpenPlaySessionPolicy::class,
         Coach::class => CoachPolicy::class,
         TrainingSession::class => TrainingSessionPolicy::class,
         Payment::class => PaymentPolicy::class,

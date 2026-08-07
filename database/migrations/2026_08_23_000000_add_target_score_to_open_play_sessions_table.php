@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('club_events', function (Blueprint $table) {
-            $table->string('bracket_format')->nullable()->after('target_score');
+        Schema::table('open_play_sessions', function (Blueprint $table) {
+            $table->unsignedSmallInteger('target_score')->default(11)->after('max_players');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('club_events', function (Blueprint $table) {
-            $table->dropColumn('bracket_format');
+        Schema::table('open_play_sessions', function (Blueprint $table) {
+            $table->dropColumn('target_score');
         });
     }
 };

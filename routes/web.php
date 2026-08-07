@@ -10,6 +10,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     require __DIR__.'/bookings.php';
+    require __DIR__.'/open-play-join.php';
     require __DIR__.'/rental-rent.php';
 
     Route::middleware('venue.admin')->group(function () {
@@ -25,6 +26,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         require __DIR__.'/pos.php';
         require __DIR__.'/rentals.php';
         require __DIR__.'/announcements.php';
+        require __DIR__.'/open-play.php';
         require __DIR__.'/admin.php';
     });
 });

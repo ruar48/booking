@@ -8,6 +8,7 @@ use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\TournamentStatus;
 use App\Models\GameMatch;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Ranking;
 use App\Models\Resource;
@@ -149,6 +150,15 @@ class DashboardRepository implements DashboardRepositoryInterface
         return ResourceBooking::query()
             ->with(['resource', 'user'])
             ->latest('starts_at')
+            ->limit($limit)
+            ->get();
+    }
+
+    public function getUpcomingOpenPlay(int $limit = 6): Collection
+    {
+        return OpenPlaySession::query()
+            ->where('starts_at', '>=', now())
+            ->orderBy('starts_at')
             ->limit($limit)
             ->get();
     }

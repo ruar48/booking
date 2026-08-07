@@ -21,4 +21,6 @@ interface DashboardRepositoryInterface
     public function getMatchStats(): array;
 
     public function getRecentBookings(int $limit = 8): Collection;
+
+    public function getUpcomingOpenPlay(int $limit = 6): Collection;
 }

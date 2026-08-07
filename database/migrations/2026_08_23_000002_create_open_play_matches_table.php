@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('club_event_matches', function (Blueprint $table) {
+        Schema::create('open_play_matches', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('club_event_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('entry1_id')->constrained('club_event_registrations')->cascadeOnDelete();
-            $table->foreignId('entry2_id')->constrained('club_event_registrations')->cascadeOnDelete();
+            $table->foreignId('open_play_session_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('entry1_id')->constrained('open_play_registrations')->cascadeOnDelete();
+            $table->foreignId('entry2_id')->constrained('open_play_registrations')->cascadeOnDelete();
             $table->unsignedSmallInteger('entry1_score')->nullable();
             $table->unsignedSmallInteger('entry2_score')->nullable();
-            $table->foreignId('winner_registration_id')->nullable()->constrained('club_event_registrations')->nullOnDelete();
+            $table->foreignId('winner_registration_id')->nullable()->constrained('open_play_registrations')->nullOnDelete();
             $table->string('status')->default('scheduled');
             $table->timestamps();
         });
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('club_event_matches');
+        Schema::dropIfExists('open_play_matches');
     }
 };

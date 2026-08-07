@@ -11,15 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('club_event_registrations', function (Blueprint $table) {
+        Schema::create('open_play_registrations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('club_event_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('open_play_session_id')->constrained()->cascadeOnDelete();
             $table->foreignId('player_id')->constrained()->cascadeOnDelete();
             $table->foreignId('partner_player_id')->nullable()->constrained('players')->nullOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
 
-            $table->unique(['club_event_id', 'player_id']);
+            $table->unique(['open_play_session_id', 'player_id']);
         });
     }
 
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('club_event_registrations');
+        Schema::dropIfExists('open_play_registrations');
     }
 };

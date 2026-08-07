@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Models\DateOverride;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
@@ -28,6 +29,11 @@ class HomeController extends Controller
             ->take(6)
             ->values();
 
+        $openPlaySessions = OpenPlaySession::query()
+            ->where('starts_at', '>=', now())
+            ->orderBy('starts_at')
+            ->get();
+
         $bookedSlots = ResourceBooking::query()
             ->where('starts_at', '>=', now()->startOfDay())
             ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
@@ -46,6 +52,7 @@ class HomeController extends Controller
         return Inertia::render('welcome', [
             'courts' => $courts,
             'announcements' => $announcements,
+            'openPlaySessions' => $openPlaySessions,
             'bookedSlots' => $bookedSlots,
             'dateOverrides' => $dateOverrides,
             'stats' => [
