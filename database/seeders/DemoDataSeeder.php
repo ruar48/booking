@@ -69,7 +69,7 @@ class DemoDataSeeder extends Seeder
                 'state' => 'Pangasinan',
                 'postal_code' => '2411',
                 'country' => 'PH',
-                'description' => 'Welcome to Galaang-Ramos Pickleball — your neighborhood spot for open play and court reservations. We run two indoor acrylic courts with lighting, perfect for beginners and competitive players alike. Book Court 1 or Court 2 online anytime.',
+                'description' => 'Welcome to Galaang-Ramos Pickleball — your neighborhood spot for open play and court reservations. We run two indoor acrylic courts with lighting, perfect for beginners and competitive players alike. Book the Male Court or Female Court online anytime.',
                 'amenities' => [
                     'Parking',
                     'Comfort rooms',
@@ -84,16 +84,17 @@ class DemoDataSeeder extends Seeder
         $courts = Resource::factory()
             ->count(2)
             ->sequence(
-                ['name' => 'Court 1', 'resource_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
-                ['name' => 'Court 2', 'resource_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
+                ['name' => 'Male Court', 'resource_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
+                ['name' => 'Female Court', 'resource_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
             )
             ->create(['sport' => Sport::Pickleball]);
 
         $billiardsTables = Resource::factory()
-            ->count(2)
+            ->count(3)
             ->sequence(
-                ['name' => 'Table 1', 'resource_number' => '1', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
-                ['name' => 'Table 2', 'resource_number' => '2', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Training Station 1', 'resource_number' => '1', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Training Station 2', 'resource_number' => '2', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Training Station 3', 'resource_number' => '3', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
             )
             ->create(['sport' => Sport::Billiards]);
 
@@ -138,7 +139,7 @@ class DemoDataSeeder extends Seeder
         Announcement::factory()->published()->create([
             'created_by' => $owner->id,
             'title' => 'Welcome to our courts',
-            'content' => 'Book Court 1 or Court 2 online anytime. Peak hours are 5–8 PM on weekdays — reserve early!',
+            'content' => 'Book the Male Court or Female Court online anytime. Peak hours are 5–8 PM on weekdays — reserve early!',
             'show_on_dashboard' => true,
             'show_on_home' => true,
             'show_on_player_portal' => true,
@@ -426,7 +427,7 @@ class DemoDataSeeder extends Seeder
             'description' => '1v1 round robin ladder. Every player faces every other player once — climb the standings!',
             'starts_at' => now()->addWeek()->next('Monday')->setTime(18, 0),
             'ends_at' => now()->addWeek()->next('Monday')->setTime(21, 0),
-            'location' => 'Court 1',
+            'location' => 'Male Court',
             'price_per_player' => 10,
             'max_players' => 8,
             'skill_level' => 'intermediate',
@@ -465,7 +466,7 @@ class DemoDataSeeder extends Seeder
             'description' => 'Single elimination, 1v1. Win or go home — last player standing takes the pot.',
             'starts_at' => now()->addDays(4)->setTime(19, 0),
             'ends_at' => now()->addDays(4)->setTime(21, 30),
-            'location' => 'Court 2',
+            'location' => 'Female Court',
             'price_per_player' => 15,
             'max_players' => 8,
             'skill_level' => 'advanced',

@@ -221,7 +221,7 @@ function HeroLanding({
                         </h1>
                         <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
                             {venue?.description ??
-                                'Reserve Court 1 or Court 2 online. Simple scheduling for open play and private sessions.'}
+                                'Reserve a court online. Simple scheduling for open play and private sessions.'}
                         </p>
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                             <Button

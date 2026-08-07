@@ -112,7 +112,7 @@ export default function Dashboard({ data }: Props) {
                     <Card>
                         <CardHeader>
                             <CardTitle>Court status</CardTitle>
-                            <CardDescription>Court 1 & Court 2 today</CardDescription>
+                            <CardDescription>Today's court availability</CardDescription>
                         </CardHeader>
                         <CardContent>
                             {resourceAvailability.length ? (
