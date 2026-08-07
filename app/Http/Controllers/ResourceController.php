@@ -56,7 +56,7 @@ class ResourceController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Resource updated.')]);
 
-        return to_route('resources.edit', $resource);
+        return to_route('resources.index');
     }
 
     public function destroy(Resource $resource): RedirectResponse

@@ -22,7 +22,9 @@ trait ResourceValidationRules
                 'required',
                 'string',
                 'max:50',
-                Rule::unique(Resource::class, 'resource_number')->ignore($resourceId),
+                Rule::unique(Resource::class, 'resource_number')
+                    ->where(fn ($query) => $query->where('sport', $this->input('sport')))
+                    ->ignore($resourceId),
             ],
             'surface_type' => ['required', 'string', Rule::in(['hard', 'clay', 'grass', 'carpet', 'synthetic'])],
             'location_type' => ['required', 'string', Rule::in(['indoor', 'outdoor'])],
