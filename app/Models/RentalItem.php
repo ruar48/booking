@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property string $name
  * @property string $sku
  * @property string|null $category
@@ -28,7 +27,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
-    'club_id',
     'name',
     'sku',
     'category',
@@ -52,11 +50,6 @@ class RentalItem extends Model
             'hourly_rate' => 'decimal:2',
             'deposit' => 'decimal:2',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function movements(): HasMany

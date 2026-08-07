@@ -92,9 +92,9 @@ class GameMatchService
         });
     }
 
-    public function getRecent(int $limit = 10, ?int $clubId = null): Collection
+    public function getRecent(int $limit = 10): Collection
     {
-        return $this->gameMatchRepository->getRecent($limit, $clubId);
+        return $this->gameMatchRepository->getRecent($limit);
     }
 
     private function advanceTournamentWinner(GameMatch $match): void

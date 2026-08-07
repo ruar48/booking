@@ -20,10 +20,9 @@ class SaleController extends Controller
 
         return Inertia::render('pos/sales/index', [
             'sales' => $this->saleRepository->paginate(
-                clubId: $request->integer('club_id') ?: null,
                 status: $request->string('status')->value() ?: null,
             ),
-            'filters' => $request->only(['club_id', 'status']),
+            'filters' => $request->only(['status']),
         ]);
     }
 

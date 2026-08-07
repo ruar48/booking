@@ -108,11 +108,10 @@ class ResourceBookingService
     }
 
     public function getForCalendar(
-        ?int $clubId = null,
         ?Carbon $start = null,
         ?Carbon $end = null,
     ): Collection {
-        return $this->bookingRepository->getForCalendar($clubId, $start, $end);
+        return $this->bookingRepository->getForCalendar($start, $end);
     }
 
     private function assertBookable(
@@ -121,14 +120,13 @@ class ResourceBookingService
         Carbon $endsAt,
         ?int $excludeBookingId = null,
     ): void {
-        $resource = Resource::query()->with('club')->find($resourceId);
+        $resource = Resource::query()->find($resourceId);
 
         if ($resource === null || $resource->status !== ResourceStatus::Available) {
             throw new BookingConflictException('This court/table is currently unavailable.');
         }
 
         $isBlocked = ScheduleBlock::query()
-            ->where('club_id', $resource->club_id)
             ->where(fn ($query) => $query
                 ->whereNull('resource_id')
                 ->orWhere('resource_id', $resourceId))
@@ -141,7 +139,6 @@ class ResourceBookingService
         }
 
         $isRecurringLocked = RecurringScheduleLock::query()
-            ->where('club_id', $resource->club_id)
             ->where(fn ($query) => $query
                 ->whereNull('resource_id')
                 ->orWhere('resource_id', $resourceId))
@@ -158,7 +155,6 @@ class ResourceBookingService
         // on a date an admin has explicitly opened (with hours) via the booking
         // calendar. Absence of a DateOverride row means the date is closed.
         $dateOverride = DateOverride::query()
-            ->where('club_id', $resource->club_id)
             ->whereDate('date', $startsAt->toDateString())
             ->first();
 

@@ -1,8 +1,5 @@
-import type { Club } from '@/types/booking';
-
 export type Product = {
     id: number;
-    club_id: number;
     name: string;
     sku: string;
     category?: string | null;
@@ -13,7 +10,6 @@ export type Product = {
     status: 'active' | 'inactive' | 'discontinued';
     photos?: string[] | null;
     description?: string | null;
-    club?: Club;
     stock_movements?: StockMovement[];
     created_at?: string;
     updated_at?: string;

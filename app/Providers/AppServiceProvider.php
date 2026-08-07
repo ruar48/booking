@@ -4,8 +4,6 @@ namespace App\Providers;
 
 use App\Listeners\LogSuccessfulLogin;
 use App\Models\Announcement;
-use App\Models\Club;
-use App\Models\ClubEvent;
 use App\Models\Coach;
 use App\Models\GameMatch;
 use App\Models\Payment;
@@ -15,8 +13,6 @@ use App\Models\ResourceBooking;
 use App\Models\Tournament;
 use App\Models\TrainingSession;
 use App\Policies\AnnouncementPolicy;
-use App\Policies\ClubEventPolicy;
-use App\Policies\ClubPolicy;
 use App\Policies\CoachPolicy;
 use App\Policies\GameMatchPolicy;
 use App\Policies\PaymentPolicy;
@@ -40,14 +36,12 @@ class AppServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected array $policies = [
-        Club::class => ClubPolicy::class,
         Player::class => PlayerPolicy::class,
         Resource::class => ResourcePolicy::class,
         ResourceBooking::class => ResourceBookingPolicy::class,
         Tournament::class => TournamentPolicy::class,
         GameMatch::class => GameMatchPolicy::class,
         Announcement::class => AnnouncementPolicy::class,
-        ClubEvent::class => ClubEventPolicy::class,
         Coach::class => CoachPolicy::class,
         TrainingSession::class => TrainingSessionPolicy::class,
         Payment::class => PaymentPolicy::class,

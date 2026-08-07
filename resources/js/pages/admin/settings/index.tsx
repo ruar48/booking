@@ -12,10 +12,9 @@ import type { Setting } from '@/types/booking';
 
 type Props = {
     settings: Record<string, Setting[]>;
-    clubId?: number | null;
 };
 
-export default function AdminSettingsIndex({ settings, clubId }: Props) {
+export default function AdminSettingsIndex({ settings }: Props) {
     const flatSettings = Object.entries(settings).flatMap(([group, items]) =>
         items.map((setting) => ({
             group,
@@ -28,7 +27,6 @@ export default function AdminSettingsIndex({ settings, clubId }: Props) {
     );
 
     const { data, setData, put, processing, errors } = useForm({
-        club_id: clubId ?? null,
         settings: flatSettings.length
             ? flatSettings
             : [{ group: 'general', key: 'site_name', value: '' }],

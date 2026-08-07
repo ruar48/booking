@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Club;
 use App\Models\Coach;
 use App\Models\Resource;
 use App\Models\TrainingSession;
@@ -19,7 +18,6 @@ class TrainingSessionFactory extends Factory
     {
         return [
             'coach_id' => Coach::factory(),
-            'club_id' => Club::factory(),
             'court_id' => Resource::factory(),
             'title' => fake()->words(3, true).' Training',
             'description' => fake()->paragraph(),

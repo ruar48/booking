@@ -19,7 +19,6 @@ import { index as productsIndex, store } from '@/routes/products';
 
 export default function InventoryCreate() {
     const { data, setData, post, processing, errors } = useForm({
-        club_id: '',
         name: '',
         sku: '',
         category: '',
@@ -47,17 +46,6 @@ export default function InventoryCreate() {
                 <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
                     <Card>
                         <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
-                            <div className="grid gap-2">
-                                <Label htmlFor="club_id">Club ID</Label>
-                                <Input
-                                    id="club_id"
-                                    type="number"
-                                    value={data.club_id}
-                                    onChange={(e) => setData('club_id', e.target.value)}
-                                    required
-                                />
-                                <InputError message={errors.club_id} />
-                            </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="sku">SKU</Label>
                                 <Input

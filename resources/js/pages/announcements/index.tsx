@@ -29,11 +29,6 @@ export default function AnnouncementsIndex({ announcements }: Props) {
             ),
         },
         {
-            accessorKey: 'club',
-            header: 'Club',
-            cell: ({ row }) => row.original.club?.name ?? 'Global',
-        },
-        {
             accessorKey: 'is_published',
             header: 'Status',
             cell: ({ row }) => (

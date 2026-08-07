@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\ProductStatus;
-use App\Models\Club;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +18,6 @@ class ProductFactory extends Factory
         $price = fake()->randomFloat(2, 2, 100);
 
         return [
-            'club_id' => Club::factory(),
             'name' => fake()->words(3, true),
             'sku' => strtoupper(fake()->unique()->bothify('SKU-####??')),
             'category' => fake()->randomElement(['equipment', 'apparel', 'drinks', 'snacks', 'accessories']),

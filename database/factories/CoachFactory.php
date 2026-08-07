@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Club;
 use App\Models\Coach;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,7 +17,6 @@ class CoachFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'club_id' => Club::factory(),
             'certifications' => [fake()->words(2, true).' Certification'],
             'years_experience' => fake()->numberBetween(1, 30),
             'bio' => fake()->paragraph(),

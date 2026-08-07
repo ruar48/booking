@@ -23,7 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
-import type { BookedSlot, Club, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
+import type { BookedSlot, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
 
 export type WalkInCustomerPayload =
     | { mode: 'existing'; user_id: number }
@@ -39,7 +39,6 @@ type SlotSelection = {
 
 type Props = {
     courts: Resource[];
-    club: Club | null;
     bookedSlots: BookedSlot[];
     scheduleBlocks?: ScheduleBlock[];
     recurringLocks?: RecurringScheduleLock[];

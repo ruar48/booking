@@ -22,9 +22,7 @@ class GameMatchPolicy
 
     public function updateScore(User $user, GameMatch $gameMatch): bool
     {
-        $clubId = $gameMatch->court?->club_id;
-
-        return $this->isClubAdmin($user, $clubId)
+        return $this->isClubAdmin($user)
             || $this->isTournamentOrganizer($user)
             || $this->ownsRecord($user, $gameMatch->referee_id);
     }

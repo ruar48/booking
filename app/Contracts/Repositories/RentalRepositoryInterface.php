@@ -10,7 +10,6 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 interface RentalRepositoryInterface
 {
     public function paginate(
-        ?int $clubId = null,
         ?string $status = null,
         ?string $search = null,
         ?int $staffId = null,
@@ -20,7 +19,7 @@ interface RentalRepositoryInterface
     /**
      * @return array{active: int, overdue: int, returned: int, lost: int, reserved: int, revenue: float}
      */
-    public function stats(?int $clubId = null): array;
+    public function stats(): array;
 
     public function find(int $id): RentalTransaction;
 

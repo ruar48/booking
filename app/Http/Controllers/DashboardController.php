@@ -19,11 +19,8 @@ class DashboardController extends Controller
             abort(403);
         }
 
-        $clubId = $request->integer('club_id') ?: null;
-
         return Inertia::render('dashboard', [
-            'clubId' => $clubId,
-            'data' => $this->dashboardService->getData($clubId),
+            'data' => $this->dashboardService->getData(),
         ]);
     }
 }

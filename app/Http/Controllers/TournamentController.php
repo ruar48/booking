@@ -52,7 +52,7 @@ class TournamentController extends Controller
     {
         $this->authorize('view', $tournament);
 
-        $tournament->load(['club', 'creator', 'categories', 'registrations.player.user']);
+        $tournament->load(['creator', 'categories', 'registrations.player.user']);
 
         return Inertia::render('tournaments/show', [
             'tournament' => $tournament,
@@ -62,8 +62,6 @@ class TournamentController extends Controller
     public function edit(Tournament $tournament): Response
     {
         $this->authorize('update', $tournament);
-
-        $tournament->load('club');
 
         return Inertia::render('tournaments/edit', [
             'tournament' => $tournament,

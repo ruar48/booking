@@ -18,9 +18,7 @@ class ResourcePolicy
 
     public function view(User $user, Resource $resource): bool
     {
-        return $this->isSuperAdmin($user)
-            || $this->isClubAdmin($user, $resource->club_id)
-            || $this->belongsToClub($user, $resource->club_id);
+        return $this->viewAnyAuthenticated($user);
     }
 
     public function create(User $user): bool
@@ -30,12 +28,12 @@ class ResourcePolicy
 
     public function update(User $user, Resource $resource): bool
     {
-        return $this->isClubAdmin($user, $resource->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function delete(User $user, Resource $resource): bool
     {
-        return $this->isClubAdmin($user, $resource->club_id);
+        return $this->isClubAdmin($user);
     }
 
     private function viewAnyAuthenticated(User $user): bool

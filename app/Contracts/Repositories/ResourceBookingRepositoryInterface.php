@@ -29,7 +29,6 @@ interface ResourceBookingRepositoryInterface
     ): Collection;
 
     public function getForCalendar(
-        ?int $clubId = null,
         ?Carbon $start = null,
         ?Carbon $end = null,
     ): Collection;

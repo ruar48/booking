@@ -14,18 +14,13 @@ class CoachController extends Controller
         $this->authorize('viewAny', Coach::class);
 
         $coaches = Coach::query()
-            ->with(['user', 'club'])
-            ->when(
-                $request->filled('club_id'),
-                fn ($query) => $query->where('club_id', $request->integer('club_id')),
-            )
+            ->with(['user'])
             ->where('is_active', true)
             ->latest()
             ->paginate();
 
         return Inertia::render('coaches/index', [
             'coaches' => $coaches,
-            'filters' => $request->only(['club_id']),
         ]);
     }
 
@@ -33,7 +28,7 @@ class CoachController extends Controller
     {
         $this->authorize('view', $coach);
 
-        $coach->load(['user', 'club', 'players.user', 'trainingSessions']);
+        $coach->load(['user', 'players.user', 'trainingSessions']);
 
         return Inertia::render('coaches/show', [
             'coach' => $coach,

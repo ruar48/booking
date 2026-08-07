@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\SaleStatus;
-use App\Models\Club;
 use App\Models\Sale;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +22,6 @@ class SaleFactory extends Factory
         $tax = 0;
 
         return [
-            'club_id' => Club::factory(),
             'cashier_id' => User::factory(),
             'customer_id' => null,
             'invoice_number' => 'SALE-'.Str::upper(Str::random(10)),

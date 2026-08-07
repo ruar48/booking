@@ -12,7 +12,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int|null $club_id
  * @property int $created_by
  * @property string $title
  * @property string $content
@@ -26,7 +25,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
-    'club_id',
     'created_by',
     'title',
     'content',
@@ -50,11 +48,6 @@ class Announcement extends Model
             'is_published' => 'boolean',
             'published_at' => 'datetime',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function creator(): BelongsTo

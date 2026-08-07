@@ -2,7 +2,6 @@
 
 namespace App\Concerns;
 
-use App\Models\Club;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
@@ -14,7 +13,6 @@ trait AnnouncementValidationRules
     protected function announcementRules(): array
     {
         return [
-            'club_id' => ['nullable', 'integer', Rule::exists(Club::class, 'id')],
             'title' => ['required', 'string', 'max:255'],
             'content' => ['required', 'string'],
             'show_on_dashboard' => ['sometimes', 'boolean'],

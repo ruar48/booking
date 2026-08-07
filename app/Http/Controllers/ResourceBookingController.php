@@ -10,7 +10,6 @@ use App\Exceptions\BookingConflictException;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
-use App\Models\Club;
 use App\Models\DateOverride;
 use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
@@ -149,7 +148,7 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        $booking->load(['resource.club', 'user', 'approver']);
+        $booking->load(['resource', 'user', 'approver']);
 
         return Inertia::render('bookings/show', [
             'booking' => $booking,
@@ -188,27 +187,20 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('viewAny', ResourceBooking::class);
 
-        $clubId = $request->integer('club_id') ?: null;
         $start = $request->filled('start') ? Carbon::parse($request->input('start')) : null;
         $end = $request->filled('end') ? Carbon::parse($request->input('end')) : null;
 
-        $club = $this->activeClub();
-
-        $dateOverrides = $club
-            ? DateOverride::query()
-                ->where('club_id', $club->id)
-                ->whereBetween('date', [
-                    ($start ?? now()->startOfMonth())->toDateString(),
-                    ($end ?? now()->endOfMonth())->toDateString(),
-                ])
-                ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason'])
-            : collect();
+        $dateOverrides = DateOverride::query()
+            ->whereBetween('date', [
+                ($start ?? now()->startOfMonth())->toDateString(),
+                ($end ?? now()->endOfMonth())->toDateString(),
+            ])
+            ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
         return Inertia::render('bookings/calendar', [
-            'bookings' => $this->resourceBookingRepository->getForCalendar($clubId, $start, $end),
+            'bookings' => $this->resourceBookingRepository->getForCalendar($start, $end),
             'dateOverrides' => $dateOverrides,
-            'operatingHours' => $club?->operating_hours,
-            'filters' => $request->only(['club_id', 'start', 'end']),
+            'filters' => $request->only(['start', 'end']),
         ]);
     }
 
@@ -216,17 +208,13 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('viewAny', ResourceBooking::class);
 
-        $club = $this->activeClub();
-
-        abort_if($club === null, 404);
-
         $validated = $request->validate([
             'date' => ['required', 'date'],
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
 
         DateOverride::query()->updateOrCreate(
-            ['club_id' => $club->id, 'date' => $validated['date']],
+            ['date' => $validated['date']],
             [
                 'is_closed' => true,
                 'open_time' => null,
@@ -245,10 +233,6 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('viewAny', ResourceBooking::class);
 
-        $club = $this->activeClub();
-
-        abort_if($club === null, 404);
-
         $validated = $request->validate([
             'date' => ['required', 'date'],
             'open_time' => ['required', 'date_format:H:i'],
@@ -256,7 +240,7 @@ class ResourceBookingController extends Controller
         ]);
 
         DateOverride::query()->updateOrCreate(
-            ['club_id' => $club->id, 'date' => $validated['date']],
+            ['date' => $validated['date']],
             [
                 'is_closed' => false,
                 'open_time' => $validated['open_time'],
@@ -269,14 +253,6 @@ class ResourceBookingController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Date opened for bookings.')]);
 
         return back();
-    }
-
-    private function activeClub(): ?Club
-    {
-        return Club::query()
-            ->where('is_active', true)
-            ->oldest()
-            ->first();
     }
 
     /**
@@ -304,51 +280,28 @@ class ResourceBookingController extends Controller
      */
     protected function bookingScheduleData(): array
     {
-        $club = Club::query()
-            ->where('is_active', true)
-            ->oldest()
-            ->first();
+        $resources = Resource::query()
+            ->orderBy('resource_number')
+            ->get();
 
-        $clubId = $club?->id;
+        $bookedSlots = ResourceBooking::query()
+            ->where('starts_at', '>=', now()->startOfDay())
+            ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
+            ->with('resource:id,name')
+            ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
 
-        $resources = $clubId
-            ? Resource::query()
-                ->where('club_id', $clubId)
-                ->orderBy('resource_number')
-                ->get()
-            : collect();
+        $scheduleBlocks = ScheduleBlock::query()
+            ->where('ends_at', '>=', now()->startOfDay())
+            ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'reason']);
 
-        $bookedSlots = $clubId
-            ? ResourceBooking::query()
-                ->whereHas('resource', fn ($query) => $query->where('club_id', $clubId))
-                ->where('starts_at', '>=', now()->startOfDay())
-                ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
-                ->with('resource:id,name')
-                ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
-            : collect();
+        $recurringLocks = RecurringScheduleLock::query()
+            ->get(['id', 'resource_id', 'day_of_week', 'starts_at', 'ends_at', 'reason']);
 
-        $scheduleBlocks = $clubId
-            ? ScheduleBlock::query()
-                ->where('club_id', $clubId)
-                ->where('ends_at', '>=', now()->startOfDay())
-                ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'reason'])
-            : collect();
-
-        $recurringLocks = $clubId
-            ? RecurringScheduleLock::query()
-                ->where('club_id', $clubId)
-                ->get(['id', 'resource_id', 'day_of_week', 'starts_at', 'ends_at', 'reason'])
-            : collect();
-
-        $dateOverrides = $clubId
-            ? DateOverride::query()
-                ->where('club_id', $clubId)
-                ->where('date', '>=', now()->startOfDay())
-                ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason'])
-            : collect();
+        $dateOverrides = DateOverride::query()
+            ->where('date', '>=', now()->startOfDay())
+            ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
         return [
-            'club' => $club,
             'resources' => $resources,
             'bookedSlots' => $bookedSlots,
             'scheduleBlocks' => $scheduleBlocks,

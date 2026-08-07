@@ -34,17 +34,10 @@ class GameMatchRepository implements GameMatchRepositoryInterface
         return $match->fresh();
     }
 
-    public function getRecent(int $limit = 10, ?int $clubId = null): Collection
+    public function getRecent(int $limit = 10): Collection
     {
         return GameMatch::query()
             ->with(['tournament', 'court', 'player1.user', 'player2.user', 'winner'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'court',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            )
             ->latest('completed_at')
             ->latest('scheduled_at')
             ->limit($limit)

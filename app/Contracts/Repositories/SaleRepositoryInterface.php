@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 interface SaleRepositoryInterface
 {
-    public function paginate(?int $clubId = null, ?string $status = null, int $perPage = 15): LengthAwarePaginator;
+    public function paginate(?string $status = null, int $perPage = 15): LengthAwarePaginator;
 
     public function find(int $id): Sale;
 
@@ -24,5 +24,5 @@ interface SaleRepositoryInterface
     /**
      * @return array<string, mixed>
      */
-    public function salesReport(Carbon $start, Carbon $end, ?int $clubId = null): array;
+    public function salesReport(Carbon $start, Carbon $end): array;
 }

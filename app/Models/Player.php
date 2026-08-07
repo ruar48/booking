@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $user_id
- * @property int|null $club_id
  * @property int $skill_rating
  * @property string $experience_level
  * @property string|null $playing_hand
@@ -33,7 +32,6 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'user_id',
-    'club_id',
     'skill_rating',
     'experience_level',
     'playing_hand',
@@ -62,11 +60,6 @@ class Player extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function achievements(): HasMany

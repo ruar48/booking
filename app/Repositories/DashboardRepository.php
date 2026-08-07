@@ -7,7 +7,6 @@ use App\Enums\BookingStatus;
 use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\TournamentStatus;
-use App\Models\ClubEvent;
 use App\Models\GameMatch;
 use App\Models\Player;
 use App\Models\Ranking;
@@ -19,40 +18,17 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardRepository implements DashboardRepositoryInterface
 {
-    public function getStats(?int $clubId = null): array
+    public function getStats(): array
     {
-        $playersQuery = Player::query()->when(
-            $clubId !== null,
-            fn ($query) => $query->where('club_id', $clubId),
-        );
+        $playersQuery = Player::query();
 
-        $resourcesQuery = Resource::query()->when(
-            $clubId !== null,
-            fn ($query) => $query->where('club_id', $clubId),
-        );
+        $resourcesQuery = Resource::query();
 
-        $bookingsQuery = ResourceBooking::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'resource',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            );
+        $bookingsQuery = ResourceBooking::query();
 
-        $tournamentsQuery = Tournament::query()->when(
-            $clubId !== null,
-            fn ($query) => $query->where('club_id', $clubId),
-        );
+        $tournamentsQuery = Tournament::query();
 
-        $matchesQuery = GameMatch::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'court',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            );
+        $matchesQuery = GameMatch::query();
 
         return [
             'players' => (clone $playersQuery)->count(),
@@ -81,17 +57,10 @@ class DashboardRepository implements DashboardRepositoryInterface
         ];
     }
 
-    public function getRecentMatches(?int $clubId = null, int $limit = 10): Collection
+    public function getRecentMatches(int $limit = 10): Collection
     {
         return GameMatch::query()
             ->with(['tournament', 'court', 'player1.user', 'player2.user', 'winner'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'court',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            )
             ->whereIn('status', [MatchStatus::Completed, MatchStatus::InProgress])
             ->latest('completed_at')
             ->latest('scheduled_at')
@@ -99,27 +68,19 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->get();
     }
 
-    public function getRankings(?int $clubId = null, int $limit = 10): Collection
+    public function getRankings(int $limit = 10): Collection
     {
         return Ranking::query()
-            ->with(['player.user', 'club'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
+            ->with('player.user')
             ->orderByDesc('elo_rating')
             ->limit($limit)
             ->get();
     }
 
-    public function getUpcomingTournaments(?int $clubId = null, int $limit = 10): Collection
+    public function getUpcomingTournaments(int $limit = 10): Collection
     {
         return Tournament::query()
-            ->with(['club', 'creator'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
+            ->with('creator')
             ->where('starts_at', '>', now())
             ->whereNotIn('status', [TournamentStatus::Completed, TournamentStatus::Cancelled])
             ->orderBy('starts_at')
@@ -127,25 +88,20 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->get();
     }
 
-    public function getResourceAvailability(?int $clubId = null): Collection
+    public function getResourceAvailability(): Collection
     {
         return Resource::query()
             ->with([
-                'club',
                 'bookings' => fn ($query) => $query
                     ->whereDate('starts_at', today())
                     ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
                     ->orderBy('starts_at'),
             ])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->orderBy('resource_number')
             ->get();
     }
 
-    public function getRevenueChart(?int $clubId = null): array
+    public function getRevenueChart(): array
     {
         $periodExpression = match (DB::connection()->getDriverName()) {
             'sqlite' => "strftime('%Y-%m', starts_at)",
@@ -159,13 +115,6 @@ class DashboardRepository implements DashboardRepositoryInterface
                 DB::raw('SUM(amount) as total'),
             ])
             ->where('payment_status', PaymentStatus::Paid)
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'resource',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            )
             ->where('starts_at', '>=', now()->subMonths(11)->startOfMonth())
             ->groupBy('period')
             ->orderBy('period')
@@ -182,16 +131,9 @@ class DashboardRepository implements DashboardRepositoryInterface
         })->all();
     }
 
-    public function getMatchStats(?int $clubId = null): array
+    public function getMatchStats(): array
     {
-        $query = GameMatch::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'court',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            );
+        $query = GameMatch::query();
 
         return [
             'scheduled' => (clone $query)->where('status', MatchStatus::Scheduled)->count(),
@@ -202,31 +144,11 @@ class DashboardRepository implements DashboardRepositoryInterface
         ];
     }
 
-    public function getRecentBookings(?int $clubId = null, int $limit = 8): Collection
+    public function getRecentBookings(int $limit = 8): Collection
     {
         return ResourceBooking::query()
             ->with(['resource', 'user'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'resource',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            )
             ->latest('starts_at')
-            ->limit($limit)
-            ->get();
-    }
-
-    public function getUpcomingOpenPlay(?int $clubId = null, int $limit = 6): Collection
-    {
-        return ClubEvent::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
-            ->where('starts_at', '>=', now())
-            ->orderBy('starts_at')
             ->limit($limit)
             ->get();
     }

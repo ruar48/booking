@@ -6,21 +6,19 @@ use Illuminate\Support\Collection;
 
 interface DashboardRepositoryInterface
 {
-    public function getStats(?int $clubId = null): array;
+    public function getStats(): array;
 
-    public function getRecentMatches(?int $clubId = null, int $limit = 10): Collection;
+    public function getRecentMatches(int $limit = 10): Collection;
 
-    public function getRankings(?int $clubId = null, int $limit = 10): Collection;
+    public function getRankings(int $limit = 10): Collection;
 
-    public function getUpcomingTournaments(?int $clubId = null, int $limit = 10): Collection;
+    public function getUpcomingTournaments(int $limit = 10): Collection;
 
-    public function getResourceAvailability(?int $clubId = null): Collection;
+    public function getResourceAvailability(): Collection;
 
-    public function getRevenueChart(?int $clubId = null): array;
+    public function getRevenueChart(): array;
 
-    public function getMatchStats(?int $clubId = null): array;
+    public function getMatchStats(): array;
 
-    public function getRecentBookings(?int $clubId = null, int $limit = 8): Collection;
-
-    public function getUpcomingOpenPlay(?int $clubId = null, int $limit = 6): Collection;
+    public function getRecentBookings(int $limit = 8): Collection;
 }

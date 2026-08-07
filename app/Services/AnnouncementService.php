@@ -53,8 +53,8 @@ class AnnouncementService
         return $this->announcementRepository->delete($announcement);
     }
 
-    public function getPublished(?int $clubId = null): Collection
+    public function getPublished(): Collection
     {
-        return $this->announcementRepository->getPublished($clubId);
+        return $this->announcementRepository->getPublished();
     }
 }

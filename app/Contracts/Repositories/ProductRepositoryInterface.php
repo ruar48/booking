@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 
 interface ProductRepositoryInterface
 {
-    public function paginate(?int $clubId = null, ?string $search = null, bool $lowStockOnly = false, int $perPage = 15): LengthAwarePaginator;
+    public function paginate(?string $search = null, bool $lowStockOnly = false, int $perPage = 15): LengthAwarePaginator;
 
     public function find(int $id): Product;
 

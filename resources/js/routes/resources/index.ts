@@ -314,7 +314,7 @@ edit.head = (args: { resource: number | { id: number } } | [resource: number | {
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
 export const update = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -329,7 +329,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
 update.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +362,7 @@ update.url = (args: { resource: number | { id: number } } | [resource: number | 
 
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
 update.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -371,7 +371,7 @@ update.put = (args: { resource: number | { id: number } } | [resource: number | 
 })
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
 update.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -381,7 +381,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
 
     /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
     const updateForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -396,7 +396,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
 
             /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
         updateForm.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -410,7 +410,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
         })
             /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:55
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources/{resource}'
  */
         updateForm.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -426,7 +426,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:64
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}'
  */
 export const destroy = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -441,7 +441,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:64
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}'
  */
 destroy.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -474,7 +474,7 @@ destroy.url = (args: { resource: number | { id: number } } | [resource: number |
 
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:64
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}'
  */
 destroy.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -484,7 +484,7 @@ destroy.delete = (args: { resource: number | { id: number } } | [resource: numbe
 
     /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:64
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}'
  */
     const destroyForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -499,7 +499,7 @@ destroy.delete = (args: { resource: number | { id: number } } | [resource: numbe
 
             /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:64
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}'
  */
         destroyForm.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -81,7 +81,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:53
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
  * @route '/admin/schedule/hours'
  */
 export const updateHours = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -96,7 +96,7 @@ updateHours.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:53
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
  * @route '/admin/schedule/hours'
  */
 updateHours.url = (options?: RouteQueryOptions) => {
@@ -105,7 +105,7 @@ updateHours.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:53
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
  * @route '/admin/schedule/hours'
  */
 updateHours.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -115,7 +115,7 @@ updateHours.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:53
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
  * @route '/admin/schedule/hours'
  */
     const updateHoursForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -130,7 +130,7 @@ updateHours.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::updateHours
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:53
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:43
  * @route '/admin/schedule/hours'
  */
         updateHoursForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

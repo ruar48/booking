@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:101
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
  * @route '/admin/schedule/recurring-locks/toggle'
  */
 export const toggle = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ toggle.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:101
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
  * @route '/admin/schedule/recurring-locks/toggle'
  */
 toggle.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ toggle.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:101
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
  * @route '/admin/schedule/recurring-locks/toggle'
  */
 toggle.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ toggle.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:101
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
  * @route '/admin/schedule/recurring-locks/toggle'
  */
     const toggleForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ toggle.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::toggle
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:101
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:85
  * @route '/admin/schedule/recurring-locks/toggle'
  */
         toggleForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -16,5 +16,5 @@ interface GameMatchRepositoryInterface
 
     public function update(GameMatch $match, array $data): GameMatch;
 
-    public function getRecent(int $limit = 10, ?int $clubId = null): Collection;
+    public function getRecent(int $limit = 10): Collection;
 }

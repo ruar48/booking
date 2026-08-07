@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
-use App\Models\Club;
 use App\Models\Tournament;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -22,7 +21,6 @@ class TournamentFactory extends Factory
         $name = fake()->words(3, true).' Open';
 
         return [
-            'club_id' => Club::factory(),
             'created_by' => User::factory(),
             'name' => $name,
             'slug' => Str::slug($name).'-'.fake()->unique()->numerify('###'),

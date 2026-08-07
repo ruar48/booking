@@ -20,8 +20,8 @@ class EloRankingService
         }
 
         DB::transaction(function () use ($match): void {
-            $player1Ranking = $this->resolveRanking($match->player1_id, $match->tournament?->club_id);
-            $player2Ranking = $this->resolveRanking($match->player2_id, $match->tournament?->club_id);
+            $player1Ranking = $this->resolveRanking($match->player1_id);
+            $player2Ranking = $this->resolveRanking($match->player2_id);
 
             $player1Won = $match->winner_id === $match->player1_id;
 
@@ -49,10 +49,10 @@ class EloRankingService
         return (int) round(self::K_FACTOR * ($actualScore - $expected));
     }
 
-    private function resolveRanking(int $playerId, ?int $clubId): Ranking
+    private function resolveRanking(int $playerId): Ranking
     {
         return Ranking::query()->firstOrCreate(
-            ['player_id' => $playerId, 'club_id' => $clubId],
+            ['player_id' => $playerId],
             ['elo_rating' => self::DEFAULT_RATING],
         );
     }

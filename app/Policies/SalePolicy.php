@@ -18,7 +18,7 @@ class SalePolicy
 
     public function view(User $user, Sale $sale): bool
     {
-        return $this->isSuperAdmin($user) || $this->isClubAdmin($user, $sale->club_id);
+        return $this->isSuperAdmin($user) || $this->isClubAdmin($user);
     }
 
     public function create(User $user): bool
@@ -28,6 +28,6 @@ class SalePolicy
 
     public function void(User $user, Sale $sale): bool
     {
-        return $this->isClubAdmin($user, $sale->club_id);
+        return $this->isClubAdmin($user);
     }
 }

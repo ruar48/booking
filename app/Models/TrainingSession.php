@@ -13,7 +13,6 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $coach_id
- * @property int $club_id
  * @property int|null $court_id
  * @property string $title
  * @property string|null $description
@@ -27,7 +26,6 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'coach_id',
-    'club_id',
     'court_id',
     'title',
     'description',
@@ -52,11 +50,6 @@ class TrainingSession extends Model
     public function coach(): BelongsTo
     {
         return $this->belongsTo(Coach::class);
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function court(): BelongsTo

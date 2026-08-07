@@ -1,8 +1,5 @@
-import type { Club } from '@/types/booking';
-
 export type RentalItem = {
     id: number;
-    club_id: number;
     name: string;
     sku: string;
     category?: string | null;
@@ -13,7 +10,6 @@ export type RentalItem = {
     available_quantity: number;
     status: 'active' | 'inactive';
     description?: string | null;
-    club?: Club;
     created_at?: string;
     updated_at?: string;
 };
@@ -49,7 +45,6 @@ export type RentalTransactionItem = {
 
 export type RentalTransaction = {
     id: number;
-    club_id: number;
     staff_id: number;
     renter_id?: number | null;
     renter_name?: string | null;

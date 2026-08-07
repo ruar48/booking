@@ -3,7 +3,6 @@
 namespace App\Providers;
 
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
-use App\Contracts\Repositories\ClubRepositoryInterface;
 use App\Contracts\Repositories\DashboardRepositoryInterface;
 use App\Contracts\Repositories\GameMatchRepositoryInterface;
 use App\Contracts\Repositories\PlayerRepositoryInterface;
@@ -15,7 +14,6 @@ use App\Contracts\Repositories\ResourceRepositoryInterface;
 use App\Contracts\Repositories\SaleRepositoryInterface;
 use App\Contracts\Repositories\TournamentRepositoryInterface;
 use App\Repositories\AnnouncementRepository;
-use App\Repositories\ClubRepository;
 use App\Repositories\DashboardRepository;
 use App\Repositories\GameMatchRepository;
 use App\Repositories\PlayerRepository;
@@ -34,7 +32,6 @@ class RepositoryServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     public array $bindings = [
-        ClubRepositoryInterface::class => ClubRepository::class,
         PlayerRepositoryInterface::class => PlayerRepository::class,
         ResourceRepositoryInterface::class => ResourceRepository::class,
         ResourceBookingRepositoryInterface::class => ResourceBookingRepository::class,

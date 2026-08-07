@@ -17,7 +17,6 @@ import type { SalesReport } from '@/types/pos';
 type Props = {
     report: SalesReport;
     filters: {
-        club_id?: number | null;
         start: string;
         end: string;
     };

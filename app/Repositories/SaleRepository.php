@@ -24,14 +24,10 @@ class SaleRepository implements SaleRepositoryInterface
         private readonly PaymentService $paymentService,
     ) {}
 
-    public function paginate(?int $clubId = null, ?string $status = null, int $perPage = 15): LengthAwarePaginator
+    public function paginate(?string $status = null, int $perPage = 15): LengthAwarePaginator
     {
         return Sale::query()
             ->with(['cashier', 'customer'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->when(
                 filled($status),
                 fn ($query) => $query->where('status', $status),
@@ -96,7 +92,6 @@ class SaleRepository implements SaleRepositoryInterface
             $total = round($subtotal - $discount + $tax, 2);
 
             $sale = Sale::query()->create([
-                'club_id' => $meta['club_id'],
                 'cashier_id' => $cashier->id,
                 'customer_id' => $meta['customer_id'] ?? null,
                 'invoice_number' => $this->generateSaleInvoiceNumber(),
@@ -181,15 +176,11 @@ class SaleRepository implements SaleRepositoryInterface
     /**
      * @return array<string, mixed>
      */
-    public function salesReport(Carbon $start, Carbon $end, ?int $clubId = null): array
+    public function salesReport(Carbon $start, Carbon $end): array
     {
         $salesQuery = Sale::query()
             ->where('status', SaleStatus::Completed->value)
-            ->whereBetween('created_at', [$start, $end])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            );
+            ->whereBetween('created_at', [$start, $end]);
 
         $totalRevenue = (clone $salesQuery)->sum('total');
         $totalSalesCount = (clone $salesQuery)->count();
@@ -198,10 +189,6 @@ class SaleRepository implements SaleRepositoryInterface
             ->join('sales', 'sales.id', '=', 'sale_items.sale_id')
             ->where('sales.status', SaleStatus::Completed->value)
             ->whereBetween('sales.created_at', [$start, $end])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('sales.club_id', $clubId),
-            )
             ->groupBy('sale_items.product_id', 'sale_items.product_name')
             ->orderByDesc(DB::raw('SUM(sale_items.line_total)'))
             ->limit(10)
@@ -222,10 +209,6 @@ class SaleRepository implements SaleRepositoryInterface
         $revenueByDay = DB::table('sales')
             ->where('status', SaleStatus::Completed->value)
             ->whereBetween('created_at', [$start, $end])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->groupBy(DB::raw('DATE(created_at)'))
             ->orderBy(DB::raw('DATE(created_at)'))
             ->get([

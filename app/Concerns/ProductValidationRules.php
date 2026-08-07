@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Enums\ProductStatus;
-use App\Models\Club;
 use App\Models\Product;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -16,7 +15,6 @@ trait ProductValidationRules
     protected function productRules(?int $productId = null): array
     {
         return [
-            'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
             'name' => ['required', 'string', 'max:255'],
             'sku' => [
                 'required',

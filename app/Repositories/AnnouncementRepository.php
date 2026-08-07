@@ -12,7 +12,7 @@ class AnnouncementRepository implements AnnouncementRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return Announcement::query()
-            ->with(['club', 'creator'])
+            ->with(['creator'])
             ->latest('published_at')
             ->latest()
             ->paginate($perPage);
@@ -40,19 +40,11 @@ class AnnouncementRepository implements AnnouncementRepositoryInterface
         return (bool) $announcement->delete();
     }
 
-    public function getPublished(?int $clubId = null): Collection
+    public function getPublished(): Collection
     {
         return Announcement::query()
-            ->with(['club', 'creator'])
+            ->with(['creator'])
             ->where('is_published', true)
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where(
-                    fn ($query) => $query
-                        ->where('club_id', $clubId)
-                        ->orWhereNull('club_id'),
-                ),
-            )
             ->where(function ($query): void {
                 $query->whereNull('published_at')
                     ->orWhere('published_at', '<=', now());

@@ -7,7 +7,6 @@ use App\Enums\PaymentStatus;
 use App\Enums\ProductStatus;
 use App\Enums\SaleStatus;
 use App\Enums\StockMovementType;
-use App\Models\Club;
 use App\Models\Payment;
 use App\Models\Player;
 use App\Models\Product;
@@ -22,12 +21,6 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
-        $club = Club::where('slug', 'galaang-ramos-pickleball')->first() ?? Club::first();
-
-        if (! $club) {
-            return;
-        }
-
         $products = [
             ['name' => 'Bottled Water 500ml', 'sku' => 'DRK-WATER-500', 'category' => 'drinks', 'price' => 20, 'cost' => 10, 'stock_quantity' => 100],
             ['name' => 'Gatorade 500ml', 'sku' => 'DRK-GATOR-500', 'category' => 'drinks', 'price' => 45, 'cost' => 30, 'stock_quantity' => 60],
@@ -46,12 +39,12 @@ class ProductSeeder extends Seeder
             ['name' => 'Club Cap', 'sku' => 'APR-CAP-01', 'category' => 'apparel', 'price' => 350, 'cost' => 200, 'stock_quantity' => 20],
         ];
 
-        $isFreshSeed = ! Product::where('club_id', $club->id)->exists();
+        $isFreshSeed = ! Product::query()->exists();
         $seededProducts = collect();
 
         foreach ($products as $product) {
             $model = Product::query()->updateOrCreate(
-                ['club_id' => $club->id, 'sku' => $product['sku']],
+                ['sku' => $product['sku']],
                 [
                     'name' => $product['name'],
                     'category' => $product['category'],
@@ -77,12 +70,12 @@ class ProductSeeder extends Seeder
             }
         }
 
-        if (! $isFreshSeed || Sale::where('club_id', $club->id)->exists()) {
+        if (! $isFreshSeed || Sale::query()->exists()) {
             return;
         }
 
         $cashier = User::where('email', 'owner@galaangramos.test')->first() ?? User::first();
-        $members = Player::where('club_id', $club->id)->get();
+        $members = Player::query()->get();
 
         if (! $cashier || $members->isEmpty()) {
             return;
@@ -106,7 +99,6 @@ class ProductSeeder extends Seeder
             $tax = round($subtotal * 0.12, 2);
 
             $sale = Sale::query()->create([
-                'club_id' => $club->id,
                 'cashier_id' => $cashier->id,
                 'customer_id' => $customer?->user_id,
                 'invoice_number' => 'SALE-'.now()->subDays($daysAgo)->format('Ymd').'-'.Str::upper(Str::random(4)),

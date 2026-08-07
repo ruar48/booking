@@ -15,7 +15,6 @@ import type { Sale } from '@/types/pos';
 type Props = {
     sales: Paginated<Sale>;
     filters: {
-        club_id?: number | null;
         status?: string | null;
     };
 };

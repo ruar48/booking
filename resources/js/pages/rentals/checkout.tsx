@@ -18,9 +18,6 @@ import type { RentalItem } from '@/types/rentals';
 
 type Props = {
     rentalItems: RentalItem[];
-    filters: {
-        club_id?: number | null;
-    };
 };
 
 type RenterSearchResult = {
@@ -29,7 +26,7 @@ type RenterSearchResult = {
     phone: string | null;
 };
 
-export default function RentalsCheckout({ rentalItems, filters }: Props) {
+export default function RentalsCheckout({ rentalItems }: Props) {
     const [cart, setCart] = useState<RentalCartLine[]>([]);
 
     const [renterQuery, setRenterQuery] = useState('');
@@ -37,7 +34,6 @@ export default function RentalsCheckout({ rentalItems, filters }: Props) {
     const [selectedRenter, setSelectedRenter] = useState<RenterSearchResult | null>(null);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        club_id: filters.club_id ?? rentalItems[0]?.club_id ?? '',
         items: [] as { rental_item_id: number; quantity: number }[],
         renter_id: '',
         renter_name: '',

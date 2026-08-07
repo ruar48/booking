@@ -45,8 +45,6 @@ class ResourceController extends Controller
     {
         $this->authorize('update', $resource);
 
-        $resource->load('club');
-
         return Inertia::render('resources/edit', [
             'resource' => $resource,
         ]);

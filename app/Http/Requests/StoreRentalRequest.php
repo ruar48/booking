@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Club;
 use App\Models\RentalItem;
 use App\Models\RentalTransaction;
 use App\Models\User;
@@ -23,7 +22,6 @@ class StoreRentalRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
             'items' => ['required', 'array', 'min:1'],
             'items.*.rental_item_id' => ['required', 'integer', Rule::exists(RentalItem::class, 'id')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

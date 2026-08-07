@@ -25,7 +25,6 @@ type Props = {
 
 export default function ResourcesEdit({ resource }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        club_id: resource.club_id,
         sport: resource.sport,
         name: resource.name,
         resource_number: resource.resource_number,

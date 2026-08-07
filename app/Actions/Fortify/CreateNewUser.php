@@ -5,7 +5,6 @@ namespace App\Actions\Fortify;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
 use App\Enums\Role;
-use App\Models\Club;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
@@ -35,19 +34,9 @@ class CreateNewUser implements CreatesNewUsers
 
         $user->assignRole(Role::Player->value);
 
-        $club = Club::query()->where('is_active', true)->oldest()->first();
-
-        if ($club !== null) {
-            $club->users()->attach($user->id, [
-                'membership_status' => 'active',
-                'joined_at' => now()->toDateString(),
-            ]);
-
-            Player::query()->create([
-                'user_id' => $user->id,
-                'club_id' => $club->id,
-            ]);
-        }
+        Player::query()->create([
+            'user_id' => $user->id,
+        ]);
 
         return $user;
     }

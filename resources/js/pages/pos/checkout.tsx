@@ -27,16 +27,12 @@ import type { PaymentMethodOption } from '@/types/pos';
 type Props = {
     products: Product[];
     paymentMethods: PaymentMethodOption[];
-    filters: {
-        club_id?: number | null;
-    };
 };
 
-export default function PosCheckout({ products, paymentMethods, filters }: Props) {
+export default function PosCheckout({ products, paymentMethods }: Props) {
     const [cart, setCart] = useState<CartLine[]>([]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        club_id: filters.club_id ?? products[0]?.club_id ?? '',
         items: [] as { product_id: number; quantity: number }[],
         payment_method: paymentMethods[0]?.value ?? 'cash',
         customer_id: '',

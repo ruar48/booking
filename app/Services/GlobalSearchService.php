@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Club;
 use App\Models\Coach;
 use App\Models\GameMatch;
 use App\Models\Player;
@@ -15,7 +14,7 @@ class GlobalSearchService
 {
     private const int LIMIT_PER_TYPE = 5;
 
-    public function search(string $query, ?int $clubId = null): array
+    public function search(string $query): array
     {
         $query = trim($query);
 
@@ -26,13 +25,12 @@ class GlobalSearchService
         $like = '%'.$query.'%';
 
         return [
-            'players' => $this->searchPlayers($like, $clubId),
-            'coaches' => $this->searchCoaches($like, $clubId),
-            'clubs' => $this->searchClubs($like),
-            'courts' => $this->searchResources($like, $clubId),
-            'bookings' => $this->searchBookings($like, $clubId),
-            'matches' => $this->searchMatches($like, $clubId),
-            'tournaments' => $this->searchTournaments($like, $clubId),
+            'players' => $this->searchPlayers($like),
+            'coaches' => $this->searchCoaches($like),
+            'courts' => $this->searchResources($like),
+            'bookings' => $this->searchBookings($like),
+            'matches' => $this->searchMatches($like),
+            'tournaments' => $this->searchTournaments($like),
         ];
     }
 
@@ -41,7 +39,6 @@ class GlobalSearchService
         return [
             'players' => collect(),
             'coaches' => collect(),
-            'clubs' => collect(),
             'courts' => collect(),
             'bookings' => collect(),
             'matches' => collect(),
@@ -49,11 +46,10 @@ class GlobalSearchService
         ];
     }
 
-    private function searchPlayers(string $like, ?int $clubId): Collection
+    private function searchPlayers(string $like): Collection
     {
         return Player::query()
             ->with('user')
-            ->when($clubId !== null, fn ($q) => $q->where('club_id', $clubId))
             ->whereHas('user', fn ($q) => $q
                 ->where('name', 'like', $like)
                 ->orWhere('email', 'like', $like))
@@ -61,11 +57,10 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchCoaches(string $like, ?int $clubId): Collection
+    private function searchCoaches(string $like): Collection
     {
         return Coach::query()
             ->with('user')
-            ->when($clubId !== null, fn ($q) => $q->where('club_id', $clubId))
             ->whereHas('user', fn ($q) => $q
                 ->where('name', 'like', $like)
                 ->orWhere('email', 'like', $like))
@@ -73,19 +68,9 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchClubs(string $like): Collection
-    {
-        return Club::query()
-            ->where('name', 'like', $like)
-            ->orWhere('city', 'like', $like)
-            ->limit(self::LIMIT_PER_TYPE)
-            ->get();
-    }
-
-    private function searchResources(string $like, ?int $clubId): Collection
+    private function searchResources(string $like): Collection
     {
         return Resource::query()
-            ->when($clubId !== null, fn ($q) => $q->where('club_id', $clubId))
             ->where(fn ($q) => $q
                 ->where('name', 'like', $like)
                 ->orWhere('resource_number', 'like', $like))
@@ -93,14 +78,10 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchBookings(string $like, ?int $clubId): Collection
+    private function searchBookings(string $like): Collection
     {
         return ResourceBooking::query()
             ->with(['resource', 'user'])
-            ->when($clubId !== null, fn ($q) => $q->whereHas(
-                'resource',
-                fn ($q) => $q->where('club_id', $clubId),
-            ))
             ->where(fn ($q) => $q
                 ->where('notes', 'like', $like)
                 ->orWhereHas('user', fn ($q) => $q->where('name', 'like', $like))
@@ -109,14 +90,10 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchMatches(string $like, ?int $clubId): Collection
+    private function searchMatches(string $like): Collection
     {
         return GameMatch::query()
             ->with(['player1.user', 'player2.user', 'tournament'])
-            ->when($clubId !== null, fn ($q) => $q->whereHas(
-                'tournament',
-                fn ($q) => $q->where('club_id', $clubId),
-            ))
             ->where(fn ($q) => $q
                 ->whereHas('player1.user', fn ($q) => $q->where('name', 'like', $like))
                 ->orWhereHas('player2.user', fn ($q) => $q->where('name', 'like', $like))
@@ -125,10 +102,9 @@ class GlobalSearchService
             ->get();
     }
 
-    private function searchTournaments(string $like, ?int $clubId): Collection
+    private function searchTournaments(string $like): Collection
     {
         return Tournament::query()
-            ->when($clubId !== null, fn ($q) => $q->where('club_id', $clubId))
             ->where(fn ($q) => $q
                 ->where('name', 'like', $like)
                 ->orWhere('description', 'like', $like))

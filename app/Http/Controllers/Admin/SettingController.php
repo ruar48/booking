@@ -16,11 +16,7 @@ class SettingController extends Controller
     {
         abort_unless($request->user()->hasRole(Role::SuperAdmin->value), 403);
 
-        $clubId = $request->integer('club_id') ?: null;
-
         $settings = Setting::query()
-            ->when($clubId, fn ($q) => $q->where('club_id', $clubId))
-            ->when($clubId === null, fn ($q) => $q->whereNull('club_id'))
             ->orderBy('group')
             ->orderBy('key')
             ->get()
@@ -28,7 +24,6 @@ class SettingController extends Controller
 
         return Inertia::render('admin/settings/index', [
             'settings' => $settings,
-            'clubId' => $clubId,
         ]);
     }
 
@@ -37,7 +32,6 @@ class SettingController extends Controller
         abort_unless($request->user()->hasRole(Role::SuperAdmin->value), 403);
 
         $validated = $request->validate([
-            'club_id' => ['nullable', 'integer', 'exists:clubs,id'],
             'settings' => ['required', 'array'],
             'settings.*.group' => ['required', 'string', 'max:100'],
             'settings.*.key' => ['required', 'string', 'max:100'],
@@ -47,7 +41,6 @@ class SettingController extends Controller
         foreach ($validated['settings'] as $settingData) {
             Setting::query()->updateOrCreate(
                 [
-                    'club_id' => $validated['club_id'] ?? null,
                     'group' => $settingData['group'],
                     'key' => $settingData['key'],
                 ],

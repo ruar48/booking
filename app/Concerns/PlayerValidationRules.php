@@ -2,7 +2,6 @@
 
 namespace App\Concerns;
 
-use App\Models\Club;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -26,7 +25,6 @@ trait PlayerValidationRules
                 Rule::exists(User::class, 'id'),
                 Rule::unique(Player::class, 'user_id')->ignore($playerId),
             ],
-            'club_id' => ['nullable', 'integer', Rule::exists(Club::class, 'id')],
             'skill_rating' => ['sometimes', 'integer', 'min:0', 'max:3000'],
             'experience_level' => ['required', 'string', Rule::in(['beginner', 'intermediate', 'advanced', 'professional'])],
             'playing_hand' => ['nullable', 'string', Rule::in(['left', 'right', 'ambidextrous'])],

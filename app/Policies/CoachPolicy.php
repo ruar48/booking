@@ -18,7 +18,7 @@ class CoachPolicy
     public function view(User $user, Coach $coach): bool
     {
         return $coach->is_active
-            || $this->isClubAdmin($user, $coach->club_id)
+            || $this->isClubAdmin($user)
             || $this->ownsRecord($user, $coach->user_id);
     }
 }

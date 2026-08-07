@@ -21,7 +21,7 @@ class TrainingSessionPolicy
 
     public function view(User $user, TrainingSession $trainingSession): bool
     {
-        if ($this->isClubAdmin($user, $trainingSession->club_id)) {
+        if ($this->isClubAdmin($user)) {
             return true;
         }
 

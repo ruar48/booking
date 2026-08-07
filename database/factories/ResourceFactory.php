@@ -4,7 +4,6 @@ namespace Database\Factories;
 
 use App\Enums\ResourceStatus;
 use App\Enums\Sport;
-use App\Models\Club;
 use App\Models\Resource;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +17,6 @@ class ResourceFactory extends Factory
     public function definition(): array
     {
         return [
-            'club_id' => Club::factory(),
             'sport' => Sport::Pickleball,
             'name' => 'Court '.fake()->numberBetween(1, 20),
             'resource_number' => (string) fake()->numberBetween(1, 20),

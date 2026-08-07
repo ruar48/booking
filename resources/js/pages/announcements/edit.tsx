@@ -21,7 +21,6 @@ export default function AnnouncementsEdit({ announcement }: Props) {
     const [deleteOpen, setDeleteOpen] = useState(false);
 
     const { data, setData, put, processing, errors } = useForm({
-        club_id: announcement.club_id ?? '',
         title: announcement.title,
         content: announcement.content,
         show_on_dashboard: announcement.show_on_dashboard,
@@ -41,7 +40,6 @@ export default function AnnouncementsEdit({ announcement }: Props) {
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title="Edit announcement"
-                    description={announcement.club?.name ?? 'Global announcement'}
                     actions={
                         <Button
                             variant="destructive"

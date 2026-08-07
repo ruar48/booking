@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:35
+ * @see app/Http/Controllers/Admin/SettingController.php:30
  * @route '/admin/settings'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -94,7 +94,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:35
+ * @see app/Http/Controllers/Admin/SettingController.php:30
  * @route '/admin/settings'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:35
+ * @see app/Http/Controllers/Admin/SettingController.php:30
  * @route '/admin/settings'
  */
 update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -113,7 +113,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:35
+ * @see app/Http/Controllers/Admin/SettingController.php:30
  * @route '/admin/settings'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -128,7 +128,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:35
+ * @see app/Http/Controllers/Admin/SettingController.php:30
  * @route '/admin/settings'
  */
         updateForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

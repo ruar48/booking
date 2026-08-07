@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Enums\RentalItemStatus;
 use App\Enums\RentalMovementType;
 use App\Enums\RentalStatus;
-use App\Models\Club;
 use App\Models\Player;
 use App\Models\RentalItem;
 use App\Models\RentalStockMovement;
@@ -19,12 +18,6 @@ class RentalItemSeeder extends Seeder
 {
     public function run(): void
     {
-        $club = Club::where('slug', 'galaang-ramos-pickleball')->first() ?? Club::first();
-
-        if (! $club) {
-            return;
-        }
-
         $rentalItems = [
             ['name' => 'Pickleball Paddle - Rental', 'sku' => 'RNT-PADL-STD', 'category' => 'equipment', 'rate' => 100, 'deposit' => 500, 'total_quantity' => 12],
             ['name' => 'Pickleball Paddle - Pro Rental', 'sku' => 'RNT-PADL-PRO', 'category' => 'equipment', 'rate' => 180, 'deposit' => 1000, 'total_quantity' => 6],
@@ -32,12 +25,12 @@ class RentalItemSeeder extends Seeder
             ['name' => 'Court Shoes', 'sku' => 'RNT-SHOE-01', 'category' => 'apparel', 'rate' => 120, 'deposit' => 300, 'total_quantity' => 10],
         ];
 
-        $isFreshSeed = ! RentalItem::where('club_id', $club->id)->exists();
+        $isFreshSeed = ! RentalItem::query()->exists();
         $seededRentalItems = collect();
 
         foreach ($rentalItems as $item) {
             $model = RentalItem::query()->updateOrCreate(
-                ['club_id' => $club->id, 'sku' => $item['sku']],
+                ['sku' => $item['sku']],
                 [
                     'name' => $item['name'],
                     'category' => $item['category'],
@@ -63,12 +56,12 @@ class RentalItemSeeder extends Seeder
             }
         }
 
-        if (! $isFreshSeed || RentalTransaction::where('club_id', $club->id)->exists()) {
+        if (! $isFreshSeed || RentalTransaction::query()->exists()) {
             return;
         }
 
         $staff = User::where('email', 'owner@galaangramos.test')->first() ?? User::first();
-        $members = Player::where('club_id', $club->id)->get();
+        $members = Player::query()->get();
 
         if (! $staff || $members->isEmpty()) {
             return;
@@ -90,7 +83,6 @@ class RentalItemSeeder extends Seeder
             $renter = $members->random();
 
             $transaction = RentalTransaction::query()->create([
-                'club_id' => $club->id,
                 'staff_id' => $staff->id,
                 'renter_id' => $renter->user_id,
                 'reference_number' => 'RENT-'.now()->subDays($daysAgo)->format('Ymd').'-'.Str::upper(Str::random(4)),

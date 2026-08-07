@@ -27,7 +27,6 @@ class RentalItemController extends Controller
 
         return Inertia::render('rentals/index', [
             'rentalItems' => $this->rentalItemRepository->paginate(
-                clubId: $request->integer('club_id') ?: null,
                 search: $request->string('search')->value() ?: null,
                 lowStockOnly: $outOfStockOnly,
             ),
@@ -57,8 +56,6 @@ class RentalItemController extends Controller
     public function edit(RentalItem $rentalItem): Response
     {
         $this->authorize('update', $rentalItem);
-
-        $rentalItem->load('club');
 
         return Inertia::render('rentals/edit', [
             'rentalItem' => $rentalItem,

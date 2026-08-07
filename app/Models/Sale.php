@@ -14,7 +14,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property int $cashier_id
  * @property int|null $customer_id
  * @property string $invoice_number
@@ -28,7 +27,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'club_id',
     'cashier_id',
     'customer_id',
     'invoice_number',
@@ -53,11 +51,6 @@ class Sale extends Model
             'tax' => 'decimal:2',
             'total' => 'decimal:2',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function cashier(): BelongsTo

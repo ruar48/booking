@@ -55,7 +55,6 @@ type Props = {
     dateOverrides: DateOverride[];
     operatingHours: OperatingHours;
     filters: {
-        club_id?: number | null;
         start?: string;
         end?: string;
     };
@@ -133,7 +132,6 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
         router.get(
             calendar.url(),
             {
-                club_id: filters.club_id ?? undefined,
                 start: format(startOfMonth(next), 'yyyy-MM-dd'),
                 end: format(endOfMonth(next), 'yyyy-MM-dd'),
             },

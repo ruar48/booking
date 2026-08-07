@@ -18,7 +18,7 @@ class RentalItemPolicy
 
     public function view(User $user, RentalItem $rentalItem): bool
     {
-        return $this->isSuperAdmin($user) || $this->isClubAdmin($user, $rentalItem->club_id);
+        return $this->isSuperAdmin($user) || $this->isClubAdmin($user);
     }
 
     public function create(User $user): bool
@@ -28,16 +28,16 @@ class RentalItemPolicy
 
     public function update(User $user, RentalItem $rentalItem): bool
     {
-        return $this->isClubAdmin($user, $rentalItem->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function delete(User $user, RentalItem $rentalItem): bool
     {
-        return $this->isClubAdmin($user, $rentalItem->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function adjustStock(User $user, RentalItem $rentalItem): bool
     {
-        return $this->isClubAdmin($user, $rentalItem->club_id);
+        return $this->isClubAdmin($user);
     }
 }

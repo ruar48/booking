@@ -2,48 +2,38 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Concerns\ClubValidationRules;
 use App\Http\Controllers\Controller;
-use App\Models\Club;
 use App\Models\RecurringScheduleLock;
+use App\Models\Resource;
 use App\Models\ScheduleBlock;
+use App\Models\Setting;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ScheduleSettingController extends Controller
 {
-    use ClubValidationRules;
-
     public function index(): Response
     {
-        $club = $this->activeClub();
+        $resources = Resource::query()->orderBy('resource_number')->get();
 
-        $resources = $club
-            ? $club->resources()->orderBy('resource_number')->get()
-            : collect();
+        $scheduleBlocks = ScheduleBlock::query()
+            ->where('ends_at', '>=', now())
+            ->orderBy('starts_at')
+            ->with(['resource:id,name', 'creator:id,name'])
+            ->get();
 
-        $scheduleBlocks = $club
-            ? ScheduleBlock::query()
-                ->where('club_id', $club->id)
-                ->where('ends_at', '>=', now())
-                ->orderBy('starts_at')
-                ->with(['resource:id,name', 'creator:id,name'])
-                ->get()
-            : collect();
-
-        $recurringLocks = $club
-            ? RecurringScheduleLock::query()
-                ->where('club_id', $club->id)
-                ->orderBy('day_of_week')
-                ->orderBy('starts_at')
-                ->with('resource:id,name')
-                ->get()
-            : collect();
+        $recurringLocks = RecurringScheduleLock::query()
+            ->orderBy('day_of_week')
+            ->orderBy('starts_at')
+            ->with('resource:id,name')
+            ->get();
 
         return Inertia::render('admin/schedule/index', [
-            'club' => $club,
+            'operatingHours' => $this->operatingHours(),
             'resources' => $resources,
             'scheduleBlocks' => $scheduleBlocks,
             'recurringLocks' => $recurringLocks,
@@ -52,13 +42,12 @@ class ScheduleSettingController extends Controller
 
     public function updateHours(Request $request): RedirectResponse
     {
-        $club = $this->activeClub();
-
-        abort_if($club === null, 404);
-
         $validated = $request->validate($this->operatingHoursRules());
 
-        $club->update(['operating_hours' => $validated['operating_hours'] ?? null]);
+        Setting::query()->updateOrCreate(
+            ['group' => 'schedule', 'key' => 'operating_hours'],
+            ['value' => $validated['operating_hours'] ?? null],
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Operating hours updated.')]);
 
@@ -67,10 +56,6 @@ class ScheduleSettingController extends Controller
 
     public function storeBlock(Request $request): RedirectResponse
     {
-        $club = $this->activeClub();
-
-        abort_if($club === null, 404);
-
         $validated = $request->validate([
             'resource_id' => ['nullable', 'integer', 'exists:resources,id'],
             'starts_at' => ['required', 'date'],
@@ -80,7 +65,6 @@ class ScheduleSettingController extends Controller
 
         ScheduleBlock::query()->create([
             ...$validated,
-            'club_id' => $club->id,
             'created_by' => $request->user()->id,
         ]);
 
@@ -100,10 +84,6 @@ class ScheduleSettingController extends Controller
 
     public function toggle(Request $request): RedirectResponse
     {
-        $club = $this->activeClub();
-
-        abort_if($club === null, 404);
-
         $validated = $request->validate([
             'resource_id' => ['nullable', 'integer', 'exists:resources,id'],
             'day_of_week' => ['required', 'integer', 'between:0,6'],
@@ -113,7 +93,6 @@ class ScheduleSettingController extends Controller
         ]);
 
         $existing = RecurringScheduleLock::query()
-            ->where('club_id', $club->id)
             ->where('resource_id', $validated['resource_id'] ?? null)
             ->where('day_of_week', $validated['day_of_week'])
             ->where('starts_at', $validated['starts_at'])
@@ -127,7 +106,6 @@ class ScheduleSettingController extends Controller
         } else {
             RecurringScheduleLock::query()->create([
                 ...$validated,
-                'club_id' => $club->id,
                 'created_by' => $request->user()->id,
             ]);
 
@@ -137,11 +115,42 @@ class ScheduleSettingController extends Controller
         return back();
     }
 
-    private function activeClub(): ?Club
+    private function operatingHours(): ?array
     {
-        return Club::query()
-            ->where('is_active', true)
-            ->oldest()
-            ->first();
+        return Setting::query()
+            ->where('group', 'schedule')
+            ->where('key', 'operating_hours')
+            ->value('value');
+    }
+
+    /**
+     * @return array<string, array<int, ValidationRule|array<mixed>|string>>
+     */
+    private function operatingHoursRules(): array
+    {
+        $rules = [
+            'operating_hours' => ['nullable', 'array'],
+        ];
+
+        foreach ([
+            'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday',
+        ] as $day) {
+            $rules["operating_hours.{$day}"] = ['nullable', 'array'];
+            $rules["operating_hours.{$day}.closed"] = ['nullable', 'boolean'];
+            $rules["operating_hours.{$day}.open"] = [
+                'nullable',
+                'string',
+                'date_format:H:i',
+                Rule::requiredIf(fn () => ! request()->boolean("operating_hours.{$day}.closed")),
+            ];
+            $rules["operating_hours.{$day}.close"] = [
+                'nullable',
+                'string',
+                'date_format:H:i',
+                Rule::requiredIf(fn () => ! request()->boolean("operating_hours.{$day}.closed")),
+            ];
+        }
+
+        return $rules;
     }
 }

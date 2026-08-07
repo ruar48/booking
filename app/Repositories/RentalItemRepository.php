@@ -14,14 +14,9 @@ use Illuminate\Support\Facades\DB;
 
 class RentalItemRepository implements RentalItemRepositoryInterface
 {
-    public function paginate(?int $clubId = null, ?string $search = null, bool $lowStockOnly = false, int $perPage = 15): LengthAwarePaginator
+    public function paginate(?string $search = null, bool $lowStockOnly = false, int $perPage = 15): LengthAwarePaginator
     {
         return RentalItem::query()
-            ->with('club')
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->when(
                 filled($search),
                 fn ($query) => $query->where(function ($query) use ($search): void {

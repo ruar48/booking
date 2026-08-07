@@ -29,7 +29,7 @@ import {
 import { destroy as destroyBlock, store as storeBlock } from '@/routes/admin/schedule/blocks';
 import { toggle as toggleRecurringLock } from '@/routes/admin/schedule/recurring-locks';
 import { index as scheduleIndex, updateHours } from '@/routes/admin/schedule';
-import type { Club, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
+import type { RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
 
 type DayHours = {
     open: string | null;
@@ -123,7 +123,7 @@ function findRecurringLock(
     );
 }
 
-function defaultOperatingHours(existing?: Club['operating_hours'] | null): OperatingHours {
+function defaultOperatingHours(existing?: Partial<OperatingHours> | null): OperatingHours {
     const hours = {} as OperatingHours;
 
     for (const { key } of DAYS) {
@@ -139,15 +139,15 @@ function defaultOperatingHours(existing?: Club['operating_hours'] | null): Opera
 }
 
 type Props = {
-    club: Club | null;
+    operatingHours: Partial<OperatingHours> | null;
     resources: Resource[];
     scheduleBlocks: ScheduleBlock[];
     recurringLocks: RecurringScheduleLock[];
 };
 
-export default function AdminScheduleIndex({ club, resources, scheduleBlocks, recurringLocks }: Props) {
+export default function AdminScheduleIndex({ operatingHours, resources, scheduleBlocks, recurringLocks }: Props) {
     const hoursForm = useForm({
-        operating_hours: defaultOperatingHours(club?.operating_hours),
+        operating_hours: defaultOperatingHours(operatingHours),
     });
 
     const blockForm = useForm({

@@ -11,7 +11,7 @@ class TournamentRepository implements TournamentRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return Tournament::query()
-            ->with(['club', 'creator'])
+            ->with('creator')
             ->latest('starts_at')
             ->paginate($perPage);
     }

@@ -22,8 +22,8 @@ class PlayerController extends Controller
         $this->authorize('viewAny', Player::class);
 
         return Inertia::render('players/index', [
-            'players' => $this->playerRepository->paginate($request->only(['search', 'club_id', 'experience_level'])),
-            'filters' => $request->only(['search', 'club_id', 'experience_level']),
+            'players' => $this->playerRepository->paginate($request->only(['search', 'experience_level'])),
+            'filters' => $request->only(['search', 'experience_level']),
         ]);
     }
 
@@ -58,7 +58,7 @@ class PlayerController extends Controller
     {
         $this->authorize('update', $player);
 
-        $player->load(['user', 'club']);
+        $player->load(['user']);
 
         return Inertia::render('players/edit', [
             'player' => $player,

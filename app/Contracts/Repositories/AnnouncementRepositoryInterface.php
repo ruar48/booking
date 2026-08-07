@@ -18,5 +18,5 @@ interface AnnouncementRepositoryInterface
 
     public function delete(Announcement $announcement): bool;
 
-    public function getPublished(?int $clubId = null): Collection;
+    public function getPublished(): Collection;
 }

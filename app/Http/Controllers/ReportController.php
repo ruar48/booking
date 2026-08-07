@@ -25,14 +25,12 @@ class ReportController extends Controller
     {
         $this->authorize('viewAny', Sale::class);
 
-        $clubId = $request->integer('club_id') ?: null;
         $start = $request->filled('start') ? Carbon::parse($request->input('start')) : Carbon::now()->subDays(30)->startOfDay();
         $end = $request->filled('end') ? Carbon::parse($request->input('end')) : Carbon::now()->endOfDay();
 
         return Inertia::render('pos/reports', [
-            'report' => $this->saleRepository->salesReport($start, $end, $clubId),
+            'report' => $this->saleRepository->salesReport($start, $end),
             'filters' => [
-                'club_id' => $clubId,
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
             ],
@@ -41,29 +39,19 @@ class ReportController extends Controller
 
     public function index(Request $request): InertiaResponse
     {
-        $clubId = $request->integer('club_id') ?: null;
-
         return Inertia::render('reports/index', [
             'summary' => [
-                'players' => Player::query()
-                    ->when($clubId, fn ($q) => $q->where('club_id', $clubId))
-                    ->count(),
-                'bookings' => ResourceBooking::query()
-                    ->when($clubId, fn ($q) => $q->whereHas('resource', fn ($q) => $q->where('club_id', $clubId)))
-                    ->count(),
+                'players' => Player::query()->count(),
+                'bookings' => ResourceBooking::query()->count(),
                 'payments' => Payment::query()->count(),
             ],
-            'filters' => $request->only(['club_id']),
         ]);
     }
 
     public function export(Request $request, string $format): HttpResponse|StreamedResponse
     {
-        $clubId = $request->integer('club_id') ?: null;
-
         $bookings = ResourceBooking::query()
             ->with(['resource', 'user'])
-            ->when($clubId, fn ($q) => $q->whereHas('resource', fn ($q) => $q->where('club_id', $clubId)))
             ->latest('starts_at')
             ->get();
 

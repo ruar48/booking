@@ -57,7 +57,6 @@ type Props = {
     stats: Stats;
     staffOptions: { id: number; name: string }[];
     filters: {
-        club_id?: string | null;
         status?: string | null;
         search?: string | null;
         staff_id?: string | null;

@@ -11,7 +11,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property int $staff_id
  * @property int|null $renter_id
  * @property string|null $renter_name
@@ -30,7 +29,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'club_id',
     'staff_id',
     'renter_id',
     'renter_name',
@@ -59,11 +57,6 @@ class RentalTransaction extends Model
             'reserved_for' => 'date',
             'returned_at' => 'datetime',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function staff(): BelongsTo

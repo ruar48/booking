@@ -21,9 +21,7 @@ class ResourceBookingPolicy
 
     public function view(User $user, ResourceBooking $resourceBooking): bool
     {
-        $clubId = $resourceBooking->resource?->club_id;
-
-        return $this->isClubAdmin($user, $clubId)
+        return $this->isClubAdmin($user)
             || $this->ownsRecord($user, $resourceBooking->user_id);
     }
 
@@ -41,9 +39,7 @@ class ResourceBookingPolicy
 
     public function update(User $user, ResourceBooking $resourceBooking): bool
     {
-        $clubId = $resourceBooking->resource?->club_id;
-
-        if ($this->isClubAdmin($user, $clubId)) {
+        if ($this->isClubAdmin($user)) {
             return true;
         }
 
@@ -58,12 +54,12 @@ class ResourceBookingPolicy
 
     public function markPaid(User $user, ResourceBooking $resourceBooking): bool
     {
-        return $this->isClubAdmin($user, $resourceBooking->resource?->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function cancel(User $user, ResourceBooking $resourceBooking): bool
     {
-        if ($this->isClubAdmin($user, $resourceBooking->resource?->club_id)) {
+        if ($this->isClubAdmin($user)) {
             return true;
         }
 

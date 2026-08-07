@@ -22,7 +22,6 @@ class RentalRepository implements RentalRepositoryInterface
     ) {}
 
     public function paginate(
-        ?int $clubId = null,
         ?string $status = null,
         ?string $search = null,
         ?int $staffId = null,
@@ -30,10 +29,6 @@ class RentalRepository implements RentalRepositoryInterface
     ): LengthAwarePaginator {
         return RentalTransaction::query()
             ->with(['staff', 'renter', 'items'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->when(
                 filled($status),
                 fn ($query) => $query->where('status', $status),
@@ -55,12 +50,9 @@ class RentalRepository implements RentalRepositoryInterface
             ->withQueryString();
     }
 
-    public function stats(?int $clubId = null): array
+    public function stats(): array
     {
-        $base = RentalTransaction::query()->when(
-            $clubId !== null,
-            fn ($query) => $query->where('club_id', $clubId),
-        );
+        $base = RentalTransaction::query();
 
         return [
             'active' => (clone $base)->where('status', RentalStatus::Active)->count(),
@@ -105,7 +97,6 @@ class RentalRepository implements RentalRepositoryInterface
             $totalAmount = array_sum(array_map(fn ($line) => round($line['rate'] * $line['quantity'], 2), $lines));
 
             $transaction = RentalTransaction::query()->create([
-                'club_id' => $meta['club_id'],
                 'staff_id' => $staff->id,
                 'renter_id' => $meta['renter_id'] ?? null,
                 'renter_name' => $meta['renter_name'] ?? null,
@@ -166,7 +157,6 @@ class RentalRepository implements RentalRepositoryInterface
             $totalAmount = array_sum(array_map(fn ($line) => round($line['rate'] * $line['quantity'], 2), $lines));
 
             $transaction = RentalTransaction::query()->create([
-                'club_id' => $meta['club_id'],
                 'staff_id' => $staff->id,
                 'renter_id' => $meta['renter_id'] ?? null,
                 'renter_name' => $meta['renter_name'] ?? null,

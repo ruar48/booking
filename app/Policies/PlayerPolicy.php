@@ -25,7 +25,7 @@ class PlayerPolicy
             return true;
         }
 
-        if ($this->isClubAdmin($user, $player->club_id)) {
+        if ($this->isClubAdmin($user)) {
             return true;
         }
 
@@ -33,11 +33,7 @@ class PlayerPolicy
             return true;
         }
 
-        if ($this->isCoach($user) && $player->club_id !== null) {
-            return $this->belongsToClub($user, $player->club_id);
-        }
-
-        return false;
+        return $this->isCoach($user);
     }
 
     public function create(User $user): bool
@@ -47,12 +43,12 @@ class PlayerPolicy
 
     public function update(User $user, Player $player): bool
     {
-        return $this->isClubAdmin($user, $player->club_id)
+        return $this->isClubAdmin($user)
             || $this->ownsRecord($user, $player->user_id);
     }
 
     public function delete(User $user, Player $player): bool
     {
-        return $this->isClubAdmin($user, $player->club_id);
+        return $this->isClubAdmin($user);
     }
 }

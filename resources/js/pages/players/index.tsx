@@ -21,7 +21,6 @@ type Props = {
     players: Paginated<Player>;
     filters: {
         search?: string;
-        club_id?: string;
         experience_level?: string;
     };
 };
@@ -58,11 +57,6 @@ export default function PlayersIndex({ players, filters }: Props) {
                     {row.original.user?.name ?? `Player #${row.original.id}`}
                 </Link>
             ),
-        },
-        {
-            accessorKey: 'club',
-            header: 'Club',
-            cell: ({ row }) => row.original.club?.name ?? '—',
         },
         {
             accessorKey: 'experience_level',

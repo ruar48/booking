@@ -29,7 +29,6 @@ export default function PlayersEdit({ player }: Props) {
 
     const { data, setData, put, processing, errors } = useForm({
         user_id: player.user_id,
-        club_id: player.club_id ?? '',
         skill_rating: player.skill_rating,
         experience_level: player.experience_level,
         playing_hand: player.playing_hand ?? '',
@@ -102,15 +101,6 @@ export default function PlayersEdit({ player }: Props) {
                                     onChange={(e) =>
                                         setData('skill_rating', Number(e.target.value))
                                     }
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="club_id">Club ID</Label>
-                                <Input
-                                    id="club_id"
-                                    type="number"
-                                    value={data.club_id}
-                                    onChange={(e) => setData('club_id', e.target.value)}
                                 />
                             </div>
                             <div className="grid gap-2">

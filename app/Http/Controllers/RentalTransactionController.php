@@ -23,24 +23,20 @@ class RentalTransactionController extends Controller
     {
         $this->authorize('viewAny', RentalTransaction::class);
 
-        $clubId = $request->integer('club_id') ?: null;
-
         return Inertia::render('rentals/transactions/index', [
             'transactions' => $this->rentalRepository->paginate(
-                clubId: $clubId,
                 status: $request->string('status')->value() ?: null,
                 search: $request->string('search')->value() ?: null,
                 staffId: $request->integer('staff_id') ?: null,
             ),
-            'stats' => $this->rentalRepository->stats($clubId),
+            'stats' => $this->rentalRepository->stats(),
             'staffOptions' => User::query()
                 ->whereIn('id', RentalTransaction::query()
-                    ->when($clubId !== null, fn ($query) => $query->where('club_id', $clubId))
                     ->distinct()
                     ->pluck('staff_id'))
                 ->orderBy('name')
                 ->get(['id', 'name']),
-            'filters' => $request->only(['club_id', 'status', 'search', 'staff_id']),
+            'filters' => $request->only(['status', 'search', 'staff_id']),
         ]);
     }
 
@@ -76,7 +72,7 @@ class RentalTransactionController extends Controller
     {
         $this->authorize('approve', $rentalTransaction);
 
-        $dueAt = $rentalTransaction->club?->closingTimeOn(now());
+        $dueAt = null;
 
         if ($rentalTransaction->duration_type === 'hourly' && $rentalTransaction->duration_hours) {
             $hourly = now()->addHours($rentalTransaction->duration_hours);

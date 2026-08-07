@@ -11,7 +11,7 @@ class PlayerRepository implements PlayerRepositoryInterface
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return Player::query()
-            ->with(['user', 'club'])
+            ->with(['user'])
             ->when(
                 filled($filters['search'] ?? null),
                 fn ($query) => $query->where(function ($query) use ($filters): void {
@@ -24,10 +24,6 @@ class PlayerRepository implements PlayerRepositoryInterface
                 }),
             )
             ->when(
-                filled($filters['club_id'] ?? null),
-                fn ($query) => $query->where('club_id', $filters['club_id']),
-            )
-            ->when(
                 filled($filters['experience_level'] ?? null),
                 fn ($query) => $query->where('experience_level', $filters['experience_level']),
             )
@@ -37,7 +33,7 @@ class PlayerRepository implements PlayerRepositoryInterface
 
     public function findWithRelations(int $id, array $relations = []): ?Player
     {
-        $defaultRelations = ['user', 'club', 'achievements', 'rankings', 'coaches'];
+        $defaultRelations = ['user', 'achievements', 'rankings', 'coaches'];
 
         return Player::query()
             ->with($relations ?: $defaultRelations)

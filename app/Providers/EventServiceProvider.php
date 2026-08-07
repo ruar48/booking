@@ -48,18 +48,8 @@ class EventServiceProvider extends ServiceProvider
         });
 
         Event::listen(AnnouncementPublished::class, function (AnnouncementPublished $event): void {
-            $announcement = $event->announcement->loadMissing('club.users');
-
-            if ($announcement->club !== null) {
-                $announcement->club->users->each(
-                    fn ($user) => $user->notify(new AnnouncementPublishedNotification($announcement)),
-                );
-
-                return;
-            }
-
             User::role('player')->each(
-                fn ($user) => $user->notify(new AnnouncementPublishedNotification($announcement)),
+                fn ($user) => $user->notify(new AnnouncementPublishedNotification($event->announcement)),
             );
         });
     }

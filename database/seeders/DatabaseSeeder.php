@@ -19,7 +19,6 @@ class DatabaseSeeder extends Seeder
             DemoDataSeeder::class,
             ProductSeeder::class,
             RentalItemSeeder::class,
-            OpenPlayDoubleEliminationSeeder::class,
         ]);
     }
 }

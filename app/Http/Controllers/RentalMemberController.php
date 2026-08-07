@@ -22,13 +22,8 @@ class RentalMemberController extends Controller
 
     public function browse(Request $request): Response
     {
-        $user = $request->user();
-        $clubIds = $user->clubs()->pluck('clubs.id');
-
         $rentalItems = RentalItem::query()
-            ->whereIn('club_id', $clubIds)
             ->where('status', RentalItemStatus::Active->value)
-            ->with('club:id,name')
             ->orderBy('name')
             ->get();
 
@@ -61,11 +56,7 @@ class RentalMemberController extends Controller
         ]);
 
         $user = $request->user();
-        $rentalItem = RentalItem::query()->with('club')->findOrFail($validated['rental_item_id']);
-
-        if (! $user->clubs()->where('clubs.id', $rentalItem->club_id)->exists()) {
-            abort(403);
-        }
+        $rentalItem = RentalItem::query()->findOrFail($validated['rental_item_id']);
 
         $durationType = $validated['duration_type'];
         $durationHours = $durationType === 'hourly' ? (int) $validated['duration_hours'] : null;
@@ -79,7 +70,6 @@ class RentalMemberController extends Controller
             $this->rentalRepository->reserve([
                 ['rental_item_id' => $rentalItem->id, 'quantity' => $validated['quantity']],
             ], [
-                'club_id' => $rentalItem->club_id,
                 'staff' => $user,
                 'renter_id' => $user->id,
                 'duration_type' => $durationType,
@@ -102,24 +92,14 @@ class RentalMemberController extends Controller
 
         if ($durationType === 'hourly') {
             $dueAt = $now->clone()->addHours($durationHours);
-            $closing = $rentalItem->club?->closingTimeOn($now);
-
-            if ($closing && $closing->greaterThan($now) && $closing->lessThan($dueAt)) {
-                $dueAt = $closing;
-            }
         } else {
-            $dueAt = $rentalItem->club?->closingTimeOn($now);
-
-            if ($dueAt === null || $dueAt->lessThanOrEqualTo($now)) {
-                $dueAt = $now->clone()->addHours(24);
-            }
+            $dueAt = $now->clone()->addHours(24);
         }
 
         try {
             $this->rentalRepository->checkout([
                 ['rental_item_id' => $rentalItem->id, 'quantity' => $validated['quantity']],
             ], [
-                'club_id' => $rentalItem->club_id,
                 'staff' => $user,
                 'renter_id' => $user->id,
                 'due_at' => $dueAt,

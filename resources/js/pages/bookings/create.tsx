@@ -11,10 +11,9 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { create, index as bookingsIndex } from '@/routes/bookings';
 import customers from '@/routes/bookings/customers';
-import type { BookedSlot, Club, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
+import type { BookedSlot, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
 
 type Props = {
-    club: Club | null;
     resources: Resource[];
     bookedSlots: BookedSlot[];
     scheduleBlocks?: ScheduleBlock[];
@@ -31,7 +30,7 @@ type CustomerSearchResult = {
     phone: string | null;
 };
 
-export default function BookingsCreate({ club, resources, bookedSlots, scheduleBlocks = [], recurringLocks = [], dateOverrides = [], canManage }: Props) {
+export default function BookingsCreate({ resources, bookedSlots, scheduleBlocks = [], recurringLocks = [], dateOverrides = [], canManage }: Props) {
     const { auth } = usePage().props;
 
     const [mode, setMode] = useState<BookingForMode>('myself');
@@ -208,7 +207,6 @@ export default function BookingsCreate({ club, resources, bookedSlots, scheduleB
                     <CardContent className="pt-6">
                         <CourtScheduleGrid
                             courts={resources}
-                            club={club}
                             bookedSlots={bookedSlots}
                             scheduleBlocks={scheduleBlocks}
                             recurringLocks={recurringLocks}

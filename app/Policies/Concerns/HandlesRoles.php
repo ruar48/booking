@@ -17,26 +17,13 @@ trait HandlesRoles
         return $user?->hasRole($role->value) ?? false;
     }
 
-    protected function belongsToClub(?User $user, ?int $clubId): bool
-    {
-        if ($user === null || $clubId === null) {
-            return false;
-        }
-
-        return $user->clubs()->where('clubs.id', $clubId)->exists();
-    }
-
-    protected function isClubAdmin(?User $user, ?int $clubId = null): bool
+    protected function isClubAdmin(?User $user): bool
     {
         if ($this->isSuperAdmin($user)) {
             return true;
         }
 
-        if (! $this->hasRole($user, Role::ClubAdmin)) {
-            return false;
-        }
-
-        return $clubId === null || $this->belongsToClub($user, $clubId);
+        return $this->hasRole($user, Role::ClubAdmin);
     }
 
     protected function isTournamentOrganizer(?User $user): bool

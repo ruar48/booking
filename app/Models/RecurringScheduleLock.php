@@ -9,7 +9,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property int|null $resource_id
  * @property int $day_of_week
  * @property string $starts_at
@@ -20,7 +19,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'club_id',
     'resource_id',
     'day_of_week',
     'starts_at',
@@ -30,11 +28,6 @@ use Illuminate\Support\Carbon;
 ])]
 class RecurringScheduleLock extends Model
 {
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
-    }
-
     public function resource(): BelongsTo
     {
         return $this->belongsTo(Resource::class);

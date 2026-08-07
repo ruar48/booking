@@ -8,7 +8,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 interface PlayerRepositoryInterface
 {
     /**
-     * @param  array{search?: string, club_id?: int, experience_level?: string}  $filters
+     * @param  array{search?: string, experience_level?: string}  $filters
      */
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 

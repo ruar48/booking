@@ -24,7 +24,6 @@ type Props = {
 
 export default function RentalsEdit({ rentalItem }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        club_id: rentalItem.club_id,
         name: rentalItem.name,
         sku: rentalItem.sku,
         category: rentalItem.category ?? '',

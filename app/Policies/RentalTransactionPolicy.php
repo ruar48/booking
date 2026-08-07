@@ -18,7 +18,7 @@ class RentalTransactionPolicy
 
     public function view(User $user, RentalTransaction $rentalTransaction): bool
     {
-        return $this->isSuperAdmin($user) || $this->isClubAdmin($user, $rentalTransaction->club_id);
+        return $this->isSuperAdmin($user) || $this->isClubAdmin($user);
     }
 
     public function create(User $user): bool
@@ -28,11 +28,11 @@ class RentalTransactionPolicy
 
     public function return(User $user, RentalTransaction $rentalTransaction): bool
     {
-        return $this->isClubAdmin($user, $rentalTransaction->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function approve(User $user, RentalTransaction $rentalTransaction): bool
     {
-        return $this->isClubAdmin($user, $rentalTransaction->club_id);
+        return $this->isClubAdmin($user);
     }
 }

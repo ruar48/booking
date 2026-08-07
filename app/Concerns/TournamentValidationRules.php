@@ -4,7 +4,6 @@ namespace App\Concerns;
 
 use App\Enums\TournamentFormat;
 use App\Enums\TournamentStatus;
-use App\Models\Club;
 use App\Models\Tournament;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -17,7 +16,6 @@ trait TournamentValidationRules
     protected function tournamentRules(?int $tournamentId = null): array
     {
         return [
-            'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
             'name' => ['required', 'string', 'max:255'],
             'slug' => [
                 'required',

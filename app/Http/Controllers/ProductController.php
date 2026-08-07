@@ -27,7 +27,6 @@ class ProductController extends Controller
 
         return Inertia::render('inventory/index', [
             'products' => $this->productRepository->paginate(
-                clubId: $request->integer('club_id') ?: null,
                 search: $request->string('search')->value() ?: null,
                 lowStockOnly: $lowStockOnly,
             ),
@@ -57,8 +56,6 @@ class ProductController extends Controller
     public function edit(Product $product): Response
     {
         $this->authorize('update', $product);
-
-        $product->load('club');
 
         return Inertia::render('inventory/edit', [
             'product' => $product,

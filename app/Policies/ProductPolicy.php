@@ -18,7 +18,7 @@ class ProductPolicy
 
     public function view(User $user, Product $product): bool
     {
-        return $this->isSuperAdmin($user) || $this->isClubAdmin($user, $product->club_id);
+        return $this->isSuperAdmin($user) || $this->isClubAdmin($user);
     }
 
     public function create(User $user): bool
@@ -28,16 +28,16 @@ class ProductPolicy
 
     public function update(User $user, Product $product): bool
     {
-        return $this->isClubAdmin($user, $product->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function delete(User $user, Product $product): bool
     {
-        return $this->isClubAdmin($user, $product->club_id);
+        return $this->isClubAdmin($user);
     }
 
     public function adjustStock(User $user, Product $product): bool
     {
-        return $this->isClubAdmin($user, $product->club_id);
+        return $this->isClubAdmin($user);
     }
 }

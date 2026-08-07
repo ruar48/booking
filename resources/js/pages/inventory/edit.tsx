@@ -24,7 +24,6 @@ type Props = {
 
 export default function InventoryEdit({ product }: Props) {
     const { data, setData, put, processing, errors } = useForm({
-        club_id: product.club_id,
         name: product.name,
         sku: product.sku,
         category: product.category ?? '',

@@ -9,7 +9,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property int|null $resource_id
  * @property Carbon $starts_at
  * @property Carbon $ends_at
@@ -19,7 +18,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'club_id',
     'resource_id',
     'starts_at',
     'ends_at',
@@ -34,11 +32,6 @@ class ScheduleBlock extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function resource(): BelongsTo

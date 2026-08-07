@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { differenceInMinutes } from 'date-fns';
 import {
-    Building2,
     Calendar,
     CheckCircle2,
     Circle,
@@ -119,7 +118,6 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                                 />
                             </div>
                             <p className="text-muted-foreground text-sm">
-                                {booking.resource?.club?.name ?? 'Club'} ·{' '}
                                 {booking.resource?.name ?? 'Court'}
                             </p>
                             <p className="flex items-center gap-1.5 text-sm font-medium">
@@ -195,9 +193,6 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                             </SummaryRow>
                             <SummaryRow icon={MapPin} label="Court">
                                 {booking.resource?.name ?? '—'}
-                            </SummaryRow>
-                            <SummaryRow icon={Building2} label="Club">
-                                {booking.resource?.club?.name ?? '—'}
                             </SummaryRow>
                             <SummaryRow icon={Wallet} label="Amount">
                                 {booking.amount != null

@@ -20,85 +20,6 @@ export type PaginationLink = {
     active: boolean;
 };
 
-export type Club = {
-    id: number;
-    name: string;
-    slug: string;
-    logo?: string | null;
-    description?: string | null;
-    email?: string | null;
-    phone?: string | null;
-    website?: string | null;
-    address_line_1?: string | null;
-    address_line_2?: string | null;
-    city?: string | null;
-    state?: string | null;
-    postal_code?: string | null;
-    country?: string | null;
-    operating_hours?: Record<
-        string,
-        { open: string | null; close: string | null; closed: boolean }
-    > | null;
-    amenities?: string[] | null;
-    gallery?: string[] | null;
-    is_active: boolean;
-    resources_count?: number;
-    players_count?: number;
-    tournaments_count?: number;
-    coaches_count?: number;
-    created_at?: string;
-    updated_at?: string;
-};
-
-export type ClubEvent = {
-    id: number;
-    club_id: number;
-    title: string;
-    description?: string | null;
-    starts_at: string;
-    ends_at?: string | null;
-    location?: string | null;
-    price_per_player?: number | null;
-    max_players?: number | null;
-    target_score: number;
-    bracket_format: 'single_elimination' | 'double_elimination' | 'round_robin' | null;
-    bracket_generation: 'automatic' | 'random' | 'manual';
-    team_size: 'singles' | 'doubles';
-    skill_level?: string;
-    registrations_count?: number;
-    registrations?: ClubEventRegistration[];
-    matches?: ClubEventMatch[];
-};
-
-export type ClubEventRegistration = {
-    id: number;
-    club_event_id: number;
-    player_id: number;
-    partner_player_id: number | null;
-    payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded' | 'failed';
-    player?: Player;
-    partner?: Player | null;
-    creator?: { id: number; name: string } | null;
-    created_at?: string;
-};
-
-export type ClubEventMatch = {
-    id: number;
-    club_event_id: number;
-    entry1_id: number | null;
-    entry2_id: number | null;
-    entry1_score: number | null;
-    entry2_score: number | null;
-    winner_registration_id: number | null;
-    round: number;
-    bracket_position: number | null;
-    bracket_side: 'winners' | 'losers' | 'final' | null;
-    status: 'scheduled' | 'in_progress' | 'completed' | 'walkover' | 'forfeit' | 'cancelled';
-    entry1?: ClubEventRegistration | null;
-    entry2?: ClubEventRegistration | null;
-    winner?: ClubEventRegistration | null;
-};
-
 export type BookedSlot = {
     id: number;
     resource_id: number;
@@ -140,7 +61,6 @@ export type RecurringScheduleLock = {
 export type Player = {
     id: number;
     user_id: number;
-    club_id?: number | null;
     skill_rating: number;
     experience_level: string;
     playing_hand?: string | null;
@@ -153,7 +73,6 @@ export type Player = {
     bio?: string | null;
     is_active: boolean;
     user?: { id: number; name: string; email: string };
-    club?: Club | null;
     rankings?: Ranking[];
     achievements?: PlayerAchievement[];
     coaches?: Coach[];
@@ -163,7 +82,6 @@ export type Player = {
 
 export type Resource = {
     id: number;
-    club_id: number;
     sport: 'pickleball' | 'billiards';
     name: string;
     resource_number: string;
@@ -175,7 +93,6 @@ export type Resource = {
     photos?: string[] | null;
     description?: string | null;
     metadata: Record<string, unknown> | null;
-    club?: Club;
     bookings?: ResourceBooking[];
     created_at?: string;
     updated_at?: string;
@@ -204,7 +121,6 @@ export type ResourceBooking = {
 
 export type Tournament = {
     id: number;
-    club_id: number;
     name: string;
     slug: string;
     description?: string | null;
@@ -218,7 +134,6 @@ export type Tournament = {
     starts_at?: string | null;
     ends_at?: string | null;
     created_by?: number;
-    club?: Club;
     creator?: { id: number; name: string };
     categories?: TournamentCategory[];
     registrations?: TournamentRegistration[];
@@ -274,22 +189,18 @@ export type MatchSet = {
 export type Ranking = {
     id: number;
     player_id: number;
-    club_id: number;
     elo_rating: number;
     rank_position?: number;
     player?: Player;
-    club?: Club;
 };
 
 export type Coach = {
     id: number;
     user_id: number;
-    club_id: number;
     bio?: string | null;
     specialties?: string[] | null;
     is_active: boolean;
     user?: { id: number; name: string; email?: string };
-    club?: Club;
     players?: Player[];
     training_sessions?: TrainingSession[];
 };
@@ -297,7 +208,6 @@ export type Coach = {
 export type TrainingSession = {
     id: number;
     coach_id: number;
-    club_id: number;
     court_id?: number | null;
     title: string;
     description?: string | null;
@@ -306,7 +216,6 @@ export type TrainingSession = {
     notes?: string | null;
     status: string;
     coach?: Coach;
-    club?: Club;
     court?: Resource | null;
     attendance?: TrainingAttendance[];
     drills?: TrainingDrill[];
@@ -328,7 +237,6 @@ export type TrainingDrill = {
 
 export type Announcement = {
     id: number;
-    club_id?: number | null;
     title: string;
     content: string;
     show_on_dashboard: boolean;
@@ -336,7 +244,6 @@ export type Announcement = {
     show_on_player_portal: boolean;
     is_published: boolean;
     published_at?: string | null;
-    club?: Club | null;
     created_at?: string;
     updated_at?: string;
 };
@@ -380,7 +287,6 @@ export type AuditLog = {
 
 export type Setting = {
     id: number;
-    club_id?: number | null;
     group: string;
     key: string;
     value: unknown;
@@ -425,12 +331,10 @@ export type DashboardData = {
     resourceAvailability: Resource[];
     revenueChart: RevenueChartPoint[];
     recentBookings?: ResourceBooking[];
-    openPlaySessions?: ClubEvent[];
     announcements?: Announcement[];
 };
 
 export type SearchResults = {
-    clubs: Pick<Club, 'id' | 'name' | 'slug' | 'city'>[];
     players: Player[];
     courts: Resource[];
     tournaments: Pick<Tournament, 'id' | 'name' | 'slug' | 'starts_at'>[];

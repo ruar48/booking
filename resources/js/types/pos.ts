@@ -3,7 +3,6 @@ import type { Payment } from '@/types/booking';
 
 export type Sale = {
     id: number;
-    club_id: number;
     cashier_id: number;
     customer_id?: number | null;
     invoice_number: string;

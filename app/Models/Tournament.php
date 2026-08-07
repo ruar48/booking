@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property int $created_by
  * @property string $name
  * @property string $slug
@@ -35,7 +34,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
-    'club_id',
     'created_by',
     'name',
     'slug',
@@ -67,11 +65,6 @@ class Tournament extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function creator(): BelongsTo

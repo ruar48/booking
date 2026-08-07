@@ -19,7 +19,7 @@ class AnnouncementPolicy
     public function view(User $user, Announcement $announcement): bool
     {
         return $announcement->is_published
-            || $this->isClubAdmin($user, $announcement->club_id)
+            || $this->isClubAdmin($user)
             || $this->ownsRecord($user, $announcement->created_by);
     }
 
@@ -30,7 +30,7 @@ class AnnouncementPolicy
 
     public function update(User $user, Announcement $announcement): bool
     {
-        return $this->isClubAdmin($user, $announcement->club_id)
+        return $this->isClubAdmin($user)
             || $this->ownsRecord($user, $announcement->created_by);
     }
 

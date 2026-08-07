@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Club;
 use App\Models\Coach;
 use App\Models\Player;
 use App\Models\Resource;
@@ -21,7 +20,6 @@ class SearchController extends Controller
             return Inertia::render('search/index', [
                 'query' => $query,
                 'results' => [
-                    'clubs' => [],
                     'players' => [],
                     'courts' => [],
                     'tournaments' => [],
@@ -33,18 +31,12 @@ class SearchController extends Controller
         return Inertia::render('search/index', [
             'query' => $query,
             'results' => [
-                'clubs' => Club::query()
-                    ->where('name', 'like', "%{$query}%")
-                    ->orWhere('city', 'like', "%{$query}%")
-                    ->limit(10)
-                    ->get(['id', 'name', 'slug', 'city']),
                 'players' => Player::query()
                     ->with('user:id,name,email')
                     ->whereHas('user', fn ($q) => $q->where('name', 'like', "%{$query}%")->orWhere('email', 'like', "%{$query}%"))
                     ->limit(10)
                     ->get(),
                 'courts' => Resource::query()
-                    ->with('club:id,name')
                     ->where('name', 'like', "%{$query}%")
                     ->limit(10)
                     ->get(),

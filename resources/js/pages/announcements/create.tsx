@@ -13,7 +13,6 @@ import { create, index as announcementsIndex, store } from '@/routes/announcemen
 
 export default function AnnouncementsCreate() {
     const { data, setData, post, processing, errors } = useForm({
-        club_id: '',
         title: '',
         content: '',
         show_on_dashboard: true,
@@ -38,16 +37,6 @@ export default function AnnouncementsCreate() {
                 <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
                     <Card>
                         <CardContent className="grid gap-4 pt-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="club_id">Club ID (optional)</Label>
-                                <Input
-                                    id="club_id"
-                                    type="number"
-                                    value={data.club_id}
-                                    onChange={(e) => setData('club_id', e.target.value)}
-                                />
-                                <InputError message={errors.club_id} />
-                            </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="title">Title</Label>
                                 <Input

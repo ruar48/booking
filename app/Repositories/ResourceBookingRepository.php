@@ -22,7 +22,7 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return ResourceBooking::query()
-            ->with(['resource.club', 'user', 'approver'])
+            ->with(['resource', 'user', 'approver'])
             ->latest('starts_at')
             ->paginate($perPage);
     }
@@ -30,7 +30,7 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
     public function paginateForUser(User $user, int $perPage = 15): LengthAwarePaginator
     {
         return ResourceBooking::query()
-            ->with(['resource.club', 'user', 'approver'])
+            ->with(['resource', 'user', 'approver'])
             ->when(
                 ! $user->isVenueAdmin(),
                 fn ($query) => $query->where('user_id', $user->id),
@@ -80,7 +80,6 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
     }
 
     public function getForCalendar(
-        ?int $clubId = null,
         ?Carbon $start = null,
         ?Carbon $end = null,
     ): Collection {
@@ -89,13 +88,6 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
 
         return ResourceBooking::query()
             ->with(['resource', 'user'])
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->whereHas(
-                    'resource',
-                    fn ($query) => $query->where('club_id', $clubId),
-                ),
-            )
             ->where('starts_at', '<', $end)
             ->where('ends_at', '>', $start)
             ->orderBy('starts_at')

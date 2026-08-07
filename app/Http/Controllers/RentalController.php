@@ -23,22 +23,13 @@ class RentalController extends Controller
     {
         $this->authorize('create', RentalTransaction::class);
 
-        $clubId = $request->integer('club_id') ?: null;
-
         $rentalItems = RentalItem::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->where('status', RentalItemStatus::Active->value)
             ->orderBy('name')
             ->get();
 
         return Inertia::render('rentals/checkout', [
             'rentalItems' => $rentalItems,
-            'filters' => [
-                'club_id' => $clubId,
-            ],
         ]);
     }
 
@@ -48,7 +39,6 @@ class RentalController extends Controller
 
         try {
             $transaction = $this->rentalRepository->checkout($validated['items'], [
-                'club_id' => $validated['club_id'],
                 'staff' => $request->user(),
                 'renter_id' => $validated['renter_id'] ?? null,
                 'renter_name' => $validated['renter_name'] ?? null,

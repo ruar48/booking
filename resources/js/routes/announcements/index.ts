@@ -314,7 +314,7 @@ edit.head = (args: { announcement: number | { id: number } } | [announcement: nu
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
 export const update = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -329,7 +329,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
 update.url = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +362,7 @@ update.url = (args: { announcement: number | { id: number } } | [announcement: n
 
 /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
 update.put = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -371,7 +371,7 @@ update.put = (args: { announcement: number | { id: number } } | [announcement: n
 })
 /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
 update.patch = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -381,7 +381,7 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
 
     /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
     const updateForm = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -396,7 +396,7 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
 
             /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
         updateForm.put = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -410,7 +410,7 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
         })
             /**
 * @see \App\Http\Controllers\AnnouncementController::update
- * @see app/Http/Controllers/AnnouncementController.php:62
+ * @see app/Http/Controllers/AnnouncementController.php:60
  * @route '/announcements/{announcement}'
  */
         updateForm.patch = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -426,7 +426,7 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
- * @see app/Http/Controllers/AnnouncementController.php:77
+ * @see app/Http/Controllers/AnnouncementController.php:75
  * @route '/announcements/{announcement}'
  */
 export const destroy = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -441,7 +441,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
- * @see app/Http/Controllers/AnnouncementController.php:77
+ * @see app/Http/Controllers/AnnouncementController.php:75
  * @route '/announcements/{announcement}'
  */
 destroy.url = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -474,7 +474,7 @@ destroy.url = (args: { announcement: number | { id: number } } | [announcement: 
 
 /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
- * @see app/Http/Controllers/AnnouncementController.php:77
+ * @see app/Http/Controllers/AnnouncementController.php:75
  * @route '/announcements/{announcement}'
  */
 destroy.delete = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -484,7 +484,7 @@ destroy.delete = (args: { announcement: number | { id: number } } | [announcemen
 
     /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
- * @see app/Http/Controllers/AnnouncementController.php:77
+ * @see app/Http/Controllers/AnnouncementController.php:75
  * @route '/announcements/{announcement}'
  */
     const destroyForm = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -499,7 +499,7 @@ destroy.delete = (args: { announcement: number | { id: number } } | [announcemen
 
             /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
- * @see app/Http/Controllers/AnnouncementController.php:77
+ * @see app/Http/Controllers/AnnouncementController.php:75
  * @route '/announcements/{announcement}'
  */
         destroyForm.delete = (args: { announcement: number | { id: number } } | [announcement: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -30,14 +30,14 @@ class TournamentPolicy
 
     public function update(User $user, Tournament $tournament): bool
     {
-        return $this->isClubAdmin($user, $tournament->club_id)
+        return $this->isClubAdmin($user)
             || $this->isTournamentOrganizer($user)
             || $this->ownsRecord($user, $tournament->created_by);
     }
 
     public function delete(User $user, Tournament $tournament): bool
     {
-        return $this->isClubAdmin($user, $tournament->club_id)
+        return $this->isClubAdmin($user)
             || $this->isSuperAdmin($user);
     }
 
@@ -49,7 +49,7 @@ class TournamentPolicy
 
     public function generateBracket(User $user, Tournament $tournament): bool
     {
-        return $this->isClubAdmin($user, $tournament->club_id)
+        return $this->isClubAdmin($user)
             || $this->isTournamentOrganizer($user);
     }
 }

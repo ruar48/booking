@@ -16,17 +16,12 @@ class TrainingSessionController extends Controller
         $this->authorize('viewAny', TrainingSession::class);
 
         $sessions = TrainingSession::query()
-            ->with(['coach.user', 'club', 'court'])
-            ->when(
-                $request->filled('club_id'),
-                fn ($query) => $query->where('club_id', $request->integer('club_id')),
-            )
+            ->with(['coach.user', 'court'])
             ->latest('scheduled_at')
             ->paginate();
 
         return Inertia::render('training-sessions/index', [
             'sessions' => $sessions,
-            'filters' => $request->only(['club_id']),
         ]);
     }
 
@@ -50,7 +45,7 @@ class TrainingSessionController extends Controller
     {
         $this->authorize('view', $trainingSession);
 
-        $trainingSession->load(['coach.user', 'club', 'court', 'attendance.player.user', 'drills']);
+        $trainingSession->load(['coach.user', 'court', 'attendance.player.user', 'drills']);
 
         return Inertia::render('training-sessions/show', [
             'session' => $trainingSession,

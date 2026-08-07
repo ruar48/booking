@@ -9,7 +9,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property Carbon $date
  * @property bool $is_closed
  * @property string|null $open_time
@@ -20,7 +19,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'club_id',
     'date',
     'is_closed',
     'open_time',
@@ -36,11 +34,6 @@ class DateOverride extends Model
             'date' => 'date',
             'is_closed' => 'boolean',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function creator(): BelongsTo

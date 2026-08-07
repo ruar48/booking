@@ -28,13 +28,7 @@ class PosController extends Controller
     {
         $this->authorize('create', Sale::class);
 
-        $clubId = $request->integer('club_id') ?: null;
-
         $products = Product::query()
-            ->when(
-                $clubId !== null,
-                fn ($query) => $query->where('club_id', $clubId),
-            )
             ->where('status', ProductStatus::Active->value)
             ->orderBy('name')
             ->get();
@@ -45,9 +39,6 @@ class PosController extends Controller
                 'value' => $method->value,
                 'label' => $method->label(),
             ])->all(),
-            'filters' => [
-                'club_id' => $clubId,
-            ],
         ]);
     }
 
@@ -57,7 +48,6 @@ class PosController extends Controller
 
         try {
             $sale = $this->saleRepository->checkout($validated['items'], [
-                'club_id' => $validated['club_id'],
                 'cashier' => $request->user(),
                 'customer_id' => $validated['customer_id'] ?? null,
                 'payment_method' => $validated['payment_method'],

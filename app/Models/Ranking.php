@@ -10,7 +10,6 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int $player_id
- * @property int|null $club_id
  * @property string|null $region
  * @property int $elo_rating
  * @property int $wins
@@ -21,7 +20,6 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'player_id',
-    'club_id',
     'region',
     'elo_rating',
     'wins',
@@ -33,10 +31,5 @@ class Ranking extends Model
     public function player(): BelongsTo
     {
         return $this->belongsTo(Player::class);
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 }

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Award, Building2, Pencil, Star, Users } from 'lucide-react';
+import { Award, Pencil, Star, Users } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
@@ -46,11 +46,6 @@ export default function PlayersShow({ player }: Props) {
                         value={player.experience_level}
                         icon={Users}
                         className="capitalize"
-                    />
-                    <StatCard
-                        label="Club"
-                        value={player.club?.name ?? '—'}
-                        icon={Building2}
                     />
                     <StatCard
                         label="Achievements"
@@ -105,9 +100,8 @@ export default function PlayersShow({ player }: Props) {
                                     {player.rankings.map((ranking) => (
                                         <li
                                             key={ranking.id}
-                                            className="flex items-center justify-between text-sm"
+                                            className="flex items-center justify-end text-sm"
                                         >
-                                            <span>{ranking.club?.name}</span>
                                             <Badge variant="secondary">
                                                 #{ranking.rank_position ?? '—'} ·{' '}
                                                 {ranking.elo_rating} ELO

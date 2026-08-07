@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Enums\PaymentMethod;
-use App\Models\Club;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -17,7 +16,6 @@ trait SaleValidationRules
     protected function saleRules(): array
     {
         return [
-            'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', Rule::exists(Product::class, 'id')],
             'items.*.quantity' => ['required', 'integer', 'min:1'],

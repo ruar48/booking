@@ -79,7 +79,7 @@ checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     checkout.form = checkoutForm
 /**
 * @see \App\Http\Controllers\RentalController::store
- * @see app/Http/Controllers/RentalController.php:45
+ * @see app/Http/Controllers/RentalController.php:36
  * @route '/rentals'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -94,7 +94,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\RentalController::store
- * @see app/Http/Controllers/RentalController.php:45
+ * @see app/Http/Controllers/RentalController.php:36
  * @route '/rentals'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RentalController::store
- * @see app/Http/Controllers/RentalController.php:45
+ * @see app/Http/Controllers/RentalController.php:36
  * @route '/rentals'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -113,7 +113,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\RentalController::store
- * @see app/Http/Controllers/RentalController.php:45
+ * @see app/Http/Controllers/RentalController.php:36
  * @route '/rentals'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -123,7 +123,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\RentalController::store
- * @see app/Http/Controllers/RentalController.php:45
+ * @see app/Http/Controllers/RentalController.php:36
  * @route '/rentals'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

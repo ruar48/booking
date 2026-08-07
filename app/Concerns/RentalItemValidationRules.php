@@ -3,7 +3,6 @@
 namespace App\Concerns;
 
 use App\Enums\RentalItemStatus;
-use App\Models\Club;
 use App\Models\RentalItem;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -16,7 +15,6 @@ trait RentalItemValidationRules
     protected function rentalItemRules(?int $rentalItemId = null): array
     {
         return [
-            'club_id' => ['required', 'integer', Rule::exists(Club::class, 'id')],
             'name' => ['required', 'string', 'max:255'],
             'sku' => [
                 'required',

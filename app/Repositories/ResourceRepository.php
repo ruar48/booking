@@ -18,7 +18,6 @@ class ResourceRepository implements ResourceRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return Resource::query()
-            ->with('club')
             ->latest()
             ->paginate($perPage);
     }

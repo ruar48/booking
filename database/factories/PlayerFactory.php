@@ -2,7 +2,6 @@
 
 namespace Database\Factories;
 
-use App\Models\Club;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,7 +17,6 @@ class PlayerFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'club_id' => Club::factory(),
             'skill_rating' => fake()->numberBetween(800, 2000),
             'experience_level' => fake()->randomElement(['beginner', 'intermediate', 'advanced', 'professional']),
             'playing_hand' => fake()->randomElement(['right', 'left', 'ambidextrous']),

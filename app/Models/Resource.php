@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $club_id
  * @property Sport $sport
  * @property string $name
  * @property string $resource_number
@@ -32,7 +31,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
-    'club_id',
     'sport',
     'name',
     'resource_number',
@@ -60,11 +58,6 @@ class Resource extends Model
             'photos' => 'array',
             'metadata' => 'array',
         ];
-    }
-
-    public function club(): BelongsTo
-    {
-        return $this->belongsTo(Club::class);
     }
 
     public function bookings(): HasMany

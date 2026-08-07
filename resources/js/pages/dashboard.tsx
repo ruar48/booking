@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Calendar, CalendarClock, DollarSign, MapPin, Megaphone, Users } from 'lucide-react';
+import { Calendar, DollarSign, MapPin, Megaphone, Users } from 'lucide-react';
 import {
     CartesianGrid,
     Line,
@@ -13,7 +13,6 @@ import {
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { StatusBadge } from '@/components/status-badge';
-import { Button } from '@/components/ui/button';
 import {
     Card,
     CardContent,
@@ -24,15 +23,12 @@ import {
 import {
     formatCurrency,
     formatDateTime,
-    formatTime,
     monthLabel,
 } from '@/lib/format';
 import { dashboard } from '@/routes';
 import { show as showBooking } from '@/routes/bookings';
-import { create as createOpenPlay, edit as editOpenPlay, index as openPlayIndex } from '@/routes/open-play';
 import type {
     Announcement,
-    ClubEvent,
     DashboardData,
     Resource,
     ResourceBooking,
@@ -48,7 +44,6 @@ export default function Dashboard({ data }: Props) {
         resourceAvailability = [],
         revenueChart = [],
         recentBookings,
-        openPlaySessions = [],
         announcements,
     } = data;
 
@@ -130,41 +125,6 @@ export default function Dashboard({ data }: Props) {
 
                 <div className="grid gap-4 lg:grid-cols-2">
                     <Card>
-                        <CardHeader className="flex flex-row items-start justify-between gap-4">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <CalendarClock className="size-4" />
-                                    Open play
-                                </CardTitle>
-                                <CardDescription>
-                                    Upcoming drop-in sessions on your public page
-                                </CardDescription>
-                            </div>
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={openPlayIndex()}>Manage</Link>
-                            </Button>
-                        </CardHeader>
-                        <CardContent>
-                            {openPlaySessions.length ? (
-                                <ul className="space-y-4">
-                                    {openPlaySessions.map((session) => (
-                                        <OpenPlayRow key={session.id} session={session} />
-                                    ))}
-                                </ul>
-                            ) : (
-                                <div className="py-6 text-center">
-                                    <p className="text-muted-foreground text-sm">
-                                        No upcoming sessions
-                                    </p>
-                                    <Button size="sm" className="mt-3" asChild>
-                                        <Link href={createOpenPlay()}>Schedule open play</Link>
-                                    </Button>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                    <Card>
                         <CardHeader>
                             <CardTitle>Recent bookings</CardTitle>
                             <CardDescription>
@@ -213,37 +173,6 @@ export default function Dashboard({ data }: Props) {
                 </div>
             </div>
         </>
-    );
-}
-
-function OpenPlayRow({ session }: { session: ClubEvent }) {
-    return (
-        <li className="flex flex-col gap-2 border-b pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-                <Link
-                    href={editOpenPlay(session)}
-                    className="text-sm font-medium hover:underline"
-                >
-                    {session.title}
-                </Link>
-                <p className="text-muted-foreground mt-1 text-xs">
-                    {session.starts_at ? formatDateTime(session.starts_at) : '—'}
-                    {session.ends_at && ` – ${formatTime(session.ends_at)}`}
-                </p>
-                <p className="text-muted-foreground text-xs">
-                    {session.location ?? 'Courts 1, 2'}
-                    {session.max_players ? ` · 0/${session.max_players} players` : ''}
-                </p>
-            </div>
-            <div className="text-right text-sm">
-                {session.price_per_player != null && (
-                    <p className="font-medium">
-                        {formatCurrency(session.price_per_player)}
-                        <span className="text-muted-foreground font-normal"> / player</span>
-                    </p>
-                )}
-            </div>
-        </li>
     );
 }
 

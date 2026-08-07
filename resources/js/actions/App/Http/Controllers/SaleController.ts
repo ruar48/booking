@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
 export const show = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
 show.url = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -127,7 +127,7 @@ show.url = (args: { sale: number | { id: number } } | [sale: number | { id: numb
 
 /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
 show.get = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -136,7 +136,7 @@ show.get = (args: { sale: number | { id: number } } | [sale: number | { id: numb
 })
 /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
 show.head = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -146,7 +146,7 @@ show.head = (args: { sale: number | { id: number } } | [sale: number | { id: num
 
     /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
     const showForm = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -156,7 +156,7 @@ show.head = (args: { sale: number | { id: number } } | [sale: number | { id: num
 
             /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
         showForm.get = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -165,7 +165,7 @@ show.head = (args: { sale: number | { id: number } } | [sale: number | { id: num
         })
             /**
 * @see \App\Http\Controllers\SaleController::show
- * @see app/Http/Controllers/SaleController.php:30
+ * @see app/Http/Controllers/SaleController.php:29
  * @route '/pos/sales/{sale}'
  */
         showForm.head = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

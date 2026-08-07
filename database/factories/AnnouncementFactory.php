@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Announcement;
-use App\Models\Club;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,7 +16,6 @@ class AnnouncementFactory extends Factory
     public function definition(): array
     {
         return [
-            'club_id' => Club::factory(),
             'created_by' => User::factory(),
             'title' => fake()->sentence(4),
             'content' => fake()->paragraphs(2, true),

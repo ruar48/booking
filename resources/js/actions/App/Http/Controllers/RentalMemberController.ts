@@ -79,7 +79,7 @@ browse.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     browse.form = browseForm
 /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
 export const mine = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ mine.definition = {
 
 /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
 mine.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ mine.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
 mine.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ mine.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
 mine.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ mine.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
     const mineForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ mine.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
         mineForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ mine.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\RentalMemberController::mine
- * @see app/Http/Controllers/RentalMemberController.php:40
+ * @see app/Http/Controllers/RentalMemberController.php:35
  * @route '/rentals/mine'
  */
         mineForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ mine.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     mine.form = mineForm
 /**
 * @see \App\Http\Controllers\RentalMemberController::store
- * @see app/Http/Controllers/RentalMemberController.php:53
+ * @see app/Http/Controllers/RentalMemberController.php:48
  * @route '/rentals/rent'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\RentalMemberController::store
- * @see app/Http/Controllers/RentalMemberController.php:53
+ * @see app/Http/Controllers/RentalMemberController.php:48
  * @route '/rentals/rent'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\RentalMemberController::store
- * @see app/Http/Controllers/RentalMemberController.php:53
+ * @see app/Http/Controllers/RentalMemberController.php:48
  * @route '/rentals/rent'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\RentalMemberController::store
- * @see app/Http/Controllers/RentalMemberController.php:53
+ * @see app/Http/Controllers/RentalMemberController.php:48
  * @route '/rentals/rent'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\RentalMemberController::store
- * @see app/Http/Controllers/RentalMemberController.php:53
+ * @see app/Http/Controllers/RentalMemberController.php:48
  * @route '/rentals/rent'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

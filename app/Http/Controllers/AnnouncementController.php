@@ -52,8 +52,6 @@ class AnnouncementController extends Controller
     {
         $this->authorize('update', $announcement);
 
-        $announcement->load('club');
-
         return Inertia::render('announcements/edit', [
             'announcement' => $announcement,
         ]);
