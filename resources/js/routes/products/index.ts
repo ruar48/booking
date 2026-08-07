@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\ProductController::index
  * @see app/Http/Controllers/ProductController.php:22
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::index
+ * @see app/Http/Controllers/ProductController.php:22
+ * @route '/products'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::index
+ * @see app/Http/Controllers/ProductController.php:22
+ * @route '/products'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ProductController::index
+ * @see app/Http/Controllers/ProductController.php:22
+ * @route '/products'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\ProductController::create
  * @see app/Http/Controllers/ProductController.php:40
@@ -85,6 +120,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::create
+ * @see app/Http/Controllers/ProductController.php:40
+ * @route '/products/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::create
+ * @see app/Http/Controllers/ProductController.php:40
+ * @route '/products/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ProductController::create
+ * @see app/Http/Controllers/ProductController.php:40
+ * @route '/products/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\ProductController::store
  * @see app/Http/Controllers/ProductController.php:47
@@ -119,6 +189,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::store
+ * @see app/Http/Controllers/ProductController.php:47
+ * @route '/products'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::store
+ * @see app/Http/Controllers/ProductController.php:47
+ * @route '/products'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\ProductController::edit
  * @see app/Http/Controllers/ProductController.php:56
@@ -186,6 +277,41 @@ edit.head = (args: { product: number | { id: number } } | [product: number | { i
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::edit
+ * @see app/Http/Controllers/ProductController.php:56
+ * @route '/products/{product}/edit'
+ */
+    const editForm = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: edit.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::edit
+ * @see app/Http/Controllers/ProductController.php:56
+ * @route '/products/{product}/edit'
+ */
+        editForm.get = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ProductController::edit
+ * @see app/Http/Controllers/ProductController.php:56
+ * @route '/products/{product}/edit'
+ */
+        editForm.head = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: edit.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    edit.form = editForm
 /**
 * @see \App\Http\Controllers\ProductController::update
  * @see app/Http/Controllers/ProductController.php:65
@@ -253,6 +379,51 @@ update.patch = (args: { product: number | { id: number } } | [product: number | 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::update
+ * @see app/Http/Controllers/ProductController.php:65
+ * @route '/products/{product}'
+ */
+    const updateForm = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: update.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PUT',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::update
+ * @see app/Http/Controllers/ProductController.php:65
+ * @route '/products/{product}'
+ */
+        updateForm.put = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PUT',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+            /**
+* @see \App\Http\Controllers\ProductController::update
+ * @see app/Http/Controllers/ProductController.php:65
+ * @route '/products/{product}'
+ */
+        updateForm.patch = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: update.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    update.form = updateForm
 /**
 * @see \App\Http\Controllers\ProductController::destroy
  * @see app/Http/Controllers/ProductController.php:74
@@ -311,6 +482,37 @@ destroy.delete = (args: { product: number | { id: number } } | [product: number 
     method: 'delete',
 })
 
+    /**
+* @see \App\Http\Controllers\ProductController::destroy
+ * @see app/Http/Controllers/ProductController.php:74
+ * @route '/products/{product}'
+ */
+    const destroyForm = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::destroy
+ * @see app/Http/Controllers/ProductController.php:74
+ * @route '/products/{product}'
+ */
+        destroyForm.delete = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 /**
 * @see \App\Http\Controllers\ProductController::adjustStock
  * @see app/Http/Controllers/ProductController.php:85
@@ -368,6 +570,28 @@ adjustStock.post = (args: { product: number | { id: number } } | [product: numbe
     url: adjustStock.url(args, options),
     method: 'post',
 })
+
+    /**
+* @see \App\Http\Controllers\ProductController::adjustStock
+ * @see app/Http/Controllers/ProductController.php:85
+ * @route '/products/{product}/adjust-stock'
+ */
+    const adjustStockForm = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: adjustStock.url(args, options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ProductController::adjustStock
+ * @see app/Http/Controllers/ProductController.php:85
+ * @route '/products/{product}/adjust-stock'
+ */
+        adjustStockForm.post = (args: { product: number | { id: number } } | [product: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: adjustStock.url(args, options),
+            method: 'post',
+        })
+    
+    adjustStock.form = adjustStockForm
 const products = {
     index: Object.assign(index, index),
 create: Object.assign(create, create),

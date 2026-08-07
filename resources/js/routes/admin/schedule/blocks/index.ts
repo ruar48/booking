@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
@@ -33,6 +33,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\Admin\ScheduleSettingController::store
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @route '/admin/schedule/blocks'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ScheduleSettingController::store
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @route '/admin/schedule/blocks'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
  * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
@@ -90,6 +111,38 @@ destroy.delete = (args: { block: number | { id: number } } | [block: number | { 
     url: destroy.url(args, options),
     method: 'delete',
 })
+
+    /**
+* @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @route '/admin/schedule/blocks/{block}'
+ */
+    const destroyForm = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: destroy.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'DELETE',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @route '/admin/schedule/blocks/{block}'
+ */
+        destroyForm.delete = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: destroy.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'DELETE',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    destroy.form = destroyForm
 const blocks = {
     store: Object.assign(store, store),
 destroy: Object.assign(destroy, destroy),

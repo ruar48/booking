@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 import calendarFa95d0 from './calendar'
 import customers from './customers'
 /**
@@ -35,6 +35,27 @@ storeBulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::storeBulk
+ * @see app/Http/Controllers/ResourceBookingController.php:78
+ * @route '/bookings/bulk'
+ */
+    const storeBulkForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: storeBulk.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::storeBulk
+ * @see app/Http/Controllers/ResourceBookingController.php:78
+ * @route '/bookings/bulk'
+ */
+        storeBulkForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: storeBulk.url(options),
+            method: 'post',
+        })
+    
+    storeBulk.form = storeBulkForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
  * @see app/Http/Controllers/ResourceBookingController.php:191
@@ -78,6 +99,41 @@ calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::calendar
+ * @see app/Http/Controllers/ResourceBookingController.php:191
+ * @route '/bookings/calendar'
+ */
+    const calendarForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: calendar.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::calendar
+ * @see app/Http/Controllers/ResourceBookingController.php:191
+ * @route '/bookings/calendar'
+ */
+        calendarForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: calendar.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::calendar
+ * @see app/Http/Controllers/ResourceBookingController.php:191
+ * @route '/bookings/calendar'
+ */
+        calendarForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: calendar.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    calendar.form = calendarForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
  * @see app/Http/Controllers/ResourceBookingController.php:164
@@ -136,6 +192,37 @@ markPaid.patch = (args: { booking: number | { id: number } } | [booking: number 
     method: 'patch',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::markPaid
+ * @see app/Http/Controllers/ResourceBookingController.php:164
+ * @route '/bookings/{booking}/mark-paid'
+ */
+    const markPaidForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: markPaid.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::markPaid
+ * @see app/Http/Controllers/ResourceBookingController.php:164
+ * @route '/bookings/{booking}/mark-paid'
+ */
+        markPaidForm.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: markPaid.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    markPaid.form = markPaidForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
  * @see app/Http/Controllers/ResourceBookingController.php:98
@@ -170,6 +257,27 @@ storeWalkIn.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
+ * @see app/Http/Controllers/ResourceBookingController.php:98
+ * @route '/bookings/walk-in'
+ */
+    const storeWalkInForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: storeWalkIn.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
+ * @see app/Http/Controllers/ResourceBookingController.php:98
+ * @route '/bookings/walk-in'
+ */
+        storeWalkInForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: storeWalkIn.url(options),
+            method: 'post',
+        })
+    
+    storeWalkIn.form = storeWalkInForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::index
  * @see app/Http/Controllers/ResourceBookingController.php:36
@@ -213,6 +321,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::index
+ * @see app/Http/Controllers/ResourceBookingController.php:36
+ * @route '/bookings'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::index
+ * @see app/Http/Controllers/ResourceBookingController.php:36
+ * @route '/bookings'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::index
+ * @see app/Http/Controllers/ResourceBookingController.php:36
+ * @route '/bookings'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::create
  * @see app/Http/Controllers/ResourceBookingController.php:53
@@ -256,6 +399,41 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::create
+ * @see app/Http/Controllers/ResourceBookingController.php:53
+ * @route '/bookings/create'
+ */
+    const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: create.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::create
+ * @see app/Http/Controllers/ResourceBookingController.php:53
+ * @route '/bookings/create'
+ */
+        createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::create
+ * @see app/Http/Controllers/ResourceBookingController.php:53
+ * @route '/bookings/create'
+ */
+        createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: create.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    create.form = createForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::store
  * @see app/Http/Controllers/ResourceBookingController.php:60
@@ -290,6 +468,27 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::store
+ * @see app/Http/Controllers/ResourceBookingController.php:60
+ * @route '/bookings'
+ */
+    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: store.url(options),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::store
+ * @see app/Http/Controllers/ResourceBookingController.php:60
+ * @route '/bookings'
+ */
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::show
  * @see app/Http/Controllers/ResourceBookingController.php:152
@@ -357,6 +556,41 @@ show.head = (args: { booking: number | { id: number } } | [booking: number | { i
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::show
+ * @see app/Http/Controllers/ResourceBookingController.php:152
+ * @route '/bookings/{booking}'
+ */
+    const showForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::show
+ * @see app/Http/Controllers/ResourceBookingController.php:152
+ * @route '/bookings/{booking}'
+ */
+        showForm.get = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::show
+ * @see app/Http/Controllers/ResourceBookingController.php:152
+ * @route '/bookings/{booking}'
+ */
+        showForm.head = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
  * @see app/Http/Controllers/ResourceBookingController.php:177
@@ -414,6 +648,38 @@ cancel.patch = (args: { booking: number | { id: number } } | [booking: number | 
     url: cancel.url(args, options),
     method: 'patch',
 })
+
+    /**
+* @see \App\Http\Controllers\ResourceBookingController::cancel
+ * @see app/Http/Controllers/ResourceBookingController.php:177
+ * @route '/bookings/{booking}/cancel'
+ */
+    const cancelForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: cancel.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\ResourceBookingController::cancel
+ * @see app/Http/Controllers/ResourceBookingController.php:177
+ * @route '/bookings/{booking}/cancel'
+ */
+        cancelForm.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: cancel.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    cancel.form = cancelForm
 const bookings = {
     storeBulk: Object.assign(storeBulk, storeBulk),
 calendar: Object.assign(calendar, calendarFa95d0),
