@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Dumbbell, ListOrdered, Pencil, Plus } from 'lucide-react';
-import { useCallback } from 'react';
+import { BarChart3, Dumbbell, ListOrdered, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
@@ -12,8 +13,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { checkout as rentalsCheckout } from '@/routes/rentals';
-import { create, edit, index as rentalItemsIndex } from '@/routes/rental-items';
+import { checkout as rentalsCheckout, report as rentalsReport } from '@/routes/rentals';
+import { create, destroy, edit, index as rentalItemsIndex } from '@/routes/rental-items';
 import { index as rentalTransactionsIndex } from '@/routes/rentals/transactions';
 import type { Paginated } from '@/types/booking';
 import type { RentalItem } from '@/types/rentals';
@@ -27,6 +28,8 @@ type Props = {
 };
 
 export default function RentalsIndex({ rentalItems, filters }: Props) {
+    const [itemToDelete, setItemToDelete] = useState<RentalItem | null>(null);
+
     const handleSearch = useCallback(
         (value: string) => {
             router.get(
@@ -104,14 +107,28 @@ export default function RentalsIndex({ rentalItems, filters }: Props) {
             cell: ({ row }) => <StatusBadge status={row.original.status} />,
         },
         {
+            id: 'revenue',
+            header: 'Revenue',
+            cell: ({ row }) => formatCurrency(row.original.revenue ?? 0),
+        },
+        {
             id: 'actions',
             header: '',
             cell: ({ row }) => (
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href={edit(row.original)}>
-                        <Pencil className="size-4" />
-                    </Link>
-                </Button>
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={edit(row.original)}>
+                            <Pencil className="size-4" />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setItemToDelete(row.original)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                </div>
             ),
         },
     ];
@@ -125,6 +142,12 @@ export default function RentalsIndex({ rentalItems, filters }: Props) {
                     description="Manage rental equipment and availability"
                     actions={
                         <>
+                            <Button variant="outline" asChild>
+                                <Link href={rentalsReport()}>
+                                    <BarChart3 className="size-4" />
+                                    Report
+                                </Link>
+                            </Button>
                             <Button variant="outline" asChild>
                                 <Link href={rentalTransactionsIndex()}>
                                     <ListOrdered className="size-4" />
@@ -168,6 +191,26 @@ export default function RentalsIndex({ rentalItems, filters }: Props) {
                     emptyDescription="Add a rental item or adjust your filters."
                 />
             </div>
+
+            <ConfirmDialog
+                open={itemToDelete !== null}
+                onOpenChange={(open) => !open && setItemToDelete(null)}
+                title="Delete rental item"
+                description={
+                    itemToDelete
+                        ? `This will permanently remove "${itemToDelete.name}".`
+                        : undefined
+                }
+                confirmLabel="Delete"
+                variant="destructive"
+                onConfirm={() => {
+                    if (itemToDelete) {
+                        router.delete(destroy(itemToDelete).url, {
+                            onSuccess: () => setItemToDelete(null),
+                        });
+                    }
+                }}
+            />
         </>
     );
 }

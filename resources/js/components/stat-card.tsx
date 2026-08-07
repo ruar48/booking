@@ -18,6 +18,7 @@ type StatCardProps = {
         label?: string;
     };
     className?: string;
+    iconClassName?: string;
 };
 
 export function StatCard({
@@ -26,6 +27,7 @@ export function StatCard({
     icon: Icon,
     trend,
     className,
+    iconClassName,
 }: StatCardProps) {
     const isPositive = trend ? trend.value >= 0 : true;
 
@@ -35,7 +37,12 @@ export function StatCard({
                 <CardTitle className="text-muted-foreground text-sm font-medium">
                     {label}
                 </CardTitle>
-                <div className="bg-primary/10 text-primary rounded-md p-2">
+                <div
+                    className={cn(
+                        'bg-primary/10 text-primary rounded-md p-2',
+                        iconClassName,
+                    )}
+                >
                     <Icon className="size-4" />
                 </div>
             </CardHeader>
