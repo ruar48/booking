@@ -24,7 +24,6 @@ export default function RentalsCreate() {
         category: '',
         rate: 0,
         hourly_rate: '',
-        deposit: '',
         total_quantity: 0,
         status: 'active' as 'active' | 'inactive',
         description: '',
@@ -118,18 +117,6 @@ export default function RentalsCreate() {
                                     placeholder="Leave blank to disable hourly rentals"
                                 />
                                 <InputError message={errors.hourly_rate} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="deposit">Deposit</Label>
-                                <Input
-                                    id="deposit"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={data.deposit}
-                                    onChange={(e) => setData('deposit', e.target.value)}
-                                />
-                                <InputError message={errors.deposit} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="total_quantity">Total quantity</Label>

@@ -1,5 +1,5 @@
-import { Head, useForm } from '@inertiajs/react';
-import { ShoppingCart } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { BarChart3, ListOrdered, ShoppingCart } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { CartItemRow, type CartLine } from '@/components/pos/cart-item-row';
@@ -19,8 +19,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import { checkout as posCheckout } from '@/routes/pos';
-import { store } from '@/routes/pos/sales';
+import { checkout as posCheckout, reports as posReports } from '@/routes/pos';
+import { index as posSalesIndex, store } from '@/routes/pos/sales';
 import type { Product } from '@/types/inventory';
 import type { PaymentMethodOption } from '@/types/pos';
 
@@ -127,6 +127,22 @@ export default function PosCheckout({ products, paymentMethods }: Props) {
                 <PageHeader
                     title="Point of Sale"
                     description="Ring up a walk-in sale"
+                    actions={
+                        <>
+                            <Button variant="outline" asChild>
+                                <Link href={posReports()}>
+                                    <BarChart3 className="size-4" />
+                                    Report
+                                </Link>
+                            </Button>
+                            <Button variant="outline" asChild>
+                                <Link href={posSalesIndex()}>
+                                    <ListOrdered className="size-4" />
+                                    Transactions
+                                </Link>
+                            </Button>
+                        </>
+                    }
                 />
 
                 <div className="grid gap-6 lg:grid-cols-3">

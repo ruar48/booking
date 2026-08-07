@@ -60,7 +60,6 @@ class RentalMemberController extends Controller
 
         $durationType = $validated['duration_type'];
         $durationHours = $durationType === 'hourly' ? (int) $validated['duration_hours'] : null;
-        $depositAmount = round((float) ($rentalItem->deposit ?? 0) * $validated['quantity'], 2);
 
         $reservedFor = filled($validated['reserved_for'] ?? null)
             ? Carbon::parse($validated['reserved_for'])->startOfDay()
@@ -75,7 +74,6 @@ class RentalMemberController extends Controller
                 'duration_type' => $durationType,
                 'duration_hours' => $durationHours,
                 'reserved_for' => $reservedFor,
-                'deposit_amount' => $depositAmount,
             ]);
 
             Inertia::flash('toast', [
@@ -105,7 +103,6 @@ class RentalMemberController extends Controller
                 'due_at' => $dueAt,
                 'duration_type' => $durationType,
                 'duration_hours' => $durationHours,
-                'deposit_amount' => $depositAmount,
             ]);
         } catch (InsufficientRentalStockException $exception) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);

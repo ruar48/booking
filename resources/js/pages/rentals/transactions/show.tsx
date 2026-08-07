@@ -171,10 +171,6 @@ export default function RentalTransactionShow({ transaction }: Props) {
                                 </Table>
 
                                 <div className="mt-4 ml-auto max-w-xs space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Deposit</span>
-                                        <span>{formatCurrency(transaction.deposit_amount)}</span>
-                                    </div>
                                     <div className="flex justify-between text-base font-semibold">
                                         <span>Total</span>
                                         <span>{formatCurrency(transaction.total_amount)}</span>

@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePoll } from '@inertiajs/react';
 import {
     Award,
     CalendarDays,
@@ -310,6 +310,10 @@ function StatCard({
 }
 
 export default function OpenPlayMine({ session, registrationId }: Props) {
+    // Keeps "Your next match" current as the organizer enters scores,
+    // without the player needing to manually refresh the page.
+    usePoll(5000, { only: ['session'] });
+
     const registrations = session.registrations ?? [];
     const matches = session.matches ?? [];
 

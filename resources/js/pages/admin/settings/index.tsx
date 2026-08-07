@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import type { FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
@@ -7,26 +7,124 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { index as adminSettingsIndex, update } from '@/routes/admin/settings';
 import type { Setting } from '@/types/booking';
+
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 type Props = {
     settings: Record<string, Setting[]>;
 };
+
+function humanize(key: string): string {
+    return key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function isPlainObject(value: unknown): value is Record<string, JsonValue> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isStringArray(value: unknown): value is string[] {
+    return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+function toEditableValue(value: unknown): JsonValue {
+    if (value === undefined) {
+        return '';
+    }
+
+    return value as JsonValue;
+}
+
+function SettingValueEditor({
+    value,
+    onChange,
+    idPrefix,
+}: {
+    value: JsonValue;
+    onChange: (value: JsonValue) => void;
+    idPrefix: string;
+}) {
+    if (isPlainObject(value)) {
+        return (
+            <div className="grid gap-4 sm:grid-cols-2">
+                {Object.entries(value).map(([key, val]) => {
+                    const fieldId = `${idPrefix}-${key}`;
+                    const wide = isPlainObject(val) || isStringArray(val) || (typeof val === 'string' && val.length > 80);
+
+                    return (
+                        <div key={key} className={wide ? 'grid gap-2 sm:col-span-2' : 'grid gap-2'}>
+                            <Label htmlFor={fieldId}>{humanize(key)}</Label>
+                            {isPlainObject(val) ? (
+                                <div className="rounded-lg border p-3">
+                                    <SettingValueEditor
+                                        value={val}
+                                        onChange={(next) => onChange({ ...value, [key]: next })}
+                                        idPrefix={fieldId}
+                                    />
+                                </div>
+                            ) : isStringArray(val) ? (
+                                <Input
+                                    id={fieldId}
+                                    value={val.join(', ')}
+                                    placeholder="Comma-separated list"
+                                    onChange={(e) =>
+                                        onChange({
+                                            ...value,
+                                            [key]: e.target.value
+                                                .split(',')
+                                                .map((item) => item.trim())
+                                                .filter(Boolean),
+                                        })
+                                    }
+                                />
+                            ) : key === 'description' || (typeof val === 'string' && val.length > 80) ? (
+                                <Textarea
+                                    id={fieldId}
+                                    value={val === null || val === undefined ? '' : String(val)}
+                                    onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+                                    rows={4}
+                                />
+                            ) : (
+                                <Input
+                                    id={fieldId}
+                                    type={key === 'open' || key === 'close' ? 'time' : 'text'}
+                                    value={val === null || val === undefined ? '' : String(val)}
+                                    onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    }
+
+    return (
+        <Input
+            id={idPrefix}
+            value={value === null || value === undefined ? '' : String(value)}
+            onChange={(e) => onChange(e.target.value)}
+        />
+    );
+}
 
 export default function AdminSettingsIndex({ settings }: Props) {
     const flatSettings = Object.entries(settings).flatMap(([group, items]) =>
         items.map((setting) => ({
             group,
             key: setting.key,
-            value:
-                typeof setting.value === 'string'
-                    ? setting.value
-                    : JSON.stringify(setting.value ?? ''),
+            value: toEditableValue(setting.value),
         })),
     );
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors } = useForm<{
+        settings: { group: string; key: string; value: any }[];
+    }>({
         settings: flatSettings.length
             ? flatSettings
             : [{ group: 'general', key: 'site_name', value: '' }],
@@ -37,7 +135,7 @@ export default function AdminSettingsIndex({ settings }: Props) {
         put(update().url);
     };
 
-    const updateSetting = (index: number, value: string) => {
+    const updateSetting = (index: number, value: JsonValue) => {
         const next = [...data.settings];
         next[index] = { ...next[index], value };
         setData('settings', next);
@@ -60,32 +158,30 @@ export default function AdminSettingsIndex({ settings }: Props) {
                                     {group.replace(/_/g, ' ')}
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent className="grid gap-4">
+                            <CardContent className="grid gap-6">
                                 {items.map((setting) => {
                                     const index = data.settings.findIndex(
                                         (s) =>
                                             s.group === group &&
                                             s.key === setting.key,
                                     );
-                                    const value =
+                                    const value = toEditableValue(
                                         index >= 0
                                             ? data.settings[index].value
-                                            : String(setting.value ?? '');
+                                            : setting.value,
+                                    );
 
                                     return (
                                         <div key={setting.id} className="grid gap-2">
                                             <Label htmlFor={`${group}-${setting.key}`}>
-                                                {setting.key.replace(/_/g, ' ')}
+                                                {humanize(setting.key)}
                                             </Label>
-                                            <Input
-                                                id={`${group}-${setting.key}`}
+                                            <SettingValueEditor
                                                 value={value}
-                                                onChange={(e) => {
+                                                idPrefix={`${group}-${setting.key}`}
+                                                onChange={(next) => {
                                                     if (index >= 0) {
-                                                        updateSetting(
-                                                            index,
-                                                            e.target.value,
-                                                        );
+                                                        updateSetting(index, next);
                                                     }
                                                 }}
                                             />
@@ -102,7 +198,7 @@ export default function AdminSettingsIndex({ settings }: Props) {
                                 <div className="grid gap-2">
                                     <Label>Site name</Label>
                                     <Input
-                                        value={data.settings[0]?.value ?? ''}
+                                        value={String(data.settings[0]?.value ?? '')}
                                         onChange={(e) =>
                                             updateSetting(0, e.target.value)
                                         }

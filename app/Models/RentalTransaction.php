@@ -21,7 +21,6 @@ use Illuminate\Support\Carbon;
  * @property int|null $duration_hours
  * @property Carbon|null $reserved_for
  * @property Carbon|null $returned_at
- * @property string $deposit_amount
  * @property string $total_amount
  * @property RentalStatus $status
  * @property string|null $notes
@@ -39,7 +38,6 @@ use Illuminate\Support\Carbon;
     'duration_hours',
     'reserved_for',
     'returned_at',
-    'deposit_amount',
     'total_amount',
     'status',
     'notes',
@@ -50,7 +48,6 @@ class RentalTransaction extends Model
     {
         return [
             'status' => RentalStatus::class,
-            'deposit_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'rented_at' => 'datetime',
             'due_at' => 'datetime',

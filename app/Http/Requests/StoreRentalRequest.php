@@ -28,7 +28,6 @@ class StoreRentalRequest extends FormRequest
             'renter_id' => ['nullable', 'integer', Rule::exists(User::class, 'id')],
             'renter_name' => ['nullable', 'string', 'max:255'],
             'due_at' => ['nullable', 'date'],
-            'deposit_amount' => ['nullable', 'numeric', 'min:0'],
             'notes' => ['nullable', 'string'],
         ];
     }

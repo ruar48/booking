@@ -7,6 +7,7 @@ use App\Models\OpenPlayMatch;
 use App\Services\OpenPlayBracketService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class OpenPlayMatchController extends Controller
@@ -25,6 +26,14 @@ class OpenPlayMatchController extends Controller
             'entry1_score' => ['required', 'integer', 'min:0', 'max:99', 'different:entry2_score'],
             'entry2_score' => ['required', 'integer', 'min:0', 'max:99'],
         ]);
+
+        $targetScore = $match->openPlaySession->target_score;
+
+        if (max($validated['entry1_score'], $validated['entry2_score']) !== $targetScore) {
+            throw ValidationException::withMessages([
+                'entry1_score' => "The winning entry must score exactly {$targetScore} points to win.",
+            ]);
+        }
 
         $winnerRegistrationId = $validated['entry1_score'] > $validated['entry2_score']
             ? $match->entry1_id

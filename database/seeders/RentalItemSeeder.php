@@ -19,10 +19,10 @@ class RentalItemSeeder extends Seeder
     public function run(): void
     {
         $rentalItems = [
-            ['name' => 'Pickleball Paddle - Rental', 'sku' => 'RNT-PADL-STD', 'category' => 'equipment', 'rate' => 100, 'deposit' => 500, 'total_quantity' => 12],
-            ['name' => 'Pickleball Paddle - Pro Rental', 'sku' => 'RNT-PADL-PRO', 'category' => 'equipment', 'rate' => 180, 'deposit' => 1000, 'total_quantity' => 6],
-            ['name' => 'Pickleball Balls (Set of 3)', 'sku' => 'RNT-BALL-3PK', 'category' => 'equipment', 'rate' => 50, 'deposit' => 100, 'total_quantity' => 20],
-            ['name' => 'Court Shoes', 'sku' => 'RNT-SHOE-01', 'category' => 'apparel', 'rate' => 120, 'deposit' => 300, 'total_quantity' => 10],
+            ['name' => 'Pickleball Paddle - Rental', 'sku' => 'RNT-PADL-STD', 'category' => 'equipment', 'rate' => 100, 'total_quantity' => 12],
+            ['name' => 'Pickleball Paddle - Pro Rental', 'sku' => 'RNT-PADL-PRO', 'category' => 'equipment', 'rate' => 180, 'total_quantity' => 6],
+            ['name' => 'Pickleball Balls (Set of 3)', 'sku' => 'RNT-BALL-3PK', 'category' => 'equipment', 'rate' => 50, 'total_quantity' => 20],
+            ['name' => 'Court Shoes', 'sku' => 'RNT-SHOE-01', 'category' => 'apparel', 'rate' => 120, 'total_quantity' => 10],
         ];
 
         $isFreshSeed = ! RentalItem::query()->exists();
@@ -35,7 +35,6 @@ class RentalItemSeeder extends Seeder
                     'name' => $item['name'],
                     'category' => $item['category'],
                     'rate' => $item['rate'],
-                    'deposit' => $item['deposit'],
                     'total_quantity' => $item['total_quantity'],
                     'available_quantity' => $item['total_quantity'],
                     'status' => RentalItemStatus::Active,
@@ -89,7 +88,6 @@ class RentalItemSeeder extends Seeder
                 'rented_at' => now()->subDays($daysAgo),
                 'due_at' => now()->subDays($daysAgo)->addDay(),
                 'returned_at' => $isReturned ? now()->subDays($daysAgo)->addHours(6) : null,
-                'deposit_amount' => 200,
                 'total_amount' => $totalAmount,
                 'status' => $isReturned ? RentalStatus::Returned : RentalStatus::Active,
                 'notes' => null,

@@ -13,7 +13,9 @@ use App\Models\Player;
 use App\Models\Ranking;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Models\Setting;
 use App\Models\Tournament;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -55,7 +57,63 @@ class DashboardRepository implements DashboardRepositoryInterface
                 ->whereMonth('starts_at', now()->month)
                 ->whereYear('starts_at', now()->year)
                 ->sum('amount'),
+            'revenue_last_month' => (float) (clone $bookingsQuery)
+                ->where('payment_status', PaymentStatus::Paid)
+                ->whereMonth('starts_at', now()->subMonthNoOverflow()->month)
+                ->whereYear('starts_at', now()->subMonthNoOverflow()->year)
+                ->sum('amount'),
+            'bookings_yesterday' => (clone $bookingsQuery)
+                ->whereDate('starts_at', today()->subDay())
+                ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved, BookingStatus::Completed])
+                ->count(),
+            'bookings_this_month' => (clone $bookingsQuery)
+                ->whereMonth('starts_at', now()->month)
+                ->whereYear('starts_at', now()->year)
+                ->count(),
+            'members_new_this_week' => (clone $playersQuery)
+                ->where('created_at', '>=', now()->startOfWeek())
+                ->count(),
+            'courts_available' => (clone $resourcesQuery)->where('status', 'available')->count(),
+            'operating_window_minutes' => $this->todaysOperatingWindowMinutes(),
         ];
+    }
+
+    public function getBookingStatusBreakdown(): array
+    {
+        $counts = ResourceBooking::query()
+            ->whereMonth('starts_at', now()->month)
+            ->whereYear('starts_at', now()->year)
+            ->select('status', DB::raw('count(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status');
+
+        return collect(BookingStatus::cases())
+            ->map(fn (BookingStatus $status) => [
+                'status' => $status->value,
+                'count' => (int) ($counts[$status->value] ?? 0),
+            ])
+            ->filter(fn (array $row) => $row['count'] > 0)
+            ->values()
+            ->all();
+    }
+
+    private function todaysOperatingWindowMinutes(): int
+    {
+        $hours = Setting::query()
+            ->where('group', 'schedule')
+            ->where('key', 'operating_hours')
+            ->value('value');
+
+        $today = $hours[strtolower(now()->format('l'))] ?? null;
+
+        if (! $today || ($today['closed'] ?? false) || empty($today['open']) || empty($today['close'])) {
+            return 14 * 60;
+        }
+
+        $open = Carbon::createFromFormat('H:i', $today['open']);
+        $close = Carbon::createFromFormat('H:i', $today['close']);
+
+        return max(60, $open->diffInMinutes($close));
     }
 
     public function getRecentMatches(int $limit = 10): Collection

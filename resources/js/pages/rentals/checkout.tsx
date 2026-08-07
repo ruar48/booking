@@ -38,7 +38,6 @@ export default function RentalsCheckout({ rentalItems }: Props) {
         renter_id: '',
         renter_name: '',
         due_at: '',
-        deposit_amount: 0,
         notes: '',
     });
 
@@ -143,7 +142,7 @@ export default function RentalsCheckout({ rentalItems }: Props) {
             onSuccess: () => {
                 setCart([]);
                 clearRenter();
-                reset('items', 'notes', 'renter_id', 'renter_name', 'due_at', 'deposit_amount');
+                reset('items', 'notes', 'renter_id', 'renter_name', 'due_at');
             },
         });
     };
@@ -260,21 +259,6 @@ export default function RentalsCheckout({ rentalItems }: Props) {
                                         onChange={(e) => setData('due_at', e.target.value)}
                                     />
                                     <InputError message={errors.due_at} />
-                                </div>
-
-                                <div className="grid gap-2">
-                                    <Label htmlFor="deposit_amount">Deposit</Label>
-                                    <Input
-                                        id="deposit_amount"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={data.deposit_amount}
-                                        onChange={(e) =>
-                                            setData('deposit_amount', Number(e.target.value))
-                                        }
-                                    />
-                                    <InputError message={errors.deposit_amount} />
                                 </div>
 
                                 <div className="grid gap-2">

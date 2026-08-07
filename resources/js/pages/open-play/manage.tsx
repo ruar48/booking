@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CircleDollarSign, Maximize2, Trophy, UserPlus, X } from 'lucide-react';
+import { CircleDollarSign, Maximize2, Minus, Plus, Trophy, UserPlus, X } from 'lucide-react';
 import type { FormEvent} from 'react';
 import { useState } from 'react';
 
@@ -36,9 +36,11 @@ import {
     entryLabel,
     finalMatchLabel,
     groupByRound,
+    isEntryInMatch,
     losersBracketRoundHeights,
     losersRoundLabel,
     matchesByBracketSide,
+    matchRoundLabel,
     roundLabel,
 } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
@@ -299,13 +301,35 @@ function BracketMatchCard({ match }: { match: OpenPlayMatch }) {
             >
                 <span className="truncate">{bracketSlotLabel(match, 'entry1')}</span>
                 {canScore ? (
-                    <Input
-                        type="number"
-                        min={0}
-                        className="h-7 w-12 px-1 text-center"
-                        value={score1}
-                        onChange={(e) => setScore1(e.target.value)}
-                    />
+                    <div className="flex items-center gap-1">
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() =>
+                                setScore1(String(Math.max(0, Number(score1 || 0) - 1)))
+                            }
+                        >
+                            <Minus className="size-3" />
+                        </Button>
+                        <Input
+                            type="number"
+                            min={0}
+                            className="h-7 w-10 px-1 text-center"
+                            value={score1}
+                            onChange={(e) => setScore1(e.target.value)}
+                        />
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => setScore1(String(Number(score1 || 0) + 1))}
+                        >
+                            <Plus className="size-3" />
+                        </Button>
+                    </div>
                 ) : (
                     match.entry1_score !== null && <span className="font-mono">{match.entry1_score}</span>
                 )}
@@ -318,13 +342,35 @@ function BracketMatchCard({ match }: { match: OpenPlayMatch }) {
             >
                 <span className="truncate">{bracketSlotLabel(match, 'entry2')}</span>
                 {canScore ? (
-                    <Input
-                        type="number"
-                        min={0}
-                        className="h-7 w-12 px-1 text-center"
-                        value={score2}
-                        onChange={(e) => setScore2(e.target.value)}
-                    />
+                    <div className="flex items-center gap-1">
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() =>
+                                setScore2(String(Math.max(0, Number(score2 || 0) - 1)))
+                            }
+                        >
+                            <Minus className="size-3" />
+                        </Button>
+                        <Input
+                            type="number"
+                            min={0}
+                            className="h-7 w-10 px-1 text-center"
+                            value={score2}
+                            onChange={(e) => setScore2(e.target.value)}
+                        />
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="outline"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => setScore2(String(Number(score2 || 0) + 1))}
+                        >
+                            <Plus className="size-3" />
+                        </Button>
+                    </div>
                 ) : (
                     match.entry2_score !== null && <span className="font-mono">{match.entry2_score}</span>
                 )}
@@ -995,17 +1041,42 @@ export default function OpenPlayManage({ session }: Props) {
                                                             <TableHead>Played</TableHead>
                                                             <TableHead>Wins</TableHead>
                                                             <TableHead>Losses</TableHead>
+                                                            <TableHead>Next opponent</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {standings.map((standing) => (
-                                                            <TableRow key={standing.registrationId}>
-                                                                <TableCell>{standing.label}</TableCell>
-                                                                <TableCell>{standing.played}</TableCell>
-                                                                <TableCell>{standing.wins}</TableCell>
-                                                                <TableCell>{standing.losses}</TableCell>
-                                                            </TableRow>
-                                                        ))}
+                                                        {standings.map((standing) => {
+                                                            const nextMatch = matches
+                                                                .filter((m) => isEntryInMatch(m, standing.registrationId))
+                                                                .find((m) => m.status !== 'completed');
+
+                                                            return (
+                                                                <TableRow key={standing.registrationId}>
+                                                                    <TableCell>{standing.label}</TableCell>
+                                                                    <TableCell>{standing.played}</TableCell>
+                                                                    <TableCell>{standing.wins}</TableCell>
+                                                                    <TableCell>{standing.losses}</TableCell>
+                                                                    <TableCell>
+                                                                        {!nextMatch ? (
+                                                                            <span className="text-muted-foreground text-xs">
+                                                                                No matches left
+                                                                            </span>
+                                                                        ) : (
+                                                                            <div>
+                                                                                <p className="text-sm">
+                                                                                    {nextMatch.entry1_id === standing.registrationId
+                                                                                        ? bracketSlotLabel(nextMatch, 'entry2')
+                                                                                        : bracketSlotLabel(nextMatch, 'entry1')}
+                                                                                </p>
+                                                                                <p className="text-muted-foreground text-xs">
+                                                                                    {matchRoundLabel(nextMatch, matches)}
+                                                                                </p>
+                                                                            </div>
+                                                                        )}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        })}
                                                     </TableBody>
                                                 </Table>
                                             </div>
@@ -1109,17 +1180,42 @@ export default function OpenPlayManage({ session }: Props) {
                                                             <TableHead>Played</TableHead>
                                                             <TableHead>Wins</TableHead>
                                                             <TableHead>Losses</TableHead>
+                                                            <TableHead>Next opponent</TableHead>
                                                         </TableRow>
                                                     </TableHeader>
                                                     <TableBody>
-                                                        {standings.map((standing) => (
-                                                            <TableRow key={standing.registrationId}>
-                                                                <TableCell>{standing.label}</TableCell>
-                                                                <TableCell>{standing.played}</TableCell>
-                                                                <TableCell>{standing.wins}</TableCell>
-                                                                <TableCell>{standing.losses}</TableCell>
-                                                            </TableRow>
-                                                        ))}
+                                                        {standings.map((standing) => {
+                                                            const nextMatch = matches
+                                                                .filter((m) => isEntryInMatch(m, standing.registrationId))
+                                                                .find((m) => m.status !== 'completed');
+
+                                                            return (
+                                                                <TableRow key={standing.registrationId}>
+                                                                    <TableCell>{standing.label}</TableCell>
+                                                                    <TableCell>{standing.played}</TableCell>
+                                                                    <TableCell>{standing.wins}</TableCell>
+                                                                    <TableCell>{standing.losses}</TableCell>
+                                                                    <TableCell>
+                                                                        {!nextMatch ? (
+                                                                            <span className="text-muted-foreground text-xs">
+                                                                                No matches left
+                                                                            </span>
+                                                                        ) : (
+                                                                            <div>
+                                                                                <p className="text-sm">
+                                                                                    {nextMatch.entry1_id === standing.registrationId
+                                                                                        ? bracketSlotLabel(nextMatch, 'entry2')
+                                                                                        : bracketSlotLabel(nextMatch, 'entry1')}
+                                                                                </p>
+                                                                                <p className="text-muted-foreground text-xs">
+                                                                                    {matchRoundLabel(nextMatch, matches)}
+                                                                                </p>
+                                                                            </div>
+                                                                        )}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            );
+                                                        })}
                                                     </TableBody>
                                                 </Table>
                                             </div>

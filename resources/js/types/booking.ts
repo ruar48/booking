@@ -373,6 +373,17 @@ export type DashboardStats = {
     upcoming_tournaments: number;
     matches_scheduled: number;
     revenue_this_month: number;
+    revenue_last_month: number;
+    bookings_yesterday: number;
+    bookings_this_month: number;
+    members_new_this_week: number;
+    courts_available: number;
+    operating_window_minutes: number;
+};
+
+export type BookingStatusBreakdownPoint = {
+    status: string;
+    count: number;
 };
 
 export type DashboardMatchStats = {
@@ -393,6 +404,7 @@ export type DashboardData = {
     stats: DashboardStats;
     resourceAvailability: Resource[];
     revenueChart: RevenueChartPoint[];
+    bookingStatusBreakdown: BookingStatusBreakdownPoint[];
     recentBookings?: ResourceBooking[];
     openPlaySessions?: OpenPlaySession[];
     announcements?: Announcement[];

@@ -5,7 +5,6 @@ export type RentalItem = {
     category?: string | null;
     rate: number;
     hourly_rate?: number | null;
-    deposit?: number | null;
     total_quantity: number;
     available_quantity: number;
     status: 'active' | 'inactive';
@@ -56,7 +55,6 @@ export type RentalTransaction = {
     duration_hours?: number | null;
     reserved_for?: string | null;
     returned_at?: string | null;
-    deposit_amount: number;
     total_amount: number;
     status: 'active' | 'returned' | 'overdue' | 'lost' | 'reserved';
     notes?: string | null;

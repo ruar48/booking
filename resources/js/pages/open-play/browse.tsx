@@ -27,6 +27,19 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
+function formatBracketFormat(format?: string | null): string | null {
+    switch (format) {
+        case 'single_elimination':
+            return 'Single elimination';
+        case 'double_elimination':
+            return 'Double elimination';
+        case 'round_robin':
+            return 'Round robin';
+        default:
+            return null;
+    }
+}
+
 export default function OpenPlayBrowse({ sessions }: Props) {
     const upcoming = sessions.filter((session) => !isPast(parseISO(session.starts_at)));
     const past = sessions.filter((session) => isPast(parseISO(session.starts_at)));
@@ -78,6 +91,7 @@ export default function OpenPlayBrowse({ sessions }: Props) {
 
 function SessionCard({ session }: { session: BrowseSession }) {
     const isDoubles = session.team_size === 'doubles';
+    const bracketFormat = formatBracketFormat(session.bracket_format);
 
     return (
         <Card>
@@ -93,6 +107,7 @@ function SessionCard({ session }: { session: BrowseSession }) {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                     <Badge variant="outline">{isDoubles ? '2v2 Doubles' : '1v1 Singles'}</Badge>
                     <Badge variant="outline">{formatSkillLevel(session.skill_level)}</Badge>
+                    {bracketFormat && <Badge variant="outline">{bracketFormat}</Badge>}
                 </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">

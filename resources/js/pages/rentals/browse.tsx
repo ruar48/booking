@@ -153,12 +153,6 @@ function RentalItemCard({ rentalItem }: { rentalItem: RentalItem }) {
                         )}
                     </span>
                 </div>
-                {rentalItem.deposit != null && Number(rentalItem.deposit) > 0 && (
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Deposit</span>
-                        <span>{formatCurrency(rentalItem.deposit)}</span>
-                    </div>
-                )}
                 <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Available</span>
                     <span>{outOfStock ? 'Out of stock' : `${rentalItem.available_quantity} left`}</span>

@@ -20,11 +20,21 @@ function isIos(): boolean {
     return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+const WAS_INSTALLED_KEY = 'pwa-was-installed';
+const DISMISSED_KEY = 'pwa-install-dismissed-at';
+
 export function usePwaInstall() {
     const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
     const [installed, setInstalled] = useState(isStandalone);
 
     useEffect(() => {
+        // If the app was installed before but is no longer running standalone,
+        // the user uninstalled it — clear any dismiss snooze so the prompt reappears.
+        if (!isStandalone() && localStorage.getItem(WAS_INSTALLED_KEY) === 'true') {
+            localStorage.removeItem(WAS_INSTALLED_KEY);
+            localStorage.removeItem(DISMISSED_KEY);
+        }
+
         const handleBeforeInstallPrompt = (event: Event) => {
             event.preventDefault();
             setDeferredPrompt(event as BeforeInstallPromptEvent);
@@ -33,6 +43,7 @@ export function usePwaInstall() {
         const handleAppInstalled = () => {
             setInstalled(true);
             setDeferredPrompt(null);
+            localStorage.setItem(WAS_INSTALLED_KEY, 'true');
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -52,6 +63,7 @@ export function usePwaInstall() {
 
         if (outcome === 'accepted') {
             setInstalled(true);
+            localStorage.setItem(WAS_INSTALLED_KEY, 'true');
         }
 
         setDeferredPrompt(null);

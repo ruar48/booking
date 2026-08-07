@@ -20,14 +20,14 @@ type CartItemRowProps = {
 
 export function CartItemRow({ line, onIncrement, onDecrement, onRemove }: CartItemRowProps) {
     return (
-        <div className="flex items-center justify-between gap-2 border-b py-2 last:border-b-0">
+        <div className="flex items-center justify-between gap-1 border-b py-2 last:border-b-0 sm:gap-2">
             <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{line.name}</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="truncate text-xs text-muted-foreground">
                     {formatCurrency(line.unit_price)} each
                 </p>
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex shrink-0 items-center gap-1">
                 <Button
                     type="button"
                     variant="outline"
@@ -37,7 +37,7 @@ export function CartItemRow({ line, onIncrement, onDecrement, onRemove }: CartIt
                 >
                     <Minus className="size-3" />
                 </Button>
-                <span className="w-6 text-center text-sm">{line.quantity}</span>
+                <span className="w-5 text-center text-sm">{line.quantity}</span>
                 <Button
                     type="button"
                     variant="outline"
@@ -49,14 +49,14 @@ export function CartItemRow({ line, onIncrement, onDecrement, onRemove }: CartIt
                     <Plus className="size-3" />
                 </Button>
             </div>
-            <div className="w-16 text-right text-sm font-semibold">
+            <div className="shrink-0 whitespace-nowrap text-right text-sm font-semibold">
                 {formatCurrency(line.unit_price * line.quantity)}
             </div>
             <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="size-7 text-muted-foreground hover:text-destructive"
+                className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => onRemove(line.product_id)}
             >
                 <X className="size-3" />

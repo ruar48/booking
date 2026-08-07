@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('category')->nullable();
             $table->decimal('rate', 10, 2);
             $table->decimal('hourly_rate', 10, 2)->nullable();
-            $table->decimal('deposit', 10, 2)->nullable();
             $table->integer('total_quantity')->default(0);
             $table->integer('available_quantity')->default(0);
             $table->string('status')->default('active');
@@ -38,7 +37,6 @@ return new class extends Migration
             $table->unsignedInteger('duration_hours')->nullable();
             $table->date('reserved_for')->nullable();
             $table->timestamp('returned_at')->nullable();
-            $table->decimal('deposit_amount', 10, 2)->default(0);
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->string('status')->default('active');
             $table->text('notes')->nullable();

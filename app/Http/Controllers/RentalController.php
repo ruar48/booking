@@ -43,7 +43,6 @@ class RentalController extends Controller
                 'renter_id' => $validated['renter_id'] ?? null,
                 'renter_name' => $validated['renter_name'] ?? null,
                 'due_at' => $validated['due_at'] ?? null,
-                'deposit_amount' => $validated['deposit_amount'] ?? 0,
                 'notes' => $validated['notes'] ?? null,
             ]);
         } catch (InsufficientRentalStockException $exception) {

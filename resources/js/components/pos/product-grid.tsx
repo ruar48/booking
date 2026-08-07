@@ -33,22 +33,22 @@ export function ProductGrid({ products, onSelect }: ProductGridProps) {
                         onClick={() => !outOfStock && onSelect(product)}
                         className={
                             outOfStock
-                                ? 'cursor-not-allowed opacity-50'
-                                : 'cursor-pointer transition hover:border-primary'
+                                ? 'min-w-0 cursor-not-allowed opacity-50'
+                                : 'min-w-0 cursor-pointer transition hover:border-primary'
                         }
                     >
-                        <CardContent className="flex flex-col gap-1 p-4">
-                            <span className="text-sm font-medium leading-tight">
+                        <CardContent className="flex min-w-0 flex-col gap-1 p-3 sm:p-4">
+                            <span className="truncate text-sm font-medium leading-tight">
                                 {product.name}
                             </span>
-                            <span className="text-xs text-muted-foreground">
+                            <span className="truncate text-xs text-muted-foreground">
                                 {product.category ?? 'Uncategorized'}
                             </span>
-                            <div className="mt-2 flex items-center justify-between">
+                            <div className="mt-2 flex flex-col gap-0.5 sm:flex-row sm:items-center sm:justify-between">
                                 <span className="font-semibold">
                                     {formatCurrency(product.price)}
                                 </span>
-                                <span className="text-xs text-muted-foreground">
+                                <span className="truncate text-xs text-muted-foreground">
                                     {outOfStock
                                         ? 'Out of stock'
                                         : `${product.stock_quantity} in stock`}

@@ -18,6 +18,7 @@ class DashboardService
             'stats' => $this->dashboardRepository->getStats(),
             'resourceAvailability' => $this->dashboardRepository->getResourceAvailability(),
             'revenueChart' => $this->dashboardRepository->getRevenueChart(),
+            'bookingStatusBreakdown' => $this->dashboardRepository->getBookingStatusBreakdown(),
             'recentBookings' => $this->dashboardRepository->getRecentBookings(),
             'openPlaySessions' => $this->dashboardRepository->getUpcomingOpenPlay(),
             'announcements' => $this->announcementRepository->getPublished()
