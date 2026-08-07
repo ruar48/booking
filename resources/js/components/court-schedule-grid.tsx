@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import {
     addDays,
     addMonths,
@@ -189,6 +189,11 @@ function slotIsBlocked(
     });
 }
 
+function slotIsPast(date: string, slot: string): boolean {
+    const slotStart = new Date(`${date}T${slot}:00`);
+    return slotStart <= new Date();
+}
+
 function slotIsRecurringLocked(
     courtId: number,
     date: string,
@@ -244,13 +249,17 @@ export function CourtScheduleGrid({
     dateOverrides = [],
     isAuthenticated,
     processing = false,
-    errors = {},
+    errors,
     customer = null,
     markPaid = false,
 }: Props) {
+    const pageErrors = (usePage().props as { errors?: Record<string, string> }).errors ?? {};
+    const effectiveErrors = errors ?? pageErrors;
+
     const today = format(new Date(), 'yyyy-MM-dd');
     const [selectedDate, setSelectedDate] = useState(today);
     const [selections, setSelections] = useState<SlotSelection[]>([]);
+    const [submitting, setSubmitting] = useState(false);
     const [selectedSport, setSelectedSport] = useState<Resource['sport']>('pickleball');
     const [datePickerOpen, setDatePickerOpen] = useState(false);
     const [monthCursor, setMonthCursor] = useState(() =>
@@ -314,6 +323,10 @@ export function CourtScheduleGrid({
             return;
         }
 
+        if (slotIsPast(selectedDate, slot)) {
+            return;
+        }
+
         const key = selectionKey(court.id, slot);
         setSelections((current) => {
             const exists = current.some(
@@ -366,17 +379,22 @@ export function CourtScheduleGrid({
         }
 
         const bookings = buildBookingRuns(selections, selectedDate);
+        const requestOptions = {
+            onStart: () => setSubmitting(true),
+            onFinish: () => setSubmitting(false),
+            onSuccess: () => setSelections([]),
+        };
 
         if (customer) {
-            router.post(storeWalkInBooking().url, {
-                bookings,
-                customer,
-                mark_paid: markPaid,
-            });
+            router.post(
+                storeWalkInBooking().url,
+                { bookings, customer, mark_paid: markPaid },
+                requestOptions,
+            );
             return;
         }
 
-        router.post(storeBookingsBulk().url, { bookings });
+        router.post(storeBookingsBulk().url, { bookings }, requestOptions);
     };
 
     const summary = selections
@@ -646,11 +664,12 @@ export function CourtScheduleGrid({
                                             slot,
                                             recurringLocks,
                                         );
+                                        const past = slotIsPast(selectedDate, slot);
                                         const selected = selectedKeys.has(
                                             selectionKey(court.id, slot),
                                         );
                                         const disabled =
-                                            unavailable || booked || blocked || locked;
+                                            unavailable || booked || blocked || locked || past;
 
                                         return (
                                             <td key={court.id} className="p-1">
@@ -664,7 +683,7 @@ export function CourtScheduleGrid({
                                                         'w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
                                                         disabled &&
                                                             'cursor-not-allowed bg-slate-100 text-slate-400',
-                                                        (blocked || locked || unavailable) &&
+                                                        (blocked || locked || unavailable || past) &&
                                                             !booked &&
                                                             'bg-slate-200 text-slate-500',
                                                         !disabled &&
@@ -679,13 +698,15 @@ export function CourtScheduleGrid({
                                                         ? 'Booked'
                                                         : unavailable
                                                           ? 'Unavailable'
-                                                          : locked
-                                                            ? 'Locked'
-                                                            : blocked
-                                                              ? 'Blocked'
-                                                              : selected
-                                                                ? 'Selected'
-                                                                : 'Open'}
+                                                          : past
+                                                            ? 'Passed'
+                                                            : locked
+                                                              ? 'Locked'
+                                                              : blocked
+                                                                ? 'Blocked'
+                                                                : selected
+                                                                  ? 'Selected'
+                                                                  : 'Open'}
                                                 </button>
                                             </td>
                                         );
@@ -697,9 +718,9 @@ export function CourtScheduleGrid({
                 </div>
             )}
 
-            {(errors.bookings || errors['bookings.0.starts_at']) && (
+            {(effectiveErrors.bookings || effectiveErrors['bookings.0.starts_at'] || effectiveErrors.starts_at) && (
                 <p className="text-destructive text-sm">
-                    {errors.bookings ?? errors['bookings.0.starts_at']}
+                    {effectiveErrors.bookings ?? effectiveErrors['bookings.0.starts_at'] ?? effectiveErrors.starts_at}
                 </p>
             )}
 
@@ -714,17 +735,17 @@ export function CourtScheduleGrid({
                         type="button"
                         variant="outline"
                         onClick={clearSelections}
-                        disabled={!selections.length || processing}
+                        disabled={!selections.length || processing || submitting}
                     >
                         Clear
                     </Button>
                     <Button
                         type="button"
                         onClick={submitBookings}
-                        disabled={!selections.length || processing}
+                        disabled={!selections.length || processing || submitting}
                         className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
                     >
-                        {isAuthenticated ? 'Book now' : 'Sign up to book'}
+                        {isAuthenticated ? (submitting ? 'Booking…' : 'Book now') : 'Sign up to book'}
                     </Button>
                 </div>
             </div>
