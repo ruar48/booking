@@ -341,40 +341,24 @@ class RentalRepository implements RentalRepositoryInterface
     {
         $baseQuery = RentalTransaction::query()->whereBetween('rented_at', [$start, $end]);
 
-        $totalRevenue = (float) (clone $baseQuery)->sum('total_amount');
+        $totalRevenue = (clone $baseQuery)->sum('total_amount');
         $totalRentalsCount = (clone $baseQuery)->count();
-        $avgRental = $totalRentalsCount > 0 ? round($totalRevenue / $totalRentalsCount, 2) : 0.0;
-        $activeRentals = RentalTransaction::query()->where('status', RentalStatus::Active)->count();
 
-        $periodLengthInSeconds = $end->diffInSeconds($start);
-        $previousEnd = (clone $start)->subSecond();
-        $previousStart = (clone $previousEnd)->subSeconds($periodLengthInSeconds);
-        $previousQuery = RentalTransaction::query()->whereBetween('rented_at', [$previousStart, $previousEnd]);
-        $previousRevenue = (float) (clone $previousQuery)->sum('total_amount');
-        $previousRentalsCount = (clone $previousQuery)->count();
-        $previousAvgRental = $previousRentalsCount > 0 ? round($previousRevenue / $previousRentalsCount, 2) : 0.0;
-
-        $revenueByDayRows = DB::table('rental_transactions')
+        $revenueByDay = DB::table('rental_transactions')
             ->whereBetween('rented_at', [$start, $end])
             ->groupBy(DB::raw('DATE(rented_at)'))
             ->orderBy(DB::raw('DATE(rented_at)'))
             ->get([
                 DB::raw('DATE(rented_at) as date'),
                 DB::raw('SUM(total_amount) as revenue'),
-                DB::raw('COUNT(*) as rentals_count'),
-            ]);
+            ])
+            ->map(fn ($row) => [
+                'date' => (string) $row->date,
+                'revenue' => (float) $row->revenue,
+            ])
+            ->all();
 
-        $revenueByDay = $revenueByDayRows->map(fn ($row) => [
-            'date' => (string) $row->date,
-            'revenue' => (float) $row->revenue,
-        ])->all();
-
-        $rentalsByDay = $revenueByDayRows->map(fn ($row) => [
-            'date' => (string) $row->date,
-            'count' => (int) $row->rentals_count,
-        ])->all();
-
-        $equipmentRevenue = DB::table('rental_transaction_items')
+        $topItems = DB::table('rental_transaction_items')
             ->join('rental_transactions', 'rental_transactions.id', '=', 'rental_transaction_items.rental_transaction_id')
             ->whereBetween('rental_transactions.rented_at', [$start, $end])
             ->groupBy('rental_transaction_items.rental_item_id', 'rental_transaction_items.rental_item_name')
@@ -394,105 +378,12 @@ class RentalRepository implements RentalRepositoryInterface
             ])
             ->all();
 
-        $heatmap = $this->rentalHeatmap($start, $end);
-
-        $inventoryAlerts = RentalItem::query()
-            ->whereColumn('available_quantity', '<=', DB::raw('total_quantity * 0.2'))
-            ->orderBy('available_quantity')
-            ->limit(10)
-            ->get(['id', 'name', 'available_quantity', 'total_quantity'])
-            ->map(fn (RentalItem $item) => [
-                'id' => $item->id,
-                'name' => $item->name,
-                'available_quantity' => $item->available_quantity,
-                'total_quantity' => $item->total_quantity,
-                'status' => $item->available_quantity <= 0 ? 'out' : 'low',
-            ])
-            ->all();
-
-        $recentRentals = RentalTransaction::query()
-            ->with('items')
-            ->latest('rented_at')
-            ->limit(8)
-            ->get()
-            ->map(fn (RentalTransaction $transaction) => [
-                'id' => $transaction->id,
-                'reference_number' => $transaction->reference_number,
-                'renter_name' => $transaction->renter_name ?? $transaction->renter?->name ?? 'Walk-in',
-                'item_summary' => $transaction->items->pluck('rental_item_name')->implode(', '),
-                'total_amount' => (float) $transaction->total_amount,
-                'rented_at' => $transaction->rented_at?->toIso8601String(),
-                'status' => $transaction->status->value,
-            ])
-            ->all();
-
         return [
-            'kpis' => [
-                'revenue' => [
-                    'value' => $totalRevenue,
-                    'trend_pct' => $this->trendPercent($totalRevenue, $previousRevenue),
-                ],
-                'rentals_count' => [
-                    'value' => $totalRentalsCount,
-                    'trend_pct' => $this->trendPercent($totalRentalsCount, $previousRentalsCount),
-                ],
-                'avg_rental' => [
-                    'value' => $avgRental,
-                    'trend_pct' => $this->trendPercent($avgRental, $previousAvgRental),
-                ],
-                'active_rentals' => [
-                    'value' => $activeRentals,
-                ],
-            ],
+            'total_revenue' => (float) $totalRevenue,
+            'total_rentals_count' => $totalRentalsCount,
             'revenue_by_day' => $revenueByDay,
-            'rentals_by_day' => $rentalsByDay,
-            'equipment_revenue' => $equipmentRevenue,
-            'heatmap' => $heatmap,
-            'inventory_alerts' => $inventoryAlerts,
-            'recent_rentals' => $recentRentals,
+            'top_items' => $topItems,
         ];
-    }
-
-    private function trendPercent(float|int $current, float|int $previous): ?float
-    {
-        if ($previous == 0) {
-            return $current > 0 ? 100.0 : null;
-        }
-
-        return round((($current - $previous) / $previous) * 100, 1);
-    }
-
-    /**
-     * @return array<int, array{day_of_week: int, hour: int, count: int}>
-     */
-    private function rentalHeatmap(CarbonInterface $start, CarbonInterface $end): array
-    {
-        $counts = [];
-
-        RentalTransaction::query()
-            ->whereBetween('rented_at', [$start, $end])
-            ->get(['rented_at'])
-            ->each(function (RentalTransaction $transaction) use (&$counts): void {
-                if ($transaction->rented_at === null) {
-                    return;
-                }
-
-                $key = $transaction->rented_at->dayOfWeek.'-'.$transaction->rented_at->hour;
-                $counts[$key] = ($counts[$key] ?? 0) + 1;
-            });
-
-        $result = [];
-
-        foreach ($counts as $key => $count) {
-            [$dayOfWeek, $hour] = array_map('intval', explode('-', $key));
-            $result[] = [
-                'day_of_week' => $dayOfWeek,
-                'hour' => $hour,
-                'count' => $count,
-            ];
-        }
-
-        return $result;
     }
 
     private function generateReferenceNumber(): string

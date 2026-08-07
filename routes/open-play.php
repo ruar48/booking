@@ -13,6 +13,7 @@ Route::resource('open-play', OpenPlayController::class)->except(['show']);
 Route::prefix('open-play/{open_play}')->name('open-play.')->group(function () {
     Route::get('manage', [OpenPlayController::class, 'manage'])->name('manage');
     Route::post('registrations', [OpenPlayRegistrationController::class, 'store'])->name('registrations.store');
+    Route::post('registrations/add-all', [OpenPlayRegistrationController::class, 'addAll'])->name('registrations.add-all');
     Route::post('registrations/pair-random', [OpenPlayRegistrationController::class, 'pairRandom'])->name('registrations.pair-random');
     Route::post('bracket/generate', [OpenPlayBracketController::class, 'generate'])->name('bracket.generate');
     Route::delete('bracket', [OpenPlayBracketController::class, 'reset'])->name('bracket.reset');

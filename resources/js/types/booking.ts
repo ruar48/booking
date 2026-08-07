@@ -114,6 +114,7 @@ export type Player = {
     playing_hand?: string | null;
     gender?: string | null;
     birthdate?: string | null;
+    age?: number | null;
     phone?: string | null;
     address?: string | null;
     emergency_contact_name?: string | null;

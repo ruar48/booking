@@ -5,9 +5,11 @@ import {
     endOfMonth,
     endOfWeek,
     format,
+    isBefore,
     isSameMonth,
     isToday,
     parseISO,
+    startOfDay,
     startOfMonth,
     startOfWeek,
     subMonths,
@@ -158,11 +160,11 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
 
                 <Card>
                     <CardContent className="p-4">
-                        <div className="mb-4 flex items-center justify-between">
+                        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                             <h2 className="text-lg font-semibold">
                                 {format(monthCursor, 'MMMM yyyy')}
                             </h2>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
@@ -187,7 +189,8 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-7 gap-px overflow-hidden rounded-lg border bg-border">
+                        <div className="overflow-x-auto">
+                        <div className="grid min-w-[42rem] grid-cols-7 gap-px overflow-hidden rounded-lg border bg-border">
                             {WEEKDAYS.map((weekday) => (
                                 <div
                                     key={weekday}
@@ -205,23 +208,30 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
                                 const overflow = dayBookings.length - visible.length;
                                 const override = overridesByDate.get(key);
                                 const isOpenDay = override?.is_closed === false;
+                                const isPast = isBefore(day, startOfDay(new Date()));
 
                                 return (
                                     <div
                                         key={key}
                                         role="button"
-                                        tabIndex={0}
-                                        onClick={() => setSelectedDate(key)}
+                                        tabIndex={isPast ? -1 : 0}
+                                        aria-disabled={isPast}
+                                        onClick={() => !isPast && setSelectedDate(key)}
                                         onKeyDown={(e) => {
+                                            if (isPast) return;
                                             if (e.key === 'Enter' || e.key === ' ') {
                                                 e.preventDefault();
                                                 setSelectedDate(key);
                                             }
                                         }}
                                         className={cn(
-                                            'bg-background outline-none flex min-h-28 cursor-pointer flex-col gap-1 p-1.5 text-left transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-32',
+                                            'bg-background outline-none flex min-h-28 flex-col gap-1 p-1.5 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset sm:min-h-32',
+                                            isPast
+                                                ? 'cursor-not-allowed opacity-60'
+                                                : 'cursor-pointer hover:bg-accent/50',
                                             !inMonth && 'bg-muted/40',
-                                            !isOpenDay && 'bg-destructive/5 hover:bg-destructive/10',
+                                            !isOpenDay && 'bg-destructive/5',
+                                            !isOpenDay && !isPast && 'hover:bg-destructive/10',
                                         )}
                                     >
                                         <div className="flex items-center justify-between gap-1">
@@ -320,6 +330,7 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
                                     </div>
                                 );
                             })}
+                        </div>
                         </div>
                     </CardContent>
                 </Card>

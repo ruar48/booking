@@ -58,13 +58,13 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                 />
 
                 <div className="flex flex-wrap gap-4">
-                    <div className="grid gap-2">
+                    <div className="grid w-full gap-2 sm:w-[200px]">
                         <Label htmlFor="action">Action</Label>
                         <Input
                             id="action"
                             defaultValue={filters.action}
                             placeholder="e.g. created, updated"
-                            className="w-[200px]"
+                            className="w-full"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     router.get(
@@ -79,13 +79,13 @@ export default function AuditLogsIndex({ logs, filters }: Props) {
                             }}
                         />
                     </div>
-                    <div className="grid gap-2">
+                    <div className="grid w-full gap-2 sm:w-[140px]">
                         <Label htmlFor="user_id">User ID</Label>
                         <Input
                             id="user_id"
                             type="number"
                             defaultValue={filters.user_id}
-                            className="w-[140px]"
+                            className="w-full"
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
                                     router.get(

@@ -44,6 +44,22 @@ class OpenPlayRegistrationController extends Controller
         return back();
     }
 
+    public function addAll(Request $request, OpenPlaySession $open_play): RedirectResponse
+    {
+        $this->authorize('update', $open_play);
+
+        $registered = $this->registrationService->registerAll($open_play, $request->user()->id);
+
+        Inertia::flash('toast', [
+            'type' => $registered > 0 ? 'success' : 'error',
+            'message' => $registered > 0
+                ? __(':count :player added.', ['count' => $registered, 'player' => $registered === 1 ? 'player' : 'players'])
+                : __('No eligible players to add.'),
+        ]);
+
+        return back();
+    }
+
     public function pairRandom(OpenPlaySession $open_play): RedirectResponse
     {
         $this->authorize('update', $open_play);

@@ -123,7 +123,7 @@ export default function PlayersIndex({ players, filters }: Props) {
                         value={filters.experience_level ?? 'all'}
                         onValueChange={(v) => handleFilter('experience_level', v)}
                     >
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-full sm:w-[180px]">
                             <SelectValue placeholder="Experience level" />
                         </SelectTrigger>
                         <SelectContent>

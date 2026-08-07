@@ -48,6 +48,7 @@ import { store as storeBracketMatch } from '@/routes/open-play/bracket/matches';
 import { destroy as destroyBracketMatch } from '@/routes/open-play/bracket-matches';
 import { updateScore } from '@/routes/open-play/matches';
 import {
+    addAll as addAllMembers,
     destroy as destroyRegistration,
     pairRandom as pairRandomly,
     store as storeRegistration,
@@ -564,6 +565,7 @@ export default function OpenPlayManage({ session }: Props) {
     const [bracketProcessing, setBracketProcessing] = useState(false);
     const [fullscreenOpen, setFullscreenOpen] = useState(false);
     const [pairingProcessing, setPairingProcessing] = useState(false);
+    const [addAllProcessing, setAddAllProcessing] = useState(false);
 
     const needsPartnerSelection = isDoublesSession && partnerMode === 'select';
     const unpairedCount = registrations.filter((r) => !r.partner_player_id).length;
@@ -593,6 +595,19 @@ export default function OpenPlayManage({ session }: Props) {
                 },
                 onError: (errors) => setRegisterErrors(errors as Record<string, string>),
                 onFinish: () => setRegisterProcessing(false),
+            },
+        );
+    };
+
+    const runAddAllMembers = () => {
+        setAddAllProcessing(true);
+        router.post(
+            addAllMembers(session).url,
+            {},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setAddAllProcessing(false),
             },
         );
     };
@@ -774,6 +789,21 @@ export default function OpenPlayManage({ session }: Props) {
                                     </Button>
                                 </div>
                             </form>
+
+                            <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-3 text-sm">
+                                <span className="text-muted-foreground">
+                                    Register every active member in one click.
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={runAddAllMembers}
+                                    disabled={addAllProcessing}
+                                >
+                                    Add all members
+                                </Button>
+                            </div>
 
                             {isDoublesSession && unpairedCount > 0 && (
                                 <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-3 text-sm">

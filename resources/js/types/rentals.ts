@@ -10,7 +10,6 @@ export type RentalItem = {
     available_quantity: number;
     status: 'active' | 'inactive';
     description?: string | null;
-    revenue?: number;
     created_at?: string;
     updated_at?: string;
 };

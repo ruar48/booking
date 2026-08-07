@@ -75,7 +75,10 @@ export default function PlayersShow({ player }: Props) {
                             {player.birthdate ? (
                                 <div className="flex justify-between">
                                     <span className="text-muted-foreground">Birthdate</span>
-                                    <span>{formatDate(player.birthdate)}</span>
+                                    <span>
+                                        {formatDate(player.birthdate)}
+                                        {player.age != null && ` (${player.age} years old)`}
+                                    </span>
                                 </div>
                             ) : null}
                             {player.phone ? (

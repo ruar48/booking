@@ -27,7 +27,7 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
             ->paginate($perPage);
     }
 
-    public function paginateForUser(User $user, int $perPage = 15): LengthAwarePaginator
+    public function paginateForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return ResourceBooking::query()
             ->with(['resource', 'user', 'approver'])
@@ -35,8 +35,32 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
                 ! $user->isVenueAdmin(),
                 fn ($query) => $query->where('user_id', $user->id),
             )
+            ->when(
+                ! empty($filters['search']),
+                fn ($query) => $query->whereHas(
+                    'user',
+                    fn ($userQuery) => $userQuery->where('name', 'like', '%'.$filters['search'].'%'),
+                ),
+            )
+            ->when(
+                ! empty($filters['status']),
+                fn ($query) => $query->where('status', $filters['status']),
+            )
+            ->when(
+                ! empty($filters['payment_status']),
+                fn ($query) => $query->where('payment_status', $filters['payment_status']),
+            )
+            ->when(
+                ! empty($filters['resource_id']),
+                fn ($query) => $query->where('resource_id', $filters['resource_id']),
+            )
+            ->when(
+                ! empty($filters['date']),
+                fn ($query) => $query->whereDate('starts_at', $filters['date']),
+            )
             ->latest('starts_at')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
     }
 
     public function find(int $id): ?ResourceBooking

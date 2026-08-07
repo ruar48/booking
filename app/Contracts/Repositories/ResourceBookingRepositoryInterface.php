@@ -11,7 +11,7 @@ interface ResourceBookingRepositoryInterface
 {
     public function paginate(int $perPage = 15): LengthAwarePaginator;
 
-    public function paginateForUser(\App\Models\User $user, int $perPage = 15): LengthAwarePaginator;
+    public function paginateForUser(\App\Models\User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
     public function find(int $id): ?ResourceBooking;
 

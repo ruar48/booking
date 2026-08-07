@@ -249,7 +249,7 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                             {timeline.map((step) => (
                                 <li
                                     key={step.label}
-                                    className="flex items-center gap-3 text-sm"
+                                    className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm"
                                 >
                                     {step.done ? (
                                         'failed' in step && step.failed ? (

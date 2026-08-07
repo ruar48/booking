@@ -33,15 +33,20 @@ class ResourceBookingController extends Controller
         private readonly ResourceBookingService $resourceBookingService,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', ResourceBooking::class);
 
-        $user = request()->user();
+        $user = $request->user();
+        $filters = $request->only(['search', 'status', 'payment_status', 'resource_id', 'date']);
 
         return Inertia::render('bookings/index', [
-            'bookings' => $this->resourceBookingRepository->paginateForUser($user),
+            'bookings' => $this->resourceBookingRepository->paginateForUser($user, $filters),
             'canManage' => $user->isVenueAdmin(),
+            'filters' => $filters,
+            'resources' => $user->isVenueAdmin()
+                ? Resource::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -234,7 +239,7 @@ class ResourceBookingController extends Controller
         $this->authorize('viewAny', ResourceBooking::class);
 
         $validated = $request->validate([
-            'date' => ['required', 'date'],
+            'date' => ['required', 'date', 'after_or_equal:today'],
             'open_time' => ['required', 'date_format:H:i'],
             'close_time' => ['required', 'date_format:H:i', 'after:open_time'],
         ]);

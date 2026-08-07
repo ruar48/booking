@@ -94,6 +94,7 @@ export default function BookingsCreate({ resources, bookedSlots, scheduleBlocks 
                                 <ToggleGroup
                                     type="single"
                                     variant="outline"
+                                    className="flex-wrap"
                                     value={mode}
                                     onValueChange={(value) => {
                                         if (!value) {

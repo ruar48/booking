@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Models\Player;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+            'birthdate' => $request->user()->players()->first()?->birthdate?->toDateString(),
         ]);
     }
 
@@ -30,13 +32,20 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $validated = $request->validated();
+
+        $request->user()->fill(collect($validated)->only(['name', 'email'])->all());
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;
         }
 
         $request->user()->save();
+
+        Player::query()->updateOrCreate(
+            ['user_id' => $request->user()->id],
+            ['birthdate' => $validated['birthdate'] ?? null],
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);
 

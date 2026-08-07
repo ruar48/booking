@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CalendarDays, CheckCircle2, Clock, MapPin, Users } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { BrandLogo } from '@/components/brand-logo';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
+import { edit as editProfile } from '@/routes/profile';
 import { store as joinStore } from '@/routes/open-play/join';
 import type { OpenPlaySession, Player } from '@/types/booking';
 
@@ -17,6 +18,7 @@ type Props = {
     registrationsCount: number;
     isRegistered: boolean;
     isFull: boolean;
+    needsProfile: boolean;
 };
 
 function formatSkillLevel(level?: string): string {
@@ -27,7 +29,7 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
-export default function OpenPlayJoin({ session, registrationsCount, isRegistered, isFull }: Props) {
+export default function OpenPlayJoin({ session, registrationsCount, isRegistered, isFull, needsProfile }: Props) {
     const isDoublesSession = session.team_size === 'doubles';
 
     const [partnerMode, setPartnerMode] = useState<'select' | 'random'>('select');
@@ -126,6 +128,18 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                             <span className="font-semibold">
                                 You&apos;re registered for this session — see you on the court!
                             </span>
+                        </div>
+                    ) : needsProfile ? (
+                        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                            <div className="flex items-center gap-3">
+                                <TriangleAlert className="size-5 shrink-0" />
+                                <span className="font-semibold">
+                                    Add your birthdate to your profile before joining Open Play.
+                                </span>
+                            </div>
+                            <Button asChild size="sm" variant="outline">
+                                <Link href={editProfile()}>Complete your profile</Link>
+                            </Button>
                         </div>
                     ) : isFull ? (
                         <div className="rounded-lg border border-slate-200 bg-slate-100 p-4 text-center text-sm font-medium text-slate-500">

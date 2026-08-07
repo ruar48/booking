@@ -297,7 +297,7 @@ export default function RentalTransactionsIndex({ transactions, stats, staffOpti
                                     updateFilters({ status: value === 'all' ? undefined : value })
                                 }
                             >
-                                <SelectTrigger className="w-[150px]">
+                                <SelectTrigger className="w-full sm:w-[150px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -316,7 +316,7 @@ export default function RentalTransactionsIndex({ transactions, stats, staffOpti
                                     updateFilters({ staff_id: value === 'all' ? undefined : value })
                                 }
                             >
-                                <SelectTrigger className="w-[160px]">
+                                <SelectTrigger className="w-full sm:w-[160px]">
                                     <SelectValue placeholder="Staff" />
                                 </SelectTrigger>
                                 <SelectContent>

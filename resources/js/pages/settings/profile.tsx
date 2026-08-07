@@ -18,9 +18,11 @@ type PageProps = {
 export default function Profile({
     mustVerifyEmail,
     status,
+    birthdate,
 }: {
     mustVerifyEmail: boolean;
     status?: string;
+    birthdate?: string | null;
 }) {
     const { auth } = usePage<PageProps>().props;
 
@@ -109,6 +111,28 @@ export default function Profile({
                                         )}
                                     </div>
                                 )}
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="birthdate">Birthdate</Label>
+
+                                <Input
+                                    id="birthdate"
+                                    type="date"
+                                    className="mt-1 block w-full"
+                                    defaultValue={birthdate ?? ''}
+                                    name="birthdate"
+                                    max={new Date().toISOString().split('T')[0]}
+                                />
+
+                                <p className="text-sm text-muted-foreground">
+                                    Required to join Open Play sessions.
+                                </p>
+
+                                <InputError
+                                    className="mt-2"
+                                    message={errors.birthdate}
+                                />
+                            </div>
 
                             <div className="flex items-center gap-4">
                                 <Button

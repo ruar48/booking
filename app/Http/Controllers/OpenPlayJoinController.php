@@ -90,6 +90,7 @@ class OpenPlayJoinController extends Controller
             'registrationsCount' => $registrationsCount,
             'isRegistered' => $isRegistered,
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
+            'needsProfile' => $player === null || $player->birthdate === null,
         ]);
     }
 
@@ -110,6 +111,12 @@ class OpenPlayJoinController extends Controller
         $player = Player::query()->firstOrCreate([
             'user_id' => $request->user()->id,
         ]);
+
+        if ($player->birthdate === null) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('Please add your birthdate to your profile before joining Open Play.')]);
+
+            return to_route('profile.edit');
+        }
 
         $partner = isset($validated['partner_player_id'])
             ? Player::query()->findOrFail($validated['partner_player_id'])

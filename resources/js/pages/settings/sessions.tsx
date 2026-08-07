@@ -44,7 +44,7 @@ export default function Sessions({ sessions }: Props) {
 
                         return (
                             <Card key={session.id}>
-                                <CardContent className="flex items-center justify-between gap-4 py-4">
+                                <CardContent className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                                     <div className="flex items-center gap-4">
                                         <div className="bg-muted rounded-lg p-2">
                                             <DeviceIcon className="size-5" />
@@ -76,6 +76,7 @@ export default function Sessions({ sessions }: Props) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
+                                            className="self-end sm:self-auto"
                                             onClick={() => setRevokeId(session.id)}
                                         >
                                             <Trash2 className="size-4" />
