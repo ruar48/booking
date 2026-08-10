@@ -289,6 +289,77 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     home.form = homeForm
 /**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+export const sitemap = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: sitemap.url(options),
+    method: 'get',
+})
+
+sitemap.definition = {
+    methods: ["get","head"],
+    url: '/sitemap.xml',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+sitemap.url = (options?: RouteQueryOptions) => {
+    return sitemap.definition.url + queryParams(options)
+}
+
+/**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+sitemap.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: sitemap.url(options),
+    method: 'get',
+})
+/**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: sitemap.url(options),
+    method: 'head',
+})
+
+    /**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+    const sitemapForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: sitemap.url(options),
+        method: 'get',
+    })
+
+            /**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+        sitemapForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: sitemap.url(options),
+            method: 'get',
+        })
+            /**
+ * @see routes/web.php:11
+ * @route '/sitemap.xml'
+ */
+        sitemapForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: sitemap.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    sitemap.form = sitemapForm
+/**
 * @see \App\Http\Controllers\DashboardController::dashboard
  * @see app/Http/Controllers/DashboardController.php:16
  * @route '/dashboard'

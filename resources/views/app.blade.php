@@ -5,6 +5,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="theme-color" content="#0f2847">
 
+        <meta name="description" content="Book pickleball courts and billiards tables online at {{ config('app.name', 'Laravel') }}. Real-time availability, instant confirmation, open play sessions.">
+        <link rel="canonical" href="{{ url()->current() }}">
+
+        <meta property="og:site_name" content="{{ config('app.name', 'Laravel') }}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:title" content="{{ config('app.name', 'Laravel') }}">
+        <meta property="og:description" content="Book pickleball courts and billiards tables online at {{ config('app.name', 'Laravel') }}. Real-time availability, instant confirmation, open play sessions.">
+        <meta property="og:image" content="{{ asset('logos.png') }}">
+
+        <meta name="twitter:card" content="summary">
+        <meta name="twitter:title" content="{{ config('app.name', 'Laravel') }}">
+        <meta name="twitter:description" content="Book pickleball courts and billiards tables online at {{ config('app.name', 'Laravel') }}. Real-time availability, instant confirmation, open play sessions.">
+        <meta name="twitter:image" content="{{ asset('logos.png') }}">
+
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
             (function() {
@@ -31,7 +46,8 @@
             }
         </style>
 
-        <link rel="icon" href="/logos.png" sizes="any">
+        <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/logos.png">
         <link rel="manifest" href="/build/manifest.webmanifest">
         <meta name="mobile-web-app-capable" content="yes">

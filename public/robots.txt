@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /dashboard
+Disallow: /bookings
+Disallow: /payments
+Disallow: /players
+Disallow: /resources
+Disallow: /products
+Disallow: /pos
+Disallow: /rental-items
+Disallow: /rentals
+Disallow: /announcements
+Disallow: /open-play
+Disallow: /admin
+Disallow: /settings
+
+Sitemap: /sitemap.xml

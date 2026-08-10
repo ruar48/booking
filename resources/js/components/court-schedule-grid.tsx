@@ -103,8 +103,8 @@ function buildBookingRuns(
 
             runs.push({
                 resource_id: courtId,
-                starts_at: new Date(`${selectedDate}T${minutesToSlot(runStart)}:00`).toISOString(),
-                ends_at: new Date(`${selectedDate}T${minutesToSlot(runEnd)}:00`).toISOString(),
+                starts_at: `${selectedDate} ${minutesToSlot(runStart)}:00`,
+                ends_at: `${selectedDate} ${minutesToSlot(runEnd)}:00`,
             });
         };
 

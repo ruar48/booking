@@ -636,6 +636,35 @@ export default function Welcome({
 }: Props) {
     const { auth } = usePage().props;
     const businessName = brand.name;
+    const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const ogImage = typeof window !== 'undefined'
+        ? `${window.location.origin}${brand.logo}`
+        : brand.logo;
+    const metaDescription = (venue?.description
+        ? venue.description.replace(/\s+/g, ' ').trim().slice(0, 155)
+        : `Book pickleball courts and billiards tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`);
+    const structuredData = {
+        '@context': 'https://schema.org',
+        '@type': 'SportsActivityLocation',
+        name: businessName,
+        description: metaDescription,
+        image: ogImage,
+        url: pageUrl,
+        ...(venue?.phone ? { telephone: venue.phone } : {}),
+        ...(venue?.email ? { email: venue.email } : {}),
+        ...(venue && venueAddress(venue)
+            ? {
+                  address: {
+                      '@type': 'PostalAddress',
+                      streetAddress: venue.address_line_1 ?? undefined,
+                      addressLocality: venue.city ?? undefined,
+                      addressRegion: venue.state ?? undefined,
+                      postalCode: venue.postal_code ?? undefined,
+                      addressCountry: venue.country ?? undefined,
+                  },
+              }
+            : {}),
+    };
     const [activeTab, setActiveTab] = useState('about');
     const venueSection = useRef<HTMLElement>(null);
     const [venueVisible, setVenueVisible] = useState(false);
@@ -668,7 +697,20 @@ export default function Welcome({
 
     return (
         <>
-            <Head title={businessName} />
+            <Head title={businessName}>
+                <meta name="description" content={metaDescription} />
+                {pageUrl && <link rel="canonical" href={pageUrl} />}
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={businessName} />
+                <meta property="og:description" content={metaDescription} />
+                <meta property="og:image" content={ogImage} />
+                {pageUrl && <meta property="og:url" content={pageUrl} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={businessName} />
+                <meta name="twitter:description" content={metaDescription} />
+                <meta name="twitter:image" content={ogImage} />
+                <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+            </Head>
 
             <div className="overflow-x-hidden bg-slate-100 text-brand-navy">
                 <HeroLanding

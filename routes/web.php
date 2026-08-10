@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+Route::get('/sitemap.xml', function () {
+    return response()
+        ->view('sitemap', ['url' => url('/')])
+        ->header('Content-Type', 'text/xml');
+})->name('sitemap');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     require __DIR__.'/bookings.php';
     require __DIR__.'/open-play-join.php';
