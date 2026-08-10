@@ -13,6 +13,7 @@ use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\Announcement;
 use App\Models\AuditLog;
+use App\Models\DateOverride;
 use App\Models\OpenPlayMatch;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;
@@ -80,6 +81,19 @@ class DemoDataSeeder extends Seeder
                 'gallery' => [],
             ],
         ]);
+
+        // Open the demo date range for public booking — matches the window
+        // the resource bookings below are seeded across (-10 to +18 days),
+        // with extra headroom on both ends for manual testing.
+        foreach (range(-10, 30) as $dayOffset) {
+            DateOverride::query()->create([
+                'date' => now()->addDays($dayOffset)->toDateString(),
+                'is_closed' => false,
+                'open_time' => '07:00',
+                'close_time' => '22:00',
+                'created_by' => $owner->id,
+            ]);
+        }
 
         $courts = Resource::factory()
             ->count(2)
