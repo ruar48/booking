@@ -37,6 +37,7 @@ export default function OpenPlayCreate() {
         description: '',
         starts_at: defaultStartsAt(),
         ends_at: defaultEndsAt(),
+        registration_closes_at: '',
         location: 'Courts 1, 2',
         price_per_player: '10',
         max_players: '16',
@@ -104,6 +105,23 @@ export default function OpenPlayCreate() {
                                     required
                                 />
                                 <InputError message={errors.ends_at} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="registration_closes_at">Registration closes at</Label>
+                                <Input
+                                    id="registration_closes_at"
+                                    type="datetime-local"
+                                    value={data.registration_closes_at}
+                                    onChange={(e) =>
+                                        setData('registration_closes_at', e.target.value)
+                                    }
+                                />
+                                <p className="text-muted-foreground text-xs">
+                                    Optional. After this time, members can no longer join or
+                                    register — leave blank to allow registration until the
+                                    session starts.
+                                </p>
+                                <InputError message={errors.registration_closes_at} />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="location">Courts</Label>

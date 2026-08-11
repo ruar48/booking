@@ -26,6 +26,8 @@ export type OpenPlaySession = {
     description?: string | null;
     starts_at: string;
     ends_at?: string | null;
+    registration_closes_at?: string | null;
+    is_registration_closed?: boolean;
     location?: string | null;
     price_per_player?: number | null;
     max_players?: number | null;

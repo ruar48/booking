@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
-import { browse as openPlayBrowse, join, mine } from '@/routes/open-play';
+import { browse as openPlayBrowse, join, mine, show } from '@/routes/open-play';
 import type { OpenPlaySession } from '@/types/booking';
 
 type BrowseSession = OpenPlaySession & {
@@ -126,11 +126,18 @@ function SessionCard({ session }: { session: BrowseSession }) {
                         {session.location}
                     </div>
                 )}
-                <div className="text-muted-foreground flex items-center gap-2">
-                    <Users className="size-4 shrink-0" />
-                    {session.max_players
-                        ? `${session.registrations_count ?? 0} / ${session.max_players} registered`
-                        : `${session.registrations_count ?? 0} registered`}
+                <div className="text-muted-foreground flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-2">
+                        <Users className="size-4 shrink-0" />
+                        {session.max_players
+                            ? `${session.registrations_count ?? 0} / ${session.max_players} registered`
+                            : `${session.registrations_count ?? 0} registered`}
+                    </span>
+                    {(session.registrations_count ?? 0) > 0 && (
+                        <Button asChild variant="link" size="sm" className="h-auto p-0 text-xs">
+                            <Link href={show(session)}>View players</Link>
+                        </Button>
+                    )}
                 </div>
                 {session.price_per_player != null && (
                     <div className="text-muted-foreground flex items-center gap-2">
@@ -138,6 +145,16 @@ function SessionCard({ session }: { session: BrowseSession }) {
                         {formatCurrency(session.price_per_player)} / player
                     </div>
                 )}
+                {!session.is_registered &&
+                    !session.is_full &&
+                    session.registration_closes_at &&
+                    !session.is_registration_closed && (
+                        <div className="flex items-center gap-2 text-amber-700">
+                            <Clock className="size-4 shrink-0" />
+                            Registration closes {formatDate(session.registration_closes_at)}{' '}
+                            {formatTime(session.registration_closes_at)}
+                        </div>
+                    )}
 
                 <div className="pt-2">
                     {session.is_registered ? (
@@ -150,6 +167,10 @@ function SessionCard({ session }: { session: BrowseSession }) {
                     ) : session.is_full ? (
                         <Button className="w-full" disabled>
                             Session full
+                        </Button>
+                    ) : session.is_registration_closed ? (
+                        <Button className="w-full" disabled>
+                            Registration closed
                         </Button>
                     ) : (
                         <Button asChild variant="outline" className="w-full">

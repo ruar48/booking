@@ -29,6 +29,7 @@ import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
 import { index as bookingsIndex } from '@/routes/bookings';
+import { browse as openPlayBrowse, show as openPlayShow } from '@/routes/open-play';
 import type {
     Announcement,
     BookedSlot,
@@ -449,12 +450,20 @@ function OpenPlayTab({
                                                         {session.location}
                                                     </li>
                                                 )}
-                                                {session.max_players && (
-                                                    <li className="flex items-center gap-2">
-                                                        <Users className="size-4 text-brand-court" />
-                                                        0/{session.max_players} players
-                                                    </li>
-                                                )}
+                                                <li className="flex items-center gap-2">
+                                                    <Users className="size-4 text-brand-court" />
+                                                    {session.max_players
+                                                        ? `${session.registrations_count ?? 0}/${session.max_players} players`
+                                                        : `${session.registrations_count ?? 0} players joined`}
+                                                </li>
+                                                {session.registration_closes_at &&
+                                                    !session.is_registration_closed && (
+                                                        <li className="flex items-center gap-2 text-amber-700">
+                                                            <Clock className="size-4" />
+                                                            Registration closes{' '}
+                                                            {formatTime(session.registration_closes_at)}
+                                                        </li>
+                                                    )}
                                             </ul>
                                         </div>
                                         <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
@@ -466,18 +475,38 @@ function OpenPlayTab({
                                                     </span>
                                                 </p>
                                             )}
-                                            <Button
-                                                asChild
-                                                className="bg-brand-lime font-semibold text-brand-navy hover:bg-brand-lime-dark"
-                                            >
+                                            {session.is_registration_closed ? (
+                                                <Button disabled>Registration closed</Button>
+                                            ) : (
+                                                <Button
+                                                    asChild
+                                                    className="bg-brand-lime font-semibold text-brand-navy hover:bg-brand-lime-dark"
+                                                >
+                                                    <Link
+                                                        href={
+                                                            isAuthenticated
+                                                                ? dashboard()
+                                                                : register()
+                                                        }
+                                                    >
+                                                        Register
+                                                    </Link>
+                                                </Button>
+                                            )}
+                                            <Button asChild variant="outline" size="sm">
+                                                {/* Guests hit the auth-gated browse page, bounce
+                                                    through login/register, and land back on the
+                                                    Open Play dashboard via Laravel's intended-URL
+                                                    redirect — signed-in members go straight to
+                                                    this session's roster/bracket. */}
                                                 <Link
                                                     href={
                                                         isAuthenticated
-                                                            ? dashboard()
-                                                            : register()
+                                                            ? openPlayShow(session)
+                                                            : openPlayBrowse()
                                                     }
                                                 >
-                                                    Register
+                                                    Who&apos;s joined / bracket
                                                 </Link>
                                             </Button>
                                         </div>

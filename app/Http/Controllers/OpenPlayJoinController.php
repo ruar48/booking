@@ -24,21 +24,46 @@ class OpenPlayJoinController extends Controller
 
         $sessions = OpenPlaySession::query()
             ->withCount('registrations')
-            ->with(['registrations' => fn ($query) => $query
-                ->where(fn ($query) => $query
-                    ->whereIn('player_id', $playerIds)
-                    ->orWhereIn('partner_player_id', $playerIds))])
+            ->with([
+                'registrations.player.user:id,name',
+                'registrations.partner.user:id,name',
+            ])
             ->orderByDesc('starts_at')
             ->get()
             ->map(fn (OpenPlaySession $session) => [
                 ...$session->toArray(),
-                'is_registered' => $session->registrations->isNotEmpty(),
+                'is_registered' => $session->registrations
+                    ->contains(fn (OpenPlayRegistration $registration) => $playerIds->contains($registration->player_id)
+                        || $playerIds->contains($registration->partner_player_id)),
                 'is_full' => $session->max_players !== null
                     && $session->registrations_count >= $session->max_players,
             ]);
 
         return Inertia::render('open-play/browse', [
             'sessions' => $sessions,
+        ]);
+    }
+
+    public function show(OpenPlaySession $open_play): Response
+    {
+        $open_play->load([
+            'registrations.player:id,user_id',
+            'registrations.player.user:id,name',
+            'registrations.partner:id,user_id',
+            'registrations.partner.user:id,name',
+            'matches' => fn ($query) => $query->orderBy('round')->orderBy('bracket_position'),
+            'matches.entry1.player:id,user_id',
+            'matches.entry1.player.user:id,name',
+            'matches.entry1.partner:id,user_id',
+            'matches.entry1.partner.user:id,name',
+            'matches.entry2.player:id,user_id',
+            'matches.entry2.player.user:id,name',
+            'matches.entry2.partner:id,user_id',
+            'matches.entry2.partner.user:id,name',
+        ]);
+
+        return Inertia::render('open-play/show', [
+            'session' => $open_play,
         ]);
     }
 
@@ -58,12 +83,18 @@ class OpenPlayJoinController extends Controller
         }
 
         $open_play->load([
+            'registrations.player:id,user_id',
             'registrations.player.user:id,name',
+            'registrations.partner:id,user_id',
             'registrations.partner.user:id,name',
             'matches' => fn ($query) => $query->orderBy('round')->orderBy('bracket_position'),
+            'matches.entry1.player:id,user_id',
             'matches.entry1.player.user:id,name',
+            'matches.entry1.partner:id,user_id',
             'matches.entry1.partner.user:id,name',
+            'matches.entry2.player:id,user_id',
             'matches.entry2.player.user:id,name',
+            'matches.entry2.partner:id,user_id',
             'matches.entry2.partner.user:id,name',
         ]);
 
@@ -85,6 +116,13 @@ class OpenPlayJoinController extends Controller
                 ->orWhere('partner_player_id', $player->id))
             ->exists();
 
+        $open_play->load([
+            'registrations.player:id,user_id',
+            'registrations.player.user:id,name',
+            'registrations.partner:id,user_id',
+            'registrations.partner.user:id,name',
+        ]);
+
         return Inertia::render('open-play/join', [
             'session' => $open_play,
             'registrationsCount' => $registrationsCount,
@@ -96,6 +134,12 @@ class OpenPlayJoinController extends Controller
 
     public function store(Request $request, OpenPlaySession $open_play): RedirectResponse
     {
+        if ($open_play->is_registration_closed) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('Registration for this session has closed.')]);
+
+            return back();
+        }
+
         $registrationsCount = $open_play->registrations()->count();
 
         if ($open_play->max_players !== null && $registrationsCount >= $open_play->max_players) {

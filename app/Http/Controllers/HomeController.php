@@ -32,6 +32,7 @@ class HomeController extends Controller
 
         $openPlaySessions = OpenPlaySession::query()
             ->where('starts_at', '>=', now())
+            ->withCount('registrations')
             ->orderBy('starts_at')
             ->get();
 

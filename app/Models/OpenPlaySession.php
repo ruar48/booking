@@ -7,6 +7,7 @@ use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use Database\Factories\OpenPlaySessionFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $description
  * @property Carbon $starts_at
  * @property Carbon|null $ends_at
+ * @property Carbon|null $registration_closes_at
  * @property string|null $location
  * @property float|null $price_per_player
  * @property int|null $max_players
@@ -34,6 +36,7 @@ use Illuminate\Support\Carbon;
     'description',
     'starts_at',
     'ends_at',
+    'registration_closes_at',
     'location',
     'price_per_player',
     'max_players',
@@ -48,11 +51,14 @@ class OpenPlaySession extends Model
     /** @use HasFactory<OpenPlaySessionFactory> */
     use HasFactory;
 
+    protected $appends = ['is_registration_closed'];
+
     protected function casts(): array
     {
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'registration_closes_at' => 'datetime',
             'price_per_player' => 'decimal:2',
             'max_players' => 'integer',
             'target_score' => 'integer',
@@ -60,6 +66,14 @@ class OpenPlaySession extends Model
             'bracket_generation' => BracketGenerationMode::class,
             'team_size' => TeamSize::class,
         ];
+    }
+
+    protected function isRegistrationClosed(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): bool => $this->registration_closes_at !== null
+                && $this->registration_closes_at->isPast(),
+        );
     }
 
     public function registrations(): HasMany

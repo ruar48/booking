@@ -3,6 +3,7 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users } from 
 import { useState } from 'react';
 
 import { BrandLogo } from '@/components/brand-logo';
+import { OpenPlayRoster } from '@/components/open-play-roster';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -110,6 +111,13 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                                     ? `${registrationsCount} / ${session.max_players} registered`
                                     : `${registrationsCount} registered`}
                             </div>
+                            {session.registration_closes_at && !session.is_registration_closed && (
+                                <div className="flex items-center gap-2 text-amber-700">
+                                    <Clock className="size-4 shrink-0" />
+                                    Registration closes {formatDate(session.registration_closes_at)}{' '}
+                                    {formatTime(session.registration_closes_at)}
+                                </div>
+                            )}
                             <div className="flex flex-wrap gap-2 pt-1">
                                 <Badge variant="outline">{formatSkillLevel(session.skill_level)}</Badge>
                                 <Badge variant="outline">{isDoublesSession ? '2v2 Doubles' : '1v1 Singles'}</Badge>
@@ -119,6 +127,18 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                                     </Badge>
                                 )}
                             </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-base">Who&apos;s joined</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <OpenPlayRoster
+                                registrations={session.registrations ?? []}
+                                maxPlayers={session.max_players}
+                            />
                         </CardContent>
                     </Card>
 
@@ -144,6 +164,10 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                     ) : isFull ? (
                         <div className="rounded-lg border border-slate-200 bg-slate-100 p-4 text-center text-sm font-medium text-slate-500">
                             This session is full.
+                        </div>
+                    ) : session.is_registration_closed ? (
+                        <div className="rounded-lg border border-slate-200 bg-slate-100 p-4 text-center text-sm font-medium text-slate-500">
+                            Registration for this session has closed.
                         </div>
                     ) : (
                         <Card>

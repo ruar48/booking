@@ -28,6 +28,7 @@ class StoreOpenPlayRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:5000'],
             'starts_at' => ['required', 'date', 'after:now'],
             'ends_at' => ['required', 'date', 'after:starts_at'],
+            'registration_closes_at' => ['nullable', 'date', 'before_or_equal:starts_at'],
             'location' => ['nullable', 'string', 'max:255'],
             'price_per_player' => ['nullable', 'numeric', 'min:0'],
             'max_players' => ['nullable', 'integer', 'min:1', 'max:100'],
