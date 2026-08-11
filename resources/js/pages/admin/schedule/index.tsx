@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/table';
 import { destroy as destroyBlock, store as storeBlock } from '@/routes/admin/schedule/blocks';
 import { toggle as toggleRecurringLock } from '@/routes/admin/schedule/recurring-locks';
-import { index as scheduleIndex, updateHours } from '@/routes/admin/schedule';
+import { index as scheduleIndex, updateHours, updatePaymentWindow } from '@/routes/admin/schedule';
 import type { RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
 
 type DayHours = {
@@ -140,14 +140,25 @@ function defaultOperatingHours(existing?: Partial<OperatingHours> | null): Opera
 
 type Props = {
     operatingHours: Partial<OperatingHours> | null;
+    unpaidCancelMinutes: number | null;
     resources: Resource[];
     scheduleBlocks: ScheduleBlock[];
     recurringLocks: RecurringScheduleLock[];
 };
 
-export default function AdminScheduleIndex({ operatingHours, resources, scheduleBlocks, recurringLocks }: Props) {
+export default function AdminScheduleIndex({
+    operatingHours,
+    unpaidCancelMinutes,
+    resources,
+    scheduleBlocks,
+    recurringLocks,
+}: Props) {
     const hoursForm = useForm({
         operating_hours: defaultOperatingHours(operatingHours),
+    });
+
+    const paymentWindowForm = useForm({
+        minutes: unpaidCancelMinutes !== null ? String(unpaidCancelMinutes) : '',
     });
 
     const blockForm = useForm({
@@ -190,6 +201,14 @@ export default function AdminScheduleIndex({ operatingHours, resources, schedule
     const submitHours = (event: FormEvent) => {
         event.preventDefault();
         hoursForm.put(updateHours().url, { preserveScroll: true });
+    };
+
+    const submitPaymentWindow = (event: FormEvent) => {
+        event.preventDefault();
+        paymentWindowForm.transform((data) => ({
+            minutes: data.minutes ? Number(data.minutes) : null,
+        }));
+        paymentWindowForm.put(updatePaymentWindow().url, { preserveScroll: true });
     };
 
     const updateDay = (day: keyof OperatingHours, patch: Partial<DayHours>) => {
@@ -462,6 +481,45 @@ export default function AdminScheduleIndex({ operatingHours, resources, schedule
                         <div className="mt-4 flex justify-end">
                             <Button type="submit" disabled={hoursForm.processing}>
                                 Save hours
+                            </Button>
+                        </div>
+                    </form>
+
+                    <form onSubmit={submitPaymentWindow}>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Payment window</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <p className="text-muted-foreground text-sm">
+                                    Automatically cancel a booking if payment isn't
+                                    received within this many minutes of creation.
+                                    Leave blank to allow unlimited time to pay.
+                                </p>
+                                <div className="grid max-w-xs gap-1">
+                                    <Label htmlFor="unpaid-cancel-minutes">
+                                        Minutes before auto-cancel
+                                    </Label>
+                                    <Input
+                                        id="unpaid-cancel-minutes"
+                                        type="number"
+                                        min={1}
+                                        placeholder="No limit"
+                                        value={paymentWindowForm.data.minutes}
+                                        onChange={(e) =>
+                                            paymentWindowForm.setData(
+                                                'minutes',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                    <InputError message={paymentWindowForm.errors.minutes} />
+                                </div>
+                            </CardContent>
+                        </Card>
+                        <div className="mt-4 flex justify-end">
+                            <Button type="submit" disabled={paymentWindowForm.processing}>
+                                Save payment window
                             </Button>
                         </div>
                     </form>

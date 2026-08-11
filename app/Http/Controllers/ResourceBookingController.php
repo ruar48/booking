@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\CreateWalkInCustomer;
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\BookingConflictException;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
@@ -15,7 +16,9 @@ use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\ScheduleBlock;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\PaymentService;
 use App\Services\ResourceBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +34,7 @@ class ResourceBookingController extends Controller
     public function __construct(
         private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
         private readonly ResourceBookingService $resourceBookingService,
+        private readonly PaymentService $paymentService,
     ) {}
 
     public function index(Request $request): Response
@@ -75,16 +79,20 @@ class ResourceBookingController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking confirmed. Complete payment to secure your reservation.')]);
 
-        return to_route('bookings.show', $booking);
+        return to_route('bookings.checkout', $booking);
     }
 
     public function storeBulk(StoreBulkResourceBookingRequest $request): RedirectResponse
     {
+        $firstBooking = null;
+
         try {
             foreach ($request->validated('bookings') as $data) {
-                $this->resourceBookingService->create(
+                $booking = $this->resourceBookingService->create(
                     $this->attributesForNewBooking($data, $request->user()->id),
                 );
+
+                $firstBooking ??= $booking;
             }
         } catch (BookingConflictException $e) {
             throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
@@ -95,7 +103,7 @@ class ResourceBookingController extends Controller
             'message' => __(':count booking(s) submitted.', ['count' => count($request->validated('bookings'))]),
         ]);
 
-        return to_route('bookings.index');
+        return to_route('bookings.checkout', $firstBooking);
     }
 
     public function storeWalkIn(StoreWalkInBookingRequest $request, CreateWalkInCustomer $createWalkInCustomer): RedirectResponse
@@ -113,6 +121,9 @@ class ResourceBookingController extends Controller
                 foreach ($bookings as $data) {
                     $attributes = $this->attributesForNewBooking($data, $customerId);
                     $attributes['created_by'] = $request->user()->id;
+                    // Walk-ins are confirmed in person by staff, not routed through
+                    // the self-service checkout/payment-window flow.
+                    $attributes['status'] = BookingStatus::Approved;
 
                     $booking = $this->resourceBookingService->create($attributes);
 
@@ -156,21 +167,108 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('view', $booking);
 
+        return Inertia::render('bookings/show', $this->bookingShowProps($booking));
+    }
+
+    public function showCheckout(ResourceBooking $booking): Response
+    {
+        $this->authorize('view', $booking);
+
+        $pendingPayment = $booking->payments()
+            ->where('payment_method', PaymentMethod::Qrph->value)
+            ->where('status', PaymentStatus::Pending)
+            ->where('qr_expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        return Inertia::render('bookings/checkout', [
+            ...$this->bookingShowProps($booking),
+            'qrPayment' => $pendingPayment ? [
+                'id' => $pendingPayment->id,
+                'qrCodeUrl' => $pendingPayment->qr_code_url,
+                'expiresAt' => $pendingPayment->qr_expires_at,
+            ] : null,
+            'paymentDeadline' => $this->paymentDeadline($booking),
+        ]);
+    }
+
+    public function checkout(Request $request, ResourceBooking $booking): Response
+    {
+        $this->authorize('view', $booking);
+
+        $validated = $request->validate([
+            'payment_method' => ['required', 'in:qrph,gcash,maya'],
+        ]);
+
+        if ($validated['payment_method'] !== 'qrph') {
+            throw ValidationException::withMessages([
+                'payment_method' => __(':method is coming soon — please pay with QR Ph for now.', [
+                    'method' => PaymentMethod::from($validated['payment_method'])->label(),
+                ]),
+            ]);
+        }
+
+        $qrPayment = null;
+
+        if ($booking->payment_status !== PaymentStatus::Paid) {
+            $payment = $this->paymentService->createQrphPaymentForBooking($booking, $request->user());
+
+            $qrPayment = [
+                'id' => $payment->id,
+                'qrCodeUrl' => $payment->qr_code_url,
+                'expiresAt' => $payment->qr_expires_at,
+            ];
+        }
+
+        return Inertia::render('bookings/checkout', [
+            ...$this->bookingShowProps($booking),
+            'qrPayment' => $qrPayment,
+            'paymentDeadline' => $this->paymentDeadline($booking),
+        ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function bookingShowProps(ResourceBooking $booking): array
+    {
         $booking->load(['resource', 'user', 'approver']);
 
-        return Inertia::render('bookings/show', [
+        return [
             'booking' => $booking,
             'canManage' => request()->user()->isVenueAdmin(),
-        ]);
+        ];
+    }
+
+    protected function paymentDeadline(ResourceBooking $booking): ?string
+    {
+        if ($booking->payment_status !== PaymentStatus::Unpaid) {
+            return null;
+        }
+
+        $minutes = Setting::query()
+            ->where('group', 'bookings')
+            ->where('key', 'unpaid_cancel_minutes')
+            ->value('value');
+
+        if (! $minutes) {
+            return null;
+        }
+
+        return $booking->created_at->addMinutes((int) $minutes)->toIso8601String();
     }
 
     public function markPaid(ResourceBooking $booking): RedirectResponse
     {
         $this->authorize('markPaid', $booking);
 
-        $this->resourceBookingRepository->update($booking, [
-            'payment_status' => PaymentStatus::Paid,
-        ]);
+        $updates = ['payment_status' => PaymentStatus::Paid];
+
+        if ($booking->status === BookingStatus::Pending) {
+            $updates['status'] = BookingStatus::Approved;
+        }
+
+        $this->resourceBookingRepository->update($booking, $updates);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment marked as paid.')]);
 
@@ -277,7 +375,7 @@ class ResourceBookingController extends Controller
         return [
             ...$data,
             'user_id' => $userId,
-            'status' => BookingStatus::Approved,
+            'status' => BookingStatus::Pending,
             'payment_status' => PaymentStatus::Unpaid,
             'amount' => round((float) $resource->hourly_rate * $hours, 2),
         ];

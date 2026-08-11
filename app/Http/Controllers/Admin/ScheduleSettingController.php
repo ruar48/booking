@@ -34,6 +34,7 @@ class ScheduleSettingController extends Controller
 
         return Inertia::render('admin/schedule/index', [
             'operatingHours' => $this->operatingHours(),
+            'unpaidCancelMinutes' => $this->unpaidCancelMinutes(),
             'resources' => $resources,
             'scheduleBlocks' => $scheduleBlocks,
             'recurringLocks' => $recurringLocks,
@@ -50,6 +51,22 @@ class ScheduleSettingController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Operating hours updated.')]);
+
+        return back();
+    }
+
+    public function updatePaymentWindow(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'minutes' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        Setting::query()->updateOrCreate(
+            ['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'],
+            ['value' => $validated['minutes'] ?? null],
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment window updated.')]);
 
         return back();
     }
@@ -121,6 +138,16 @@ class ScheduleSettingController extends Controller
             ->where('group', 'schedule')
             ->where('key', 'operating_hours')
             ->value('value');
+    }
+
+    private function unpaidCancelMinutes(): ?int
+    {
+        $value = Setting::query()
+            ->where('group', 'bookings')
+            ->where('key', 'unpaid_cancel_minutes')
+            ->value('value');
+
+        return $value !== null ? (int) $value : null;
     }
 
     /**

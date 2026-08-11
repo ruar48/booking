@@ -19,6 +19,7 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "maatwebsite/excel": "*",
+        "pusher/pusher-php-server": "*",
         "spatie/laravel-permission": "*"
     },
     "require-dev": {

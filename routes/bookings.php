@@ -16,3 +16,7 @@ Route::middleware('venue.admin')->group(function () {
 
 Route::resource('bookings', ResourceBookingController::class)->only(['index', 'create', 'store', 'show']);
 Route::patch('bookings/{booking}/cancel', [ResourceBookingController::class, 'cancel'])->name('bookings.cancel');
+Route::get('bookings/{booking}/checkout', [ResourceBookingController::class, 'showCheckout'])->name('bookings.checkout');
+Route::post('bookings/{booking}/checkout', [ResourceBookingController::class, 'checkout'])
+    ->middleware('throttle:10,1')
+    ->name('bookings.checkout.generate');

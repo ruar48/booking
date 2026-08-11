@@ -4,9 +4,21 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PaymongoWebhookController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
+
+// Dedicated channel-auth endpoint for the Pusher connection used only by payment
+// confirmation — kept separate from the default /broadcasting/auth route (Reverb)
+// because the auth signature must match the app secret the client connected with.
+Route::middleware(['auth'])->post('broadcasting/pusher/auth', function (Request $request) {
+    return Broadcast::connection('pusher')->auth($request);
+})->name('broadcasting.pusher.auth');
 
 Route::get('/sitemap.xml', function () {
     return response()

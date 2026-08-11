@@ -12,7 +12,7 @@ import {
     Wallet,
     XCircle,
 } from 'lucide-react';
-import { useState   } from 'react';
+import { useState } from 'react';
 import type {ComponentType, ReactNode} from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -20,10 +20,12 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatDateTime, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
     cancel,
+    checkout,
     index as bookingsIndex,
     markPaid,
 } from '@/routes/bookings';
@@ -38,8 +40,14 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
 
+    const isUnpaid = booking.payment_status === 'unpaid';
+    useBookingPaymentChannel(isUnpaid ? booking.id : null);
+
     const canMarkPaid =
         canManage &&
+        booking.payment_status === 'unpaid' &&
+        !['cancelled', 'rejected'].includes(booking.status);
+    const canPay =
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
     const canCancel = !['cancelled', 'completed', 'rejected'].includes(
@@ -134,8 +142,14 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
                             <Button variant="outline" asChild>
                                 <Link href={bookingsIndex()}>← Back</Link>
                             </Button>
+                            {canPay ? (
+                                <Button asChild>
+                                    <Link href={checkout(booking)}>Pay now</Link>
+                                </Button>
+                            ) : null}
                             {canMarkPaid ? (
                                 <Button
+                                    variant="outline"
                                     onClick={() =>
                                         router.patch(markPaid(booking).url, {}, {
                                             preserveScroll: true,

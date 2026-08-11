@@ -2,14 +2,63 @@
 
 namespace App\Services;
 
+use App\Enums\BookingStatus;
+use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\PaymentSuccessful;
 use App\Models\Payment;
+use App\Models\ResourceBooking;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
+    public function __construct(
+        private readonly PaymongoService $paymongo,
+    ) {}
+
+    public function createQrphPaymentForBooking(ResourceBooking $booking, User $user): Payment
+    {
+        $payment = $this->create(
+            userId: $user->id,
+            payable: $booking,
+            amount: (string) $booking->amount,
+            currency: 'PHP',
+            paymentMethod: PaymentMethod::Qrph->value,
+        );
+
+        $amountCentavos = (int) round(((float) $booking->amount) * 100);
+
+        $intent = $this->paymongo->createPaymentIntent(
+            amountCentavos: $amountCentavos,
+            description: "Payment for booking #{$booking->id}",
+        );
+
+        $paymentMethod = $this->paymongo->createPaymentMethod([
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+
+        $attached = $this->paymongo->attachPaymentMethod(
+            paymentIntentId: $intent['id'],
+            clientKey: $intent['attributes']['client_key'],
+            paymentMethodId: $paymentMethod['id'],
+        );
+
+        $code = $attached['attributes']['next_action']['code'] ?? null;
+
+        $payment->update([
+            'paymongo_payment_intent_id' => $intent['id'],
+            'paymongo_payment_method_id' => $paymentMethod['id'],
+            'qr_code_url' => $code['image_url'] ?? null,
+            'qr_expires_at' => isset($code['expires_at']) ? now()->createFromTimestamp($code['expires_at']) : null,
+            'raw_response' => $attached,
+        ]);
+
+        return $payment->fresh();
+    }
+
     public function create(
         int $userId,
         Model $payable,
@@ -41,6 +90,18 @@ class PaymentService
                 'paid_at' => now(),
                 'payment_method' => $paymentMethod ?? $payment->payment_method,
             ]);
+
+            $payable = $payment->payable;
+
+            if ($payable && in_array('payment_status', $payable->getFillable(), true)) {
+                $updates = ['payment_status' => PaymentStatus::Paid];
+
+                if ($payable instanceof ResourceBooking && $payable->status === BookingStatus::Pending) {
+                    $updates['status'] = BookingStatus::Approved;
+                }
+
+                $payable->update($updates);
+            }
 
             return $payment->fresh();
         });

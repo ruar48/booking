@@ -79,6 +79,9 @@ class ResourceBooking extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return MorphMany<Payment, $this>
+     */
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'payable');

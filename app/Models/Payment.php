@@ -21,6 +21,11 @@ use Illuminate\Support\Carbon;
  * @property string $currency
  * @property PaymentStatus $status
  * @property string|null $payment_method
+ * @property string|null $paymongo_payment_intent_id
+ * @property string|null $paymongo_payment_method_id
+ * @property string|null $qr_code_url
+ * @property Carbon|null $qr_expires_at
+ * @property array<string, mixed>|null $raw_response
  * @property Carbon|null $paid_at
  * @property string|null $notes
  * @property Carbon|null $created_at
@@ -35,6 +40,11 @@ use Illuminate\Support\Carbon;
     'currency',
     'status',
     'payment_method',
+    'paymongo_payment_intent_id',
+    'paymongo_payment_method_id',
+    'qr_code_url',
+    'qr_expires_at',
+    'raw_response',
     'paid_at',
     'notes',
 ])]
@@ -48,6 +58,8 @@ class Payment extends Model
         return [
             'amount' => 'decimal:2',
             'status' => PaymentStatus::class,
+            'raw_response' => 'array',
+            'qr_expires_at' => 'datetime',
             'paid_at' => 'datetime',
         ];
     }

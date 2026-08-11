@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:74
  * @route '/admin/schedule/blocks'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -16,7 +16,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:74
  * @route '/admin/schedule/blocks'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:74
  * @route '/admin/schedule/blocks'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -35,7 +35,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:74
  * @route '/admin/schedule/blocks'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -45,7 +45,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::store
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:57
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:74
  * @route '/admin/schedule/blocks'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -56,7 +56,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:93
  * @route '/admin/schedule/blocks/{block}'
  */
 export const destroy = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -71,7 +71,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:93
  * @route '/admin/schedule/blocks/{block}'
  */
 destroy.url = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -104,7 +104,7 @@ destroy.url = (args: { block: number | { id: number } } | [block: number | { id:
 
 /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:93
  * @route '/admin/schedule/blocks/{block}'
  */
 destroy.delete = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -114,7 +114,7 @@ destroy.delete = (args: { block: number | { id: number } } | [block: number | { 
 
     /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:93
  * @route '/admin/schedule/blocks/{block}'
  */
     const destroyForm = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -129,7 +129,7 @@ destroy.delete = (args: { block: number | { id: number } } | [block: number | { 
 
             /**
 * @see \App\Http\Controllers\Admin\ScheduleSettingController::destroy
- * @see app/Http/Controllers/Admin/ScheduleSettingController.php:76
+ * @see app/Http/Controllers/Admin/ScheduleSettingController.php:93
  * @route '/admin/schedule/blocks/{block}'
  */
         destroyForm.delete = (args: { block: number | { id: number } } | [block: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
