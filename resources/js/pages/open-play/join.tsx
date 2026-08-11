@@ -2,7 +2,6 @@ import { Head, Link, router } from '@inertiajs/react';
 import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users } from 'lucide-react';
 import { useState } from 'react';
 
-import { BrandLogo } from '@/components/brand-logo';
 import { ReadOnlyBracketTree, ReadOnlyDoubleEliminationBracket } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
 import { PlayerSearchInput } from '@/components/player-search-input';
@@ -12,9 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { edit as editProfile } from '@/routes/profile';
-import { checkout as openPlayCheckout } from '@/routes/open-play';
+import { browse as openPlayBrowse, checkout as openPlayCheckout } from '@/routes/open-play';
 import { store as joinStore } from '@/routes/open-play/join';
-import { cn } from '@/lib/utils';
 import type { OpenPlaySession, Player } from '@/types/booking';
 
 type Props = {
@@ -35,7 +33,7 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
-function formatBracketFormat(format?: string | null): string {
+function formatBracketFormat(format?: string | null): string | null {
     switch (format) {
         case 'single_elimination':
             return 'Single Elimination Bracket';
@@ -44,7 +42,7 @@ function formatBracketFormat(format?: string | null): string {
         case 'round_robin':
             return 'Round Robin Tournament';
         default:
-            return null as unknown as string;
+            return null;
     }
 }
 
@@ -111,16 +109,8 @@ export default function OpenPlayJoin({
     return (
         <>
             <Head title={`Join ${session.title}`} />
-            <div className="min-h-screen bg-slate-50">
-                <header className="border-b border-slate-200 bg-brand-navy">
-                    <div className="mx-auto flex h-16 max-w-lg items-center px-4">
-                        <Link href="/">
-                            <BrandLogo imageClassName="size-9" showName nameClassName="text-white" />
-                        </Link>
-                    </div>
-                </header>
-
-                <main className="mx-auto flex max-w-lg flex-col gap-4 px-4 py-8">
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
                     <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white shadow-sm">
                         <Badge className="w-fit border-0 bg-white/15 text-white uppercase backdrop-blur-sm hover:bg-white/15">
                             Open play
@@ -245,11 +235,7 @@ export default function OpenPlayJoin({
                     )}
 
                     {isRegistered ? (
-                        <div
-                            className={cn(
-                                'flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800',
-                            )}
-                        >
+                        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
                             <CheckCircle2 className="size-5 shrink-0" />
                             <span className="font-semibold">
                                 You&apos;re registered for this session — see you on the court!
@@ -342,8 +328,15 @@ export default function OpenPlayJoin({
                             </CardContent>
                         </Card>
                     )}
-                </main>
+                </div>
             </div>
         </>
     );
 }
+
+OpenPlayJoin.layout = {
+    breadcrumbs: [
+        { title: 'Open play', href: openPlayBrowse() },
+        { title: 'Join', href: openPlayBrowse() },
+    ],
+};

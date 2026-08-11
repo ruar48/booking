@@ -1,19 +1,16 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import { CalendarDays, Clock, MapPin, Trophy } from 'lucide-react';
 
-import { BrandLogo } from '@/components/brand-logo';
 import {
     ReadOnlyBracketTree,
     ReadOnlyDoubleEliminationBracket,
 } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTime } from '@/lib/format';
 import { computeStandings } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
-import { dashboard, register } from '@/routes';
+import { browse as openPlayBrowse } from '@/routes/open-play';
 import type { OpenPlaySession } from '@/types/booking';
 
 type Props = {
@@ -41,8 +38,6 @@ function rankMedal(rank: number): string {
 }
 
 export default function OpenPlayShow({ session }: Props) {
-    const { auth } = usePage().props;
-
     const registrations = session.registrations ?? [];
     const matches = session.matches ?? [];
 
@@ -57,21 +52,8 @@ export default function OpenPlayShow({ session }: Props) {
     return (
         <>
             <Head title={`Open play — ${session.title}`} />
-            <div className="min-h-screen bg-slate-50">
-                <header className="border-b border-slate-200 bg-brand-navy">
-                    <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
-                        <Link href="/">
-                            <BrandLogo imageClassName="size-9" showName nameClassName="text-white" />
-                        </Link>
-                        <Button asChild variant="secondary" size="sm">
-                            <Link href={auth.user ? dashboard() : register()}>
-                                {auth.user ? 'My dashboard' : 'Join Open Play'}
-                            </Link>
-                        </Button>
-                    </div>
-                </header>
-
-                <main className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-8">
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
                     <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white">
                         <div className="space-y-2">
                             <span
@@ -199,8 +181,15 @@ export default function OpenPlayShow({ session }: Props) {
                             <span className="font-semibold">This session has wrapped up — see the final results above.</span>
                         </div>
                     )}
-                </main>
+                </div>
             </div>
         </>
     );
 }
+
+OpenPlayShow.layout = {
+    breadcrumbs: [
+        { title: 'Open play', href: openPlayBrowse() },
+        { title: 'Bracket', href: openPlayBrowse() },
+    ],
+};
