@@ -3,6 +3,7 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users } from 
 import { useState } from 'react';
 
 import { BrandLogo } from '@/components/brand-logo';
+import { ReadOnlyBracketTree, ReadOnlyDoubleEliminationBracket } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { edit as editProfile } from '@/routes/profile';
 import { checkout as openPlayCheckout } from '@/routes/open-play';
 import { store as joinStore } from '@/routes/open-play/join';
+import { cn } from '@/lib/utils';
 import type { OpenPlaySession, Player } from '@/types/booking';
 
 type Props = {
@@ -22,6 +24,7 @@ type Props = {
     paymentPending: boolean;
     isFull: boolean;
     needsProfile: boolean;
+    myRegistrationId: number | null;
 };
 
 function formatSkillLevel(level?: string): string {
@@ -32,6 +35,19 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
+function formatBracketFormat(format?: string | null): string {
+    switch (format) {
+        case 'single_elimination':
+            return 'Single Elimination Bracket';
+        case 'double_elimination':
+            return 'Double Elimination Bracket';
+        case 'round_robin':
+            return 'Round Robin Tournament';
+        default:
+            return null as unknown as string;
+    }
+}
+
 export default function OpenPlayJoin({
     session,
     registrationsCount,
@@ -39,6 +55,7 @@ export default function OpenPlayJoin({
     paymentPending,
     isFull,
     needsProfile,
+    myRegistrationId,
 }: Props) {
     const isDoublesSession = session.team_size === 'doubles';
     const requiresPayment = session.price_per_player != null && Number(session.price_per_player) > 0;
@@ -49,6 +66,20 @@ export default function OpenPlayJoin({
     const [error, setError] = useState<string | null>(null);
 
     const needsPartnerSelection = isDoublesSession && partnerMode === 'select';
+
+    const matches = session.matches ?? [];
+    const isSingleElim = session.bracket_format === 'single_elimination';
+    const isDoubleElim = session.bracket_format === 'double_elimination';
+    const hasBracketTree = isSingleElim || isDoubleElim;
+    const totalRounds = matches.length > 0 ? Math.max(...matches.map((m) => m.round)) : 0;
+    const isSessionComplete = matches.length > 0 && matches.every((m) => m.status === 'completed');
+    const bracketFormatLabel = formatBracketFormat(session.bracket_format);
+
+    const spotsLeft = session.max_players != null ? Math.max(session.max_players - registrationsCount, 0) : null;
+    const fillPct =
+        session.max_players != null && session.max_players > 0
+            ? Math.min(Math.round((registrationsCount / session.max_players) * 100), 100)
+            : null;
 
     const register = () => {
         if (needsPartnerSelection && !partner) {
@@ -90,46 +121,36 @@ export default function OpenPlayJoin({
                 </header>
 
                 <main className="mx-auto flex max-w-lg flex-col gap-4 px-4 py-8">
-                    <Card>
-                        <CardHeader>
-                            <Badge variant="secondary" className="w-fit uppercase">
-                                Open play
-                            </Badge>
-                            <CardTitle className="text-2xl">{session.title}</CardTitle>
-                            {session.description && (
-                                <p className="text-muted-foreground text-sm">{session.description}</p>
-                            )}
-                        </CardHeader>
-                        <CardContent className="space-y-3 text-sm">
-                            <div className="flex items-center gap-2 text-slate-700">
-                                <CalendarDays className="text-brand-court size-4 shrink-0" />
+                    <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white shadow-sm">
+                        <Badge className="w-fit border-0 bg-white/15 text-white uppercase backdrop-blur-sm hover:bg-white/15">
+                            Open play
+                        </Badge>
+                        <h1 className="mt-3 text-2xl font-bold sm:text-3xl">{session.title}</h1>
+                        {session.description && (
+                            <p className="mt-1 text-sm text-white/70">{session.description}</p>
+                        )}
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
+                                <CalendarDays className="size-3.5" />
                                 {formatDate(session.starts_at)}
-                            </div>
-                            <div className="flex items-center gap-2 text-slate-700">
-                                <Clock className="text-brand-court size-4 shrink-0" />
+                            </span>
+                            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
+                                <Clock className="size-3.5" />
                                 {formatTime(session.starts_at)}
                                 {session.ends_at && ` – ${formatTime(session.ends_at)}`}
-                            </div>
+                            </span>
                             {session.location && (
-                                <div className="flex items-center gap-2 text-slate-700">
-                                    <MapPin className="text-brand-court size-4 shrink-0" />
+                                <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
+                                    <MapPin className="size-3.5" />
                                     {session.location}
-                                </div>
+                                </span>
                             )}
-                            <div className="flex items-center gap-2 text-slate-700">
-                                <Users className="text-brand-court size-4 shrink-0" />
-                                {session.max_players
-                                    ? `${registrationsCount} / ${session.max_players} registered`
-                                    : `${registrationsCount} registered`}
-                            </div>
-                            {session.registration_closes_at && !session.is_registration_closed && (
-                                <div className="flex items-center gap-2 text-amber-700">
-                                    <Clock className="size-4 shrink-0" />
-                                    Registration closes {formatDate(session.registration_closes_at)}{' '}
-                                    {formatTime(session.registration_closes_at)}
-                                </div>
-                            )}
-                            <div className="flex flex-wrap gap-2 pt-1">
+                        </div>
+                    </div>
+
+                    <Card>
+                        <CardContent className="space-y-4 pt-6">
+                            <div className="flex flex-wrap gap-2">
                                 <Badge variant="outline">{formatSkillLevel(session.skill_level)}</Badge>
                                 <Badge variant="outline">{isDoublesSession ? '2v2 Doubles' : '1v1 Singles'}</Badge>
                                 {session.price_per_player != null && (
@@ -138,6 +159,38 @@ export default function OpenPlayJoin({
                                     </Badge>
                                 )}
                             </div>
+
+                            <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
+                                        <Users className="text-brand-court size-4" />
+                                        {session.max_players
+                                            ? `${registrationsCount} / ${session.max_players} registered`
+                                            : `${registrationsCount} registered`}
+                                    </span>
+                                    {spotsLeft !== null && (
+                                        <span className="text-muted-foreground text-xs">
+                                            {spotsLeft} spot{spotsLeft === 1 ? '' : 's'} left
+                                        </span>
+                                    )}
+                                </div>
+                                {fillPct !== null && (
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                                        <div
+                                            className="from-brand-lime h-full rounded-full bg-gradient-to-r to-emerald-500 transition-all"
+                                            style={{ width: `${fillPct}%` }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+
+                            {session.registration_closes_at && !session.is_registration_closed && (
+                                <div className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+                                    <Clock className="size-3.5 shrink-0" />
+                                    Registration closes {formatDate(session.registration_closes_at)}{' '}
+                                    {formatTime(session.registration_closes_at)}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -149,12 +202,54 @@ export default function OpenPlayJoin({
                             <OpenPlayRoster
                                 registrations={session.registrations ?? []}
                                 maxPlayers={session.max_players}
+                                myRegistrationId={myRegistrationId ?? undefined}
                             />
                         </CardContent>
                     </Card>
 
+                    {matches.length > 0 && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-base">Bracket</CardTitle>
+                                {bracketFormatLabel && (
+                                    <p className="text-muted-foreground text-xs">{bracketFormatLabel}</p>
+                                )}
+                            </CardHeader>
+                            <CardContent className="overflow-x-auto">
+                                {hasBracketTree ? (
+                                    isDoubleElim ? (
+                                        <ReadOnlyDoubleEliminationBracket
+                                            matches={matches}
+                                            registrationId={myRegistrationId ?? undefined}
+                                        />
+                                    ) : (
+                                        <ReadOnlyBracketTree
+                                            matches={matches}
+                                            totalRounds={totalRounds}
+                                            registrationId={myRegistrationId ?? undefined}
+                                        />
+                                    )
+                                ) : (
+                                    <p className="text-muted-foreground text-sm">
+                                        This is a round robin session — check the roster above for who&apos;s
+                                        playing.
+                                    </p>
+                                )}
+                                {isSessionComplete && (
+                                    <p className="mt-3 text-center text-xs font-medium text-slate-500">
+                                        This session has wrapped up.
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
+
                     {isRegistered ? (
-                        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
+                        <div
+                            className={cn(
+                                'flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800',
+                            )}
+                        >
                             <CheckCircle2 className="size-5 shrink-0" />
                             <span className="font-semibold">
                                 You&apos;re registered for this session — see you on the court!
