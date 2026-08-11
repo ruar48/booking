@@ -24,13 +24,19 @@ uses(RefreshDatabase::class);
  * api.paymongo.com and the inbound webhook signature are faked, exactly the
  * two things that differ between local/test and a real PayMongo account.
  */
-function fakePaymongoGateway(): void
+function fakePaymongoGateway(bool $includeExpiresAt = true): void
 {
     config([
         'services.paymongo.secret_key' => 'sk_test_fake',
         'services.paymongo.public_key' => 'pk_test_fake',
         'services.paymongo.webhook_secret' => 'whsec_fake',
     ]);
+
+    $code = ['image_url' => 'https://api.paymongo.com/qr/test.png'];
+
+    if ($includeExpiresAt) {
+        $code['expires_at'] = now()->addMinutes(15)->timestamp;
+    }
 
     Http::fake([
         'api.paymongo.com/v1/payment_intents' => Http::response([
@@ -46,10 +52,7 @@ function fakePaymongoGateway(): void
             'data' => [
                 'attributes' => [
                     'next_action' => [
-                        'code' => [
-                            'image_url' => 'https://api.paymongo.com/qr/test.png',
-                            'expires_at' => now()->addMinutes(15)->timestamp,
-                        ],
+                        'code' => $code,
                     ],
                 ],
             ],
@@ -204,4 +207,58 @@ it('lets a customer join a paid open play session, pay via QR Ph, and get regist
 
     // Step 5: the player now shows as registered when browsing/joining again.
     $this->get(route('open-play.join', $session))->assertOk();
+});
+
+it('keeps showing the same pending QR Ph payment across a refresh, even when PayMongo omits expires_at', function () {
+    // Regression test: qr_expires_at used to be stored as null whenever
+    // PayMongo's response didn't include an expires_at for the QR code,
+    // which made showCheckout()'s "reuse the still-valid pending payment"
+    // lookup (filtered on qr_expires_at > now()) never match — silently
+    // forcing a brand-new Payment/QR to be generated on every page refresh.
+    fakePaymongoGateway(includeExpiresAt: false);
+
+    $user = playerUser();
+    $resource = Resource::factory()->create([
+        'sport' => Sport::Pickleball,
+        'status' => ResourceStatus::Available,
+        'hourly_rate' => 500,
+    ]);
+
+    $startsAt = now()->addDay()->setTime(10, 0);
+    $endsAt = $startsAt->clone()->addHour();
+
+    DateOverride::query()->create([
+        'date' => $startsAt->toDateString(),
+        'is_closed' => false,
+        'open_time' => '08:00',
+        'close_time' => '22:00',
+    ]);
+
+    $this->actingAs($user);
+
+    $this->post(route('bookings.store'), [
+        'resource_id' => $resource->id,
+        'starts_at' => $startsAt->toDateTimeString(),
+        'ends_at' => $endsAt->toDateTimeString(),
+    ])->assertRedirect();
+
+    $booking = ResourceBooking::query()->where('resource_id', $resource->id)->firstOrFail();
+
+    $this->post(route('bookings.checkout.generate', $booking), [
+        'payment_method' => 'qrph',
+    ])->assertOk();
+
+    $payment = Payment::query()->where('payable_id', $booking->id)->firstOrFail();
+
+    expect($payment->qr_expires_at)->not->toBeNull()
+        ->and($payment->qr_expires_at->isFuture())->toBeTrue();
+
+    // Simulate a browser refresh landing back on the checkout page.
+    $this->get(route('bookings.checkout', $booking))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('qrPayment.id', $payment->id));
+
+    // Still only the one payment/QR — refreshing must not have generated a
+    // second one.
+    expect(Payment::query()->where('payable_id', $booking->id)->count())->toBe(1);
 });

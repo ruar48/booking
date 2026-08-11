@@ -13,6 +13,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PaymentService
 {
@@ -51,6 +52,13 @@ class PaymentService
             paymentMethod: PaymentMethod::Qrph->value,
         );
 
+        Log::info('paymongo.qr.generate.start', [
+            'payment_id' => $payment->id,
+            'payable_type' => $payable->getMorphClass(),
+            'payable_id' => $payable->getKey(),
+            'amount' => $amount,
+        ]);
+
         $amountCentavos = (int) round(((float) $amount) * 100);
 
         $intent = $this->paymongo->createPaymentIntent(
@@ -71,12 +79,31 @@ class PaymentService
 
         $code = $attached['attributes']['next_action']['code'] ?? null;
 
+        // PayMongo's QRPh response doesn't always include an expires_at for
+        // the code — without a fallback, qr_expires_at stays null and the
+        // "reuse the still-valid pending QR on refresh" lookup in
+        // ResourceBookingController::showCheckout() / OpenPlayJoinController
+        // (which filters on qr_expires_at > now()) would never match,
+        // silently forcing a brand-new payment/QR on every page reload.
+        $qrExpiresAt = isset($code['expires_at'])
+            ? Carbon::parse($code['expires_at'])
+            : now()->addMinutes(30);
+
         $payment->update([
             'paymongo_payment_intent_id' => $intent['id'],
             'paymongo_payment_method_id' => $paymentMethod['id'],
             'qr_code_url' => $code['image_url'] ?? null,
-            'qr_expires_at' => isset($code['expires_at']) ? Carbon::parse($code['expires_at']) : null,
+            'qr_expires_at' => $qrExpiresAt,
             'raw_response' => $attached,
+        ]);
+
+        Log::info('paymongo.qr.generate.done', [
+            'payment_id' => $payment->id,
+            'paymongo_payment_intent_id' => $intent['id'],
+            'has_qr_code_url' => ($code['image_url'] ?? null) !== null,
+            'code_keys' => $code ? array_keys($code) : null,
+            'expires_at_from_paymongo' => $code['expires_at'] ?? null,
+            'qr_expires_at_stored' => $qrExpiresAt->toIso8601String(),
         ]);
 
         return $payment->fresh();
@@ -107,6 +134,12 @@ class PaymentService
 
     public function markPaid(Payment $payment, ?string $paymentMethod = null): Payment
     {
+        Log::info('payment.mark_paid.start', [
+            'payment_id' => $payment->id,
+            'payable_type' => $payment->payable_type,
+            'payable_id' => $payment->payable_id,
+        ]);
+
         $payment = DB::transaction(function () use ($payment, $paymentMethod): Payment {
             $payment->update([
                 'status' => PaymentStatus::Paid,
