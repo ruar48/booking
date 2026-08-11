@@ -60,7 +60,13 @@ function fakePaymongoGateway(bool $includeExpiresAt = true): void
     ]);
 }
 
-function postPaymongoWebhook(string $paymentIntentId): \Illuminate\Testing\TestResponse
+/**
+ * livemode: true reproduces PayMongo's real header shape for a live payment
+ * - t=<ts>,te=,li=<signature> - te= is present but EMPTY, and the real
+ * signature is in li=. This is what tripped up production: the code required
+ * te to be non-empty before ever checking li.
+ */
+function postPaymongoWebhook(string $paymentIntentId, bool $livemode = false): \Illuminate\Testing\TestResponse
 {
     $secret = config('services.paymongo.webhook_secret');
     $timestamp = time();
@@ -77,8 +83,12 @@ function postPaymongoWebhook(string $paymentIntentId): \Illuminate\Testing\TestR
     $body = json_encode($payload);
     $signature = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
 
+    $header = $livemode
+        ? "t={$timestamp},te=,li={$signature}"
+        : "t={$timestamp},te={$signature},li=";
+
     return test()->postJson('/webhooks/paymongo', $payload, [
-        'Paymongo-Signature' => "t={$timestamp},te={$signature}",
+        'Paymongo-Signature' => $header,
     ]);
 }
 

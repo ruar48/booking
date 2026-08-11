@@ -107,7 +107,12 @@ class PaymongoWebhookController extends Controller
             $parts[$key] = $value;
         }
 
-        if (empty($parts['t']) || empty($parts['te'])) {
+        // PayMongo's header always includes both a te= (test-mode) and li=
+        // (live-mode) signature, but only one is actually populated — a live
+        // payment leaves te= empty and puts the real signature in li=. Only
+        // requiring te here rejected every live webhook before it ever
+        // reached the li fallback below.
+        if (empty($parts['t']) || (empty($parts['te']) && empty($parts['li']))) {
             return 'malformed_signature_header';
         }
 
@@ -145,7 +150,7 @@ class PaymongoWebhookController extends Controller
         }
 
         $timestamp = $parts['t'] ?? null;
-        $receivedSignature = $parts['te'] ?? $parts['li'] ?? null;
+        $receivedSignature = ! empty($parts['te']) ? $parts['te'] : ($parts['li'] ?? null);
 
         $expected = ($secret !== '' && $timestamp)
             ? hash_hmac('sha256', $timestamp.'.'.$request->getContent(), $secret)
