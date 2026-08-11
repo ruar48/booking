@@ -1,8 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    Calendar,
     CheckCircle2,
-    Clock,
     MapPin,
     PartyPopper,
     QrCode,
@@ -135,18 +133,14 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
     return (
         <>
             <Head title={`Checkout — Booking #${booking.id}`} />
-            <div className="flex flex-1 flex-col gap-6 p-4">
-                <div>
+            <div className="flex flex-1 flex-col gap-3 p-3 pb-20 md:pb-3 lg:gap-6 lg:p-4">
+                <div className="flex items-center gap-3">
                     <Button variant="outline" asChild size="sm">
                         <Link href={bookingsShow(booking)}>← Back</Link>
                     </Button>
-                </div>
-
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
-                    <p className="text-muted-foreground text-sm">
-                        Complete your booking payment to confirm your reservation.
-                    </p>
+                    <div className="min-w-0">
+                        <h1 className="truncate text-lg font-semibold tracking-tight lg:text-2xl">Checkout</h1>
+                    </div>
                 </div>
 
                 {isCancelled ? (
@@ -155,62 +149,14 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                     <>
                         <StepIndicator step={step} />
 
-                        <div className="grid gap-4 lg:grid-cols-2">
-                            <Card>
-                                <CardHeader>
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
-                                            <MapPin className="size-5" />
-                                        </div>
-                                        <div>
-                                            <CardTitle className="flex items-center gap-2">
-                                                Court Booking #{booking.id}
-                                                <StatusBadge status={booking.status} />
-                                            </CardTitle>
-                                            <p className="text-muted-foreground text-sm">
-                                                {booking.resource?.name ?? 'Court'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="bg-muted flex items-center gap-2 rounded-md p-3 text-sm font-medium">
-                                        <Calendar className="size-4" />
-                                        {formatDate(booking.starts_at)}
-                                        <span className="text-muted-foreground">·</span>
-                                        <Clock className="size-4" />
-                                        {formatTime(booking.starts_at)} – {formatTime(booking.ends_at)}
-                                    </div>
-
-                                    <div>
-                                        <p className="mb-2 text-sm font-semibold">Booking Summary</p>
-                                        <SummaryRow label="Date">{formatDate(booking.starts_at)}</SummaryRow>
-                                        <SummaryRow label="Time">
-                                            {formatTime(booking.starts_at)} – {formatTime(booking.ends_at)}
-                                        </SummaryRow>
-                                        <SummaryRow label="Court">{booking.resource?.name ?? '—'}</SummaryRow>
-                                        <SummaryRow label="Amount">
-                                            {booking.amount != null ? formatCurrency(booking.amount) : '—'}
-                                        </SummaryRow>
-                                    </div>
-
-                                    {step === 1 && paymentDeadline ? (
-                                        <div className="bg-amber-500/10 border-amber-500/20 rounded-md border p-3 text-sm">
-                                            <p className="font-medium text-amber-700 dark:text-amber-400">
-                                                Complete payment within{' '}
-                                                {deadline.label ?? '—'}
-                                            </p>
-                                            <p className="text-muted-foreground text-xs">
-                                                This booking will be automatically cancelled if payment
-                                                isn&apos;t received within that time.
-                                            </p>
-                                        </div>
-                                    ) : null}
-                                </CardContent>
-                            </Card>
-
+                        <div className="mx-auto w-full max-w-xl">
                             {step === 1 ? (
-                                <ReadyPanel onContinue={() => setStep(2)} />
+                                <BookingDetailsCard
+                                    booking={booking}
+                                    showDeadline={Boolean(paymentDeadline)}
+                                    deadlineLabel={deadline.label}
+                                    onContinue={() => setStep(2)}
+                                />
                             ) : step === 2 ? (
                                 <MethodAndPolicyPanel
                                     agreed={agreed}
@@ -235,16 +181,15 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                         </div>
 
                         {step !== 4 ? (
-                            <Card className="border-emerald-500/20 bg-emerald-500/5">
-                                <CardContent className="flex items-center gap-3 p-4">
-                                    <ShieldCheck className="size-5 shrink-0 text-emerald-600" />
+                            <Card className="border-emerald-500/20 bg-emerald-500/5 mx-auto w-full max-w-xl py-0">
+                                <CardContent className="flex items-center gap-2.5 p-3">
+                                    <ShieldCheck className="size-4.5 shrink-0 text-emerald-600" />
                                     <div>
-                                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                                        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                                             Secure &amp; Safe Payment
                                         </p>
-                                        <p className="text-muted-foreground text-xs">
-                                            Your payment is processed securely. We do not store your card
-                                            or wallet information.
+                                        <p className="text-muted-foreground text-[11px]">
+                                            We do not store your card or wallet information.
                                         </p>
                                     </div>
                                 </CardContent>
@@ -257,17 +202,56 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
     );
 }
 
-function ReadyPanel({ onContinue }: { onContinue: () => void }) {
+function BookingDetailsCard({
+    booking,
+    showDeadline,
+    deadlineLabel,
+    onContinue,
+}: {
+    booking: ResourceBooking;
+    showDeadline: boolean;
+    deadlineLabel: string | null;
+    onContinue: () => void;
+}) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Booking Details</CardTitle>
+        <Card className="gap-3 py-4">
+            <CardHeader className="px-4">
+                <div className="flex items-center gap-2.5">
+                    <div className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center rounded-lg">
+                        <MapPin className="size-4.5" />
+                    </div>
+                    <div className="min-w-0">
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            Court Booking #{booking.id}
+                            <StatusBadge status={booking.status} />
+                        </CardTitle>
+                        <p className="text-muted-foreground text-xs">{booking.resource?.name ?? 'Court'}</p>
+                    </div>
+                </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm">
-                    Your reservation is held while you complete payment. Review the details on the
-                    left, then continue to choose how you&apos;d like to pay.
-                </p>
+            <CardContent className="space-y-3 px-4">
+                <div>
+                    <SummaryRow label="Date">{formatDate(booking.starts_at)}</SummaryRow>
+                    <SummaryRow label="Time">
+                        {formatTime(booking.starts_at)} – {formatTime(booking.ends_at)}
+                    </SummaryRow>
+                    <SummaryRow label="Court">{booking.resource?.name ?? '—'}</SummaryRow>
+                    <SummaryRow label="Amount">
+                        {booking.amount != null ? formatCurrency(booking.amount) : '—'}
+                    </SummaryRow>
+                </div>
+
+                {showDeadline ? (
+                    <div className="bg-amber-500/10 border-amber-500/20 rounded-md border p-2.5 text-xs">
+                        <p className="font-medium text-amber-700 dark:text-amber-400">
+                            Complete payment within {deadlineLabel ?? '—'}
+                        </p>
+                        <p className="text-muted-foreground">
+                            Automatically cancelled if payment isn&apos;t received in time.
+                        </p>
+                    </div>
+                ) : null}
+
                 <Button className="w-full" onClick={onContinue}>
                     Continue
                 </Button>
@@ -290,41 +274,31 @@ function MethodAndPolicyPanel({
     onContinue: () => void;
 }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Payment Method</CardTitle>
+        <Card className="gap-3 py-4">
+            <CardHeader className="px-4">
+                <CardTitle className="text-base">Payment Method</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-3">
+            <CardContent className="space-y-3 px-4">
+                <div className="grid grid-cols-3 gap-2">
                     <PaymentOption icon={QrCode} label="QR Ph" description="Any bank or e-wallet" selected />
                     <PaymentOption icon={Smartphone} label="GCash" description="Coming soon" disabled />
                     <PaymentOption icon={Wallet} label="Maya" description="Coming soon" disabled />
                 </div>
 
-                <Card className="bg-muted/40">
-                    <CardContent className="space-y-2 p-4 text-sm">
-                        <div className="flex items-center justify-between">
-                            <p className="font-semibold">Payment &amp; Refund Policy</p>
-                            <Badge variant="outline" className="text-[10px]">
-                                Draft — subject to change
+                <Card className="bg-muted/40 py-0">
+                    <CardContent className="space-y-1.5 p-3 text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-semibold">Payment &amp; Refund Policy</p>
+                            <Badge variant="outline" className="text-[9px]">
+                                Draft
                             </Badge>
                         </div>
-                        <ul className="text-muted-foreground list-inside list-disc space-y-1 text-xs">
-                            <li>Your booking is confirmed only once payment is received in full.</li>
-                            <li>
-                                Payments are non-refundable once your booking is confirmed, except when
-                                the venue cancels, reschedules, or cannot honor your reservation.
-                            </li>
-                            <li>
-                                If payment isn&apos;t completed within the time shown, your booking is
-                                automatically cancelled and you will not be charged.
-                            </li>
-                            <li>
-                                For rescheduling requests or payment disputes, please contact the venue
-                                directly.
-                            </li>
+                        <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
+                            <li>Confirmed only once payment is received in full.</li>
+                            <li>Non-refundable once confirmed, except if the venue cancels or reschedules.</li>
+                            <li>Unpaid bookings are auto-cancelled after the time shown.</li>
                         </ul>
-                        <label className="flex items-start gap-2 pt-2 text-sm">
+                        <label className="flex items-start gap-2 pt-1 text-xs">
                             <Checkbox
                                 checked={agreed}
                                 onCheckedChange={(checked) => onAgreedChange(checked === true)}
@@ -367,20 +341,20 @@ function PaymentOption({
     return (
         <div
             className={cn(
-                'relative flex flex-col items-center gap-1.5 rounded-lg border p-3 text-center',
+                'relative flex flex-col items-center gap-1 rounded-lg border p-2 text-center',
                 disabled ? 'opacity-50' : '',
                 selected && !disabled ? 'border-primary ring-primary/20 ring-2' : 'border-border',
             )}
         >
             {disabled ? (
-                <Badge variant="outline" className="absolute -top-2 -right-2 text-[9px]">
+                <Badge variant="outline" className="absolute -top-2 -right-2 text-[8px] px-1">
                     Soon
                 </Badge>
             ) : null}
-            <Icon className="text-primary size-5" />
+            <Icon className="text-primary size-4.5" />
             <div>
-                <p className="text-xs font-medium">{label}</p>
-                <p className="text-muted-foreground text-[10px]">{description}</p>
+                <p className="text-[11px] font-medium">{label}</p>
+                <p className="text-muted-foreground hidden text-[10px] sm:block">{description}</p>
             </div>
         </div>
     );
@@ -404,46 +378,38 @@ function PaymentPanel({
     onRefresh: (label: string) => void;
 }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle>Pay with QR Ph</CardTitle>
+        <Card className="gap-3 py-4">
+            <CardHeader className="px-4">
+                <CardTitle className="text-base">Pay with QR Ph</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-                <p className="text-muted-foreground text-sm">
-                    Scan the QR code using your bank or e-wallet app.
-                </p>
-
-                <div className="flex flex-col items-center gap-3 py-2">
+            <CardContent className="space-y-3 px-4">
+                <div className="flex flex-col items-center gap-2">
                     {qrPayment?.qrCodeUrl ? (
                         <img
                             src={qrPayment.qrCodeUrl}
                             alt="QR Ph payment code"
-                            className="size-56 rounded-lg border p-2"
+                            className="size-44 rounded-lg border p-2"
                         />
                     ) : (
-                        <div className="text-muted-foreground flex size-56 items-center justify-center rounded-lg border text-sm">
+                        <div className="text-muted-foreground flex size-44 items-center justify-center rounded-lg border text-sm">
                             {generating ? 'Generating QR…' : 'Preparing payment…'}
                         </div>
                     )}
+                    {countdownLabel ? (
+                        <p className="text-muted-foreground text-center text-xs">
+                            Complete within{' '}
+                            <span className="text-foreground font-medium">{countdownLabel}</span>
+                        </p>
+                    ) : null}
                 </div>
 
-                {countdownLabel ? (
-                    <p className="text-muted-foreground text-center text-xs">
-                        Complete payment within{' '}
-                        <span className="text-foreground font-medium">{countdownLabel}</span> or this
-                        booking will be automatically cancelled.
-                    </p>
-                ) : null}
-
-                <div className="bg-amber-500/10 border-amber-500/20 space-y-1 rounded-md border p-3 text-sm">
+                <div className="bg-amber-500/10 border-amber-500/20 space-y-1 rounded-md border p-2.5 text-xs">
                     <p className="font-medium text-amber-700 dark:text-amber-400">Payment Instructions:</p>
                     <ol className="text-muted-foreground list-inside list-decimal space-y-0.5">
-                        <li>Open your GCash or e-wallet app.</li>
-                        <li>Tap on Scan QR.</li>
+                        <li>Open your GCash or e-wallet app and tap Scan QR.</li>
                         <li>Scan the QR code above.</li>
                         <li>
-                            Confirm the payment amount
-                            {amount != null ? ` (${formatCurrency(amount)})` : ''}.
+                            Confirm the amount{amount != null ? ` (${formatCurrency(amount)})` : ''}.
                         </li>
                     </ol>
                 </div>
@@ -452,21 +418,24 @@ function PaymentPanel({
                     <CheckCircle2 className="size-4" />
                     I&apos;ve Paid
                 </Button>
-                <button
-                    type="button"
-                    disabled={refreshing}
-                    onClick={() => onRefresh('Refresh')}
-                    className="text-muted-foreground hover:text-foreground mx-auto block text-xs disabled:opacity-50"
-                >
-                    {refreshing ? 'Checking…' : 'Refresh payment status'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onBack}
-                    className="text-muted-foreground hover:text-foreground mx-auto block text-xs"
-                >
-                    ← Change payment method
-                </button>
+                <div className="flex items-center justify-center gap-3">
+                    <button
+                        type="button"
+                        disabled={refreshing}
+                        onClick={() => onRefresh('Refresh')}
+                        className="text-muted-foreground hover:text-foreground text-xs disabled:opacity-50"
+                    >
+                        {refreshing ? 'Checking…' : 'Refresh status'}
+                    </button>
+                    <span className="text-muted-foreground text-xs">·</span>
+                    <button
+                        type="button"
+                        onClick={onBack}
+                        className="text-muted-foreground hover:text-foreground text-xs"
+                    >
+                        ← Change method
+                    </button>
+                </div>
             </CardContent>
         </Card>
     );
@@ -519,20 +488,20 @@ function StepIndicator({ step }: { step: Step }) {
         <div className="mx-auto flex w-full max-w-xl items-center">
             {steps.map((s, index) => (
                 <div key={s.number} className="flex flex-1 items-center last:flex-none">
-                    <div className="flex flex-col items-center gap-1.5">
+                    <div className="flex flex-col items-center gap-1">
                         <div
                             className={cn(
-                                'flex size-8 items-center justify-center rounded-full text-sm font-semibold',
+                                'flex size-6 items-center justify-center rounded-full text-xs font-semibold lg:size-8 lg:text-sm',
                                 s.number <= step
                                     ? 'bg-emerald-500 text-white'
                                     : 'bg-muted text-muted-foreground',
                             )}
                         >
-                            {s.number < step ? <CheckCircle2 className="size-4" /> : s.number}
+                            {s.number < step ? <CheckCircle2 className="size-3.5 lg:size-4" /> : s.number}
                         </div>
                         <span
                             className={cn(
-                                'text-xs whitespace-nowrap',
+                                'text-[10px] whitespace-nowrap lg:text-xs',
                                 s.number <= step ? 'font-medium' : 'text-muted-foreground',
                             )}
                         >
@@ -542,7 +511,7 @@ function StepIndicator({ step }: { step: Step }) {
                     {index < steps.length - 1 ? (
                         <div
                             className={cn(
-                                'mx-2 h-0.5 flex-1',
+                                'mx-1.5 h-0.5 flex-1 lg:mx-2',
                                 s.number < step ? 'bg-emerald-500' : 'bg-muted',
                             )}
                         />
@@ -555,7 +524,7 @@ function StepIndicator({ step }: { step: Step }) {
 
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
-        <div className="flex items-center justify-between gap-4 border-b py-2 text-sm last:border-0">
+        <div className="flex items-center justify-between gap-4 border-b py-1.5 text-sm last:border-0">
             <span className="text-muted-foreground">{label}</span>
             <span className="font-medium">{children}</span>
         </div>

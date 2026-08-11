@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { edit as editProfile } from '@/routes/profile';
+import { checkout as openPlayCheckout } from '@/routes/open-play';
 import { store as joinStore } from '@/routes/open-play/join';
 import type { OpenPlaySession, Player } from '@/types/booking';
 
@@ -18,6 +19,7 @@ type Props = {
     session: OpenPlaySession;
     registrationsCount: number;
     isRegistered: boolean;
+    paymentPending: boolean;
     isFull: boolean;
     needsProfile: boolean;
 };
@@ -30,8 +32,16 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
-export default function OpenPlayJoin({ session, registrationsCount, isRegistered, isFull, needsProfile }: Props) {
+export default function OpenPlayJoin({
+    session,
+    registrationsCount,
+    isRegistered,
+    paymentPending,
+    isFull,
+    needsProfile,
+}: Props) {
     const isDoublesSession = session.team_size === 'doubles';
+    const requiresPayment = session.price_per_player != null && Number(session.price_per_player) > 0;
 
     const [partnerMode, setPartnerMode] = useState<'select' | 'random'>('select');
     const [partner, setPartner] = useState<Player | null>(null);
@@ -49,12 +59,13 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
         setError(null);
 
         // The controller redirects back to this same page with fresh props
-        // (isRegistered/registrationsCount/isFull), so there's no need to
-        // guess the outcome client-side — including for the "already
-        // registered" / "session full" rejection paths, which are also
-        // plain redirects rather than HTTP errors. Omitting partner_player_id
-        // (random mode) tells the server to pair with another random
-        // sign-up, or wait solo until someone else does.
+        // (isRegistered/registrationsCount/isFull) for free sessions, or to
+        // the payment checkout page when the session charges a fee — so
+        // there's no need to guess the outcome client-side, including for
+        // the "already registered" / "session full" rejection paths, which
+        // are also plain redirects rather than HTTP errors. Omitting
+        // partner_player_id (random mode) tells the server to pair with
+        // another random sign-up, or wait solo until someone else does.
         router.post(
             joinStore(session).url,
             { partner_player_id: needsPartnerSelection ? partner?.id : null },
@@ -149,6 +160,18 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                                 You&apos;re registered for this session — see you on the court!
                             </span>
                         </div>
+                    ) : paymentPending ? (
+                        <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
+                            <div className="flex items-center gap-3">
+                                <TriangleAlert className="size-5 shrink-0" />
+                                <span className="font-semibold">
+                                    You have a registration awaiting payment for this session.
+                                </span>
+                            </div>
+                            <Button asChild size="sm" className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark">
+                                <Link href={openPlayCheckout(session)}>Resume payment</Link>
+                            </Button>
+                        </div>
                     ) : needsProfile ? (
                         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
                             <div className="flex items-center gap-3">
@@ -219,7 +242,7 @@ export default function OpenPlayJoin({ session, registrationsCount, isRegistered
                                     onClick={register}
                                     disabled={processing || (needsPartnerSelection && !partner)}
                                 >
-                                    Register for this session
+                                    {requiresPayment ? 'Continue to Payment' : 'Register for this session'}
                                 </Button>
                             </CardContent>
                         </Card>

@@ -47,6 +47,7 @@ export type OpenPlayRegistration = {
     player_id: number;
     partner_player_id: number | null;
     payment_status: 'unpaid' | 'pending' | 'paid' | 'refunded' | 'failed';
+    amount?: number | string | null;
     player?: Player;
     partner?: Player | null;
     creator?: { id: number; name: string } | null;

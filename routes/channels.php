@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\OpenPlayRegistration;
 use App\Models\ResourceBooking;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -11,4 +12,12 @@ Broadcast::channel('bookings.{id}', function ($user, $id) {
     $booking = ResourceBooking::find($id);
 
     return $booking && ((int) $user->id === (int) $booking->user_id || $user->isVenueAdmin());
+});
+
+Broadcast::channel('open-play-registrations.{id}', function ($user, $id) {
+    $registration = OpenPlayRegistration::find($id);
+
+    $playerIds = $user->players()->pluck('id');
+
+    return $registration && ($playerIds->contains($registration->player_id) || $user->isVenueAdmin());
 });

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Enums\TeamSize;
 use App\Models\OpenPlaySession;
 use App\Models\OpenPlayRegistration;
@@ -10,22 +11,32 @@ use App\Models\Player;
 class OpenPlayRegistrationService
 {
     /**
-     * @return string|null An error message, or null on success.
+     * Registers a player for a session. If the session charges a fee, the
+     * registration is created unpaid and doesn't hold a roster slot (and
+     * doubles random-pairing is deferred) until payment succeeds — see
+     * PaymentService::markPaid(), which calls pairRandomly() afterward.
+     *
+     * @return OpenPlayRegistration|string The new registration, or an error message.
      */
-    public function register(OpenPlaySession $event, Player $player, ?Player $partner, int $createdBy): ?string
+    public function register(OpenPlaySession $event, Player $player, ?Player $partner, int $createdBy): OpenPlayRegistration|string
     {
         if ($this->isRegistered($event, $player)) {
             return 'This player is already registered for this session.';
         }
 
+        $requiresPayment = $event->price_per_player !== null && (float) $event->price_per_player > 0;
+        $attributes = [
+            'payment_status' => $requiresPayment ? PaymentStatus::Unpaid : PaymentStatus::Paid,
+            'amount' => $requiresPayment ? $event->price_per_player : 0,
+        ];
+
         if ($event->team_size !== TeamSize::Doubles) {
-            OpenPlayRegistration::query()->create([
+            return OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $event->id,
                 'player_id' => $player->id,
                 'created_by' => $createdBy,
+                ...$attributes,
             ]);
-
-            return null;
         }
 
         if ($partner !== null) {
@@ -37,37 +48,30 @@ class OpenPlayRegistrationService
                 return 'Your partner is already registered for this session.';
             }
 
-            OpenPlayRegistration::query()->create([
+            return OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $event->id,
                 'player_id' => $player->id,
                 'partner_player_id' => $partner->id,
                 'created_by' => $createdBy,
+                ...$attributes,
             ]);
-
-            return null;
         }
 
-        // No partner specified — pair with whoever is already waiting for a
-        // random partner, or register solo and wait to be paired.
-        $waitingSolo = $event->registrations()
-            ->whereNull('partner_player_id')
-            ->where('player_id', '!=', $player->id)
-            ->oldest('id')
-            ->first();
-
-        if ($waitingSolo !== null) {
-            $waitingSolo->update(['partner_player_id' => $player->id]);
-
-            return null;
-        }
-
-        OpenPlayRegistration::query()->create([
+        // No partner specified — register solo and wait to be paired. Free
+        // sessions pair immediately below; paid sessions wait until this
+        // player's payment succeeds (see PaymentService::markPaid()).
+        $registration = OpenPlayRegistration::query()->create([
             'open_play_session_id' => $event->id,
             'player_id' => $player->id,
             'created_by' => $createdBy,
+            ...$attributes,
         ]);
 
-        return null;
+        if (! $requiresPayment) {
+            $this->pairRandomly($event);
+        }
+
+        return $registration;
     }
 
     /**
@@ -101,7 +105,7 @@ class OpenPlayRegistrationService
         $registered = 0;
 
         foreach ($candidates as $player) {
-            if ($this->register($event, $player, null, $createdBy) === null) {
+            if (! is_string($this->register($event, $player, null, $createdBy))) {
                 $registered++;
             }
         }
@@ -124,7 +128,12 @@ class OpenPlayRegistrationService
             return 0;
         }
 
-        $solos = $event->registrations()->whereNull('partner_player_id')->get()->shuffle()->values();
+        $solos = $event->registrations()
+            ->whereNull('partner_player_id')
+            ->where('payment_status', PaymentStatus::Paid)
+            ->get()
+            ->shuffle()
+            ->values();
         $pairsFormed = 0;
 
         while ($solos->count() >= 2) {

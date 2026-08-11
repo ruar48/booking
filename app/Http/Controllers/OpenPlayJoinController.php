@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PaymentStatus;
 use App\Models\OpenPlaySession;
 use App\Models\OpenPlayRegistration;
 use App\Models\Player;
 use App\Services\OpenPlayRegistrationService;
+use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +17,7 @@ class OpenPlayJoinController extends Controller
 {
     public function __construct(
         private readonly OpenPlayRegistrationService $registrationService,
+        private readonly PaymentService $paymentService,
     ) {}
 
     public function browse(Request $request): Response
@@ -23,8 +26,9 @@ class OpenPlayJoinController extends Controller
         $playerIds = $user->players()->pluck('id');
 
         $sessions = OpenPlaySession::query()
-            ->withCount('registrations')
+            ->withCount(['registrations as registrations_count' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid)])
             ->with([
+                'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
                 'registrations.player.user:id,name',
                 'registrations.partner.user:id,name',
             ])
@@ -47,6 +51,7 @@ class OpenPlayJoinController extends Controller
     public function show(OpenPlaySession $open_play): Response
     {
         $open_play->load([
+            'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
             'registrations.player:id,user_id',
             'registrations.player.user:id,name',
             'registrations.partner:id,user_id',
@@ -73,6 +78,7 @@ class OpenPlayJoinController extends Controller
 
         $registration = OpenPlayRegistration::query()
             ->where('open_play_session_id', $open_play->id)
+            ->where('payment_status', PaymentStatus::Paid)
             ->where(fn ($query) => $query
                 ->whereIn('player_id', $playerIds)
                 ->orWhereIn('partner_player_id', $playerIds))
@@ -83,6 +89,7 @@ class OpenPlayJoinController extends Controller
         }
 
         $open_play->load([
+            'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
             'registrations.player:id,user_id',
             'registrations.player.user:id,name',
             'registrations.partner:id,user_id',
@@ -106,27 +113,30 @@ class OpenPlayJoinController extends Controller
 
     public function join(Request $request, OpenPlaySession $open_play): Response
     {
-        $registrationsCount = $open_play->registrations()->count();
-
         $player = $request->user()->players()->first();
 
-        $isRegistered = $player !== null && $open_play->registrations()
-            ->where(fn ($query) => $query
-                ->where('player_id', $player->id)
-                ->orWhere('partner_player_id', $player->id))
-            ->exists();
+        $myRegistration = $player !== null
+            ? OpenPlayRegistration::query()
+                ->where('open_play_session_id', $open_play->id)
+                ->where(fn ($query) => $query
+                    ->where('player_id', $player->id)
+                    ->orWhere('partner_player_id', $player->id))
+                ->first()
+            : null;
+
+        $registrationsCount = $open_play->registrations()->where('payment_status', PaymentStatus::Paid)->count();
 
         $open_play->load([
-            'registrations.player:id,user_id',
+            'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
             'registrations.player.user:id,name',
-            'registrations.partner:id,user_id',
             'registrations.partner.user:id,name',
         ]);
 
         return Inertia::render('open-play/join', [
             'session' => $open_play,
             'registrationsCount' => $registrationsCount,
-            'isRegistered' => $isRegistered,
+            'isRegistered' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Paid,
+            'paymentPending' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Unpaid,
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
             'needsProfile' => $player === null || $player->birthdate === null,
         ]);
@@ -140,7 +150,7 @@ class OpenPlayJoinController extends Controller
             return back();
         }
 
-        $registrationsCount = $open_play->registrations()->count();
+        $registrationsCount = $open_play->registrations()->where('payment_status', PaymentStatus::Paid)->count();
 
         if ($open_play->max_players !== null && $registrationsCount >= $open_play->max_players) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This session is full.')]);
@@ -162,20 +172,99 @@ class OpenPlayJoinController extends Controller
             return to_route('profile.edit');
         }
 
+        $pendingRegistration = OpenPlayRegistration::query()
+            ->where('open_play_session_id', $open_play->id)
+            ->where('player_id', $player->id)
+            ->where('payment_status', PaymentStatus::Unpaid)
+            ->exists();
+
+        if ($pendingRegistration) {
+            return to_route('open-play.checkout', $open_play);
+        }
+
         $partner = isset($validated['partner_player_id'])
             ? Player::query()->findOrFail($validated['partner_player_id'])
             : null;
 
-        $error = $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
+        $result = $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
 
-        if ($error !== null) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __($error)]);
+        if (is_string($result)) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __($result)]);
 
             return back();
+        }
+
+        if ($result->payment_status === PaymentStatus::Unpaid) {
+            return to_route('open-play.checkout', $open_play);
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __("You're registered! See you on the court.")]);
 
         return back();
+    }
+
+    public function showCheckout(Request $request, OpenPlaySession $open_play): RedirectResponse|Response
+    {
+        $registration = $this->unpaidRegistrationFor($request, $open_play);
+
+        if ($registration === null) {
+            return to_route('open-play.join', $open_play);
+        }
+
+        $pendingPayment = $registration->payments()
+            ->where('status', PaymentStatus::Pending)
+            ->where('qr_expires_at', '>', now())
+            ->latest()
+            ->first();
+
+        return Inertia::render('open-play/checkout', [
+            'session' => $open_play,
+            'registration' => $registration,
+            'qrPayment' => $pendingPayment ? [
+                'id' => $pendingPayment->id,
+                'qrCodeUrl' => $pendingPayment->qr_code_url,
+                'expiresAt' => $pendingPayment->qr_expires_at,
+            ] : null,
+        ]);
+    }
+
+    public function checkout(Request $request, OpenPlaySession $open_play): RedirectResponse|Response
+    {
+        $request->validate([
+            'payment_method' => ['required', 'in:qrph'],
+        ]);
+
+        $registration = $this->unpaidRegistrationFor($request, $open_play);
+
+        if ($registration === null) {
+            return to_route('open-play.join', $open_play);
+        }
+
+        $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration($registration, $request->user());
+
+        return Inertia::render('open-play/checkout', [
+            'session' => $open_play,
+            'registration' => $registration,
+            'qrPayment' => [
+                'id' => $payment->id,
+                'qrCodeUrl' => $payment->qr_code_url,
+                'expiresAt' => $payment->qr_expires_at,
+            ],
+        ]);
+    }
+
+    private function unpaidRegistrationFor(Request $request, OpenPlaySession $open_play): ?OpenPlayRegistration
+    {
+        $player = $request->user()->players()->first();
+
+        if ($player === null) {
+            return null;
+        }
+
+        return OpenPlayRegistration::query()
+            ->where('open_play_session_id', $open_play->id)
+            ->where('player_id', $player->id)
+            ->where('payment_status', PaymentStatus::Unpaid)
+            ->first();
     }
 }

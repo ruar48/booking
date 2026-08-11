@@ -6,9 +6,11 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\PaymentSuccessful;
+use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -16,23 +18,44 @@ class PaymentService
 {
     public function __construct(
         private readonly PaymongoService $paymongo,
+        private readonly OpenPlayRegistrationService $openPlayRegistrations,
     ) {}
 
     public function createQrphPaymentForBooking(ResourceBooking $booking, User $user): Payment
     {
+        return $this->createQrphPayment(
+            payable: $booking,
+            user: $user,
+            amount: (string) $booking->amount,
+            description: "Payment for booking #{$booking->id}",
+        );
+    }
+
+    public function createQrphPaymentForOpenPlayRegistration(OpenPlayRegistration $registration, User $user): Payment
+    {
+        return $this->createQrphPayment(
+            payable: $registration,
+            user: $user,
+            amount: (string) $registration->amount,
+            description: "Open Play registration #{$registration->id}",
+        );
+    }
+
+    private function createQrphPayment(Model $payable, User $user, string $amount, string $description): Payment
+    {
         $payment = $this->create(
             userId: $user->id,
-            payable: $booking,
-            amount: (string) $booking->amount,
+            payable: $payable,
+            amount: $amount,
             currency: 'PHP',
             paymentMethod: PaymentMethod::Qrph->value,
         );
 
-        $amountCentavos = (int) round(((float) $booking->amount) * 100);
+        $amountCentavos = (int) round(((float) $amount) * 100);
 
         $intent = $this->paymongo->createPaymentIntent(
             amountCentavos: $amountCentavos,
-            description: "Payment for booking #{$booking->id}",
+            description: $description,
         );
 
         $paymentMethod = $this->paymongo->createPaymentMethod([
@@ -52,7 +75,7 @@ class PaymentService
             'paymongo_payment_intent_id' => $intent['id'],
             'paymongo_payment_method_id' => $paymentMethod['id'],
             'qr_code_url' => $code['image_url'] ?? null,
-            'qr_expires_at' => isset($code['expires_at']) ? now()->createFromTimestamp($code['expires_at']) : null,
+            'qr_expires_at' => isset($code['expires_at']) ? Carbon::parse($code['expires_at']) : null,
             'raw_response' => $attached,
         ]);
 
@@ -101,6 +124,10 @@ class PaymentService
                 }
 
                 $payable->update($updates);
+
+                if ($payable instanceof OpenPlayRegistration) {
+                    $this->openPlayRegistrations->pairRandomly($payable->openPlaySession);
+                }
             }
 
             return $payment->fresh();

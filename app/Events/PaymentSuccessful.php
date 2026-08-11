@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
 use Illuminate\Broadcasting\Channel;
@@ -29,13 +30,11 @@ class PaymentSuccessful implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
-        if (! $this->payment->payable instanceof ResourceBooking) {
-            return [];
-        }
-
-        return [
-            new PrivateChannel("bookings.{$this->payment->payable_id}"),
-        ];
+        return match (true) {
+            $this->payment->payable instanceof ResourceBooking => [new PrivateChannel("bookings.{$this->payment->payable_id}")],
+            $this->payment->payable instanceof OpenPlayRegistration => [new PrivateChannel("open-play-registrations.{$this->payment->payable_id}")],
+            default => [],
+        };
     }
 
     public function broadcastAs(): string
@@ -48,9 +47,16 @@ class PaymentSuccessful implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
-        return [
-            'booking_id' => $this->payment->payable_id,
-            'payment_status' => 'paid',
-        ];
+        return match (true) {
+            $this->payment->payable instanceof ResourceBooking => [
+                'booking_id' => $this->payment->payable_id,
+                'payment_status' => 'paid',
+            ],
+            $this->payment->payable instanceof OpenPlayRegistration => [
+                'registration_id' => $this->payment->payable_id,
+                'payment_status' => 'paid',
+            ],
+            default => ['payment_status' => 'paid'],
+        };
     }
 }

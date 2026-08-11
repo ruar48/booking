@@ -32,11 +32,11 @@ export function formatRelative(value?: string | null): string {
     return formatDistanceToNow(parseISO(value), { addSuffix: true });
 }
 
-export function formatCurrency(amount?: number | null): string {
+export function formatCurrency(amount?: number | string | null): string {
     return new Intl.NumberFormat('en-PH', {
         style: 'currency',
         currency: 'PHP',
-    }).format(amount ?? 0);
+    }).format(amount != null ? Number(amount) : 0);
 }
 
 export function formatStatusLabel(status: string): string {
