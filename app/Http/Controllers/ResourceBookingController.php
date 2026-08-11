@@ -12,10 +12,8 @@ use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
 use App\Models\DateOverride;
-use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
-use App\Models\ScheduleBlock;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\PaymentService;
@@ -293,18 +291,23 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('viewAny', ResourceBooking::class);
 
-        $start = $request->filled('start') ? Carbon::parse($request->input('start')) : null;
-        $end = $request->filled('end') ? Carbon::parse($request->input('end')) : null;
+        $start = $request->filled('start') ? Carbon::parse($request->input('start')) : Carbon::now()->startOfMonth();
+        $end = $request->filled('end') ? Carbon::parse($request->input('end')) : Carbon::now()->endOfMonth();
+
+        // The calendar grid pads out to full weeks, so it also renders a few
+        // days from the adjacent months. Fetch data for that wider range too
+        // (matching the frontend's Sunday-start week grid), otherwise those
+        // padding days always render as closed/empty regardless of their
+        // actual DateOverride/booking state.
+        $rangeStart = $start->copy()->startOfWeek(Carbon::SUNDAY);
+        $rangeEnd = $end->copy()->endOfWeek(Carbon::SATURDAY);
 
         $dateOverrides = DateOverride::query()
-            ->whereBetween('date', [
-                ($start ?? now()->startOfMonth())->toDateString(),
-                ($end ?? now()->endOfMonth())->toDateString(),
-            ])
+            ->whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
             ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
         return Inertia::render('bookings/calendar', [
-            'bookings' => $this->resourceBookingRepository->getForCalendar($start, $end),
+            'bookings' => $this->resourceBookingRepository->getForCalendar($rangeStart, $rangeEnd),
             'dateOverrides' => $dateOverrides,
             'filters' => $request->only(['start', 'end']),
         ]);
@@ -317,6 +320,8 @@ class ResourceBookingController extends Controller
         $validated = $request->validate([
             'date' => ['required', 'date'],
             'reason' => ['nullable', 'string', 'max:255'],
+            'redirect_start' => ['nullable', 'date'],
+            'redirect_end' => ['nullable', 'date'],
         ]);
 
         DateOverride::query()->updateOrCreate(
@@ -332,7 +337,7 @@ class ResourceBookingController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Date closed. Members cannot book on this date until it is reopened.')]);
 
-        return back();
+        return $this->redirectToCalendar($validated);
     }
 
     public function reopenDate(Request $request): RedirectResponse
@@ -343,6 +348,8 @@ class ResourceBookingController extends Controller
             'date' => ['required', 'date', 'after_or_equal:today'],
             'open_time' => ['required', 'date_format:H:i'],
             'close_time' => ['required', 'date_format:H:i', 'after:open_time'],
+            'redirect_start' => ['nullable', 'date'],
+            'redirect_end' => ['nullable', 'date'],
         ]);
 
         DateOverride::query()->updateOrCreate(
@@ -358,7 +365,22 @@ class ResourceBookingController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Date opened for bookings.')]);
 
-        return back();
+        return $this->redirectToCalendar($validated);
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function redirectToCalendar(array $validated): RedirectResponse
+    {
+        if (empty($validated['redirect_start']) || empty($validated['redirect_end'])) {
+            return back();
+        }
+
+        return redirect()->route('bookings.calendar', [
+            'start' => $validated['redirect_start'],
+            'end' => $validated['redirect_end'],
+        ]);
     }
 
     /**
@@ -396,13 +418,6 @@ class ResourceBookingController extends Controller
             ->with('resource:id,name')
             ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
 
-        $scheduleBlocks = ScheduleBlock::query()
-            ->where('ends_at', '>=', now()->startOfDay())
-            ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'reason']);
-
-        $recurringLocks = RecurringScheduleLock::query()
-            ->get(['id', 'resource_id', 'day_of_week', 'starts_at', 'ends_at', 'reason']);
-
         $dateOverrides = DateOverride::query()
             ->where('date', '>=', now()->startOfDay())
             ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
@@ -410,8 +425,6 @@ class ResourceBookingController extends Controller
         return [
             'resources' => $resources,
             'bookedSlots' => $bookedSlots,
-            'scheduleBlocks' => $scheduleBlocks,
-            'recurringLocks' => $recurringLocks,
             'dateOverrides' => $dateOverrides,
             'canManage' => request()->user()?->isVenueAdmin() ?? false,
         ];

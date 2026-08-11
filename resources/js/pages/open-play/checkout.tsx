@@ -3,7 +3,6 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldC
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { BrandLogo } from '@/components/brand-logo';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useOpenPlayPaymentChannel } from '@/hooks/use-open-play-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { join as openPlayJoin } from '@/routes/open-play';
+import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
 import openPlayCheckout from '@/routes/open-play/checkout';
 import type { OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
 
@@ -80,16 +79,8 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
     return (
         <>
             <Head title={`Checkout — ${session.title}`} />
-            <div className="min-h-screen bg-slate-50">
-                <header className="border-b border-slate-200 bg-brand-navy">
-                    <div className="mx-auto flex h-16 max-w-lg items-center px-4">
-                        <Link href="/">
-                            <BrandLogo imageClassName="size-9" showName nameClassName="text-white" />
-                        </Link>
-                    </div>
-                </header>
-
-                <main className="mx-auto flex max-w-lg flex-col gap-3 px-3 py-6 pb-20">
+            <div className="flex flex-1 flex-col gap-4 p-4">
+                <div className="mx-auto flex w-full max-w-lg flex-col gap-3 pb-16">
                     <StepIndicator step={step} />
 
                     {step === 1 ? (
@@ -128,11 +119,18 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                             </CardContent>
                         </Card>
                     ) : null}
-                </main>
+                </div>
             </div>
         </>
     );
 }
+
+OpenPlayCheckout.layout = {
+    breadcrumbs: [
+        { title: 'Open play', href: openPlayBrowse() },
+        { title: 'Checkout', href: openPlayBrowse() },
+    ],
+};
 
 function PaymentMethodCard({
     session,
@@ -267,10 +265,10 @@ function PayCard({
                     </ol>
                 </div>
 
-                <Button className="w-full" disabled={refreshing} onClick={() => onRefresh("I've Paid")}>
-                    <CheckCircle2 className="size-4" />
-                    I&apos;ve Paid
-                </Button>
+                <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
+                    <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
+                    Waiting for payment — this page updates automatically once it's received.
+                </div>
                 <button
                     type="button"
                     disabled={refreshing}

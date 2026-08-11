@@ -9,10 +9,8 @@ use App\Events\BookingApproved;
 use App\Events\BookingCancelled;
 use App\Exceptions\BookingConflictException;
 use App\Models\DateOverride;
-use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
-use App\Models\ScheduleBlock;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -124,31 +122,6 @@ class ResourceBookingService
 
         if ($resource === null || $resource->status !== ResourceStatus::Available) {
             throw new BookingConflictException('This court/table is currently unavailable.');
-        }
-
-        $isBlocked = ScheduleBlock::query()
-            ->where(fn ($query) => $query
-                ->whereNull('resource_id')
-                ->orWhere('resource_id', $resourceId))
-            ->where('starts_at', '<', $endsAt)
-            ->where('ends_at', '>', $startsAt)
-            ->exists();
-
-        if ($isBlocked) {
-            throw new BookingConflictException('This time slot is blocked.');
-        }
-
-        $isRecurringLocked = RecurringScheduleLock::query()
-            ->where(fn ($query) => $query
-                ->whereNull('resource_id')
-                ->orWhere('resource_id', $resourceId))
-            ->where('day_of_week', $startsAt->dayOfWeek)
-            ->where('starts_at', '<', $endsAt->format('H:i:s'))
-            ->where('ends_at', '>', $startsAt->format('H:i:s'))
-            ->exists();
-
-        if ($isRecurringLocked) {
-            throw new BookingConflictException('This time slot is locked.');
         }
 
         // Dates are closed for booking by default: a resource can only be booked

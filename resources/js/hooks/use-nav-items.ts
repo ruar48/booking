@@ -2,7 +2,6 @@ import {
     Calendar,
     CalendarClock,
     CalendarDays,
-    Clock,
     CreditCard,
     Dumbbell,
     LayoutGrid,
@@ -16,7 +15,6 @@ import {
 
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { dashboard } from '@/routes';
-import { index as adminScheduleIndex } from '@/routes/admin/schedule';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
@@ -69,10 +67,7 @@ export function useNavItems(): NavItems {
         : [];
 
     const adminNavItems: NavItem[] = isVenueAdmin
-        ? [
-              { title: 'Schedule', href: adminScheduleIndex(), icon: Clock },
-              { title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings },
-          ]
+        ? [{ title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings }]
         : [];
 
     return { homeHref, mainNavItems, manageNavItems, adminNavItems };

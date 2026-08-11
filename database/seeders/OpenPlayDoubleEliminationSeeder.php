@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\BracketGenerationMode;
 use App\Enums\MatchStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\OpenPlaySession;
@@ -55,6 +56,8 @@ class OpenPlayDoubleEliminationSeeder extends Seeder
         $entries = $members->map(fn (Player $player) => OpenPlayRegistration::query()->create([
             'open_play_session_id' => $session->id,
             'player_id' => $player->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $session->price_per_player ?? 0,
             'created_by' => $owner?->id,
         ]))->values();
 

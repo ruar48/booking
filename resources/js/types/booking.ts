@@ -79,16 +79,6 @@ export type BookedSlot = {
     resource?: Pick<Resource, 'id' | 'name'>;
 };
 
-export type ScheduleBlock = {
-    id: number;
-    resource_id: number | null;
-    starts_at: string;
-    ends_at: string;
-    reason?: string | null;
-    resource?: Pick<Resource, 'id' | 'name'> | null;
-    creator?: { id: number; name: string } | null;
-};
-
 export type DateOverride = {
     id: number;
     date: string;
@@ -96,17 +86,6 @@ export type DateOverride = {
     open_time: string | null;
     close_time: string | null;
     reason?: string | null;
-};
-
-export type RecurringScheduleLock = {
-    id: number;
-    resource_id: number | null;
-    day_of_week: number;
-    starts_at: string;
-    ends_at: string;
-    reason?: string | null;
-    resource?: Pick<Resource, 'id' | 'name'> | null;
-    creator?: { id: number; name: string } | null;
 };
 
 export type Player = {
@@ -360,7 +339,6 @@ export type VenueProfile = {
     state?: string | null;
     postal_code?: string | null;
     country?: string | null;
-    operating_hours?: Record<string, { open: string; close: string } | null> | null;
     amenities?: string[] | null;
     gallery?: string[] | null;
 };
@@ -388,7 +366,6 @@ export type DashboardStats = {
     bookings_this_month: number;
     members_new_this_week: number;
     courts_available: number;
-    operating_window_minutes: number;
 };
 
 export type BookingStatusBreakdownPoint = {

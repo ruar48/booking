@@ -19,11 +19,15 @@ class SettingController extends Controller
         $settings = Setting::query()
             ->orderBy('group')
             ->orderBy('key')
+            ->where(fn ($query) => $query
+                ->where('group', '!=', 'bookings')
+                ->orWhere('key', '!=', 'unpaid_cancel_minutes'))
             ->get()
             ->groupBy('group');
 
         return Inertia::render('admin/settings/index', [
             'settings' => $settings,
+            'unpaidCancelMinutes' => $this->unpaidCancelMinutes(),
         ]);
     }
 
@@ -53,5 +57,33 @@ class SettingController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Settings updated.')]);
 
         return back();
+    }
+
+    public function updatePaymentWindow(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->hasRole(Role::SuperAdmin->value), 403);
+
+        $validated = $request->validate([
+            'minutes' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        Setting::query()->updateOrCreate(
+            ['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'],
+            ['value' => $validated['minutes'] ?? null],
+        );
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment window updated.')]);
+
+        return back();
+    }
+
+    private function unpaidCancelMinutes(): ?int
+    {
+        $value = Setting::query()
+            ->where('group', 'bookings')
+            ->where('key', 'unpaid_cancel_minutes')
+            ->value('value');
+
+        return $value !== null ? (int) $value : null;
     }
 }

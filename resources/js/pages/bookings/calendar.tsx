@@ -47,30 +47,16 @@ import { calendar, create, show, index as bookingsIndex } from '@/routes/booking
 import { closeDate, reopenDate } from '@/routes/bookings/calendar';
 import type { DateOverride, ResourceBooking } from '@/types/booking';
 
-type OperatingHours = Record<
-    string,
-    { open: string | null; close: string | null; closed: boolean }
-> | null;
-
 type Props = {
     bookings: ResourceBooking[];
     dateOverrides: DateOverride[];
-    operatingHours: OperatingHours;
     filters: {
         start?: string;
         end?: string;
     };
 };
 
-function defaultHoursFor(date: string, operatingHours: OperatingHours) {
-    const weekday = format(parseISO(date), 'EEEE').toLowerCase();
-    const day = operatingHours?.[weekday];
-
-    return {
-        open: day?.open ?? '07:00',
-        close: day?.close ?? '22:00',
-    };
-}
+const DEFAULT_HOURS = { open: '07:00', close: '22:00' };
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -82,7 +68,7 @@ const statusDotClasses: Record<string, string> = {
     completed: 'bg-blue-500',
 };
 
-export default function BookingsCalendar({ bookings, dateOverrides, operatingHours, filters }: Props) {
+export default function BookingsCalendar({ bookings, dateOverrides, filters }: Props) {
     const anchorDate = filters.start ? parseISO(filters.start) : new Date();
     const [monthCursor, setMonthCursor] = useState(startOfMonth(anchorDate));
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -341,7 +327,8 @@ export default function BookingsCalendar({ bookings, dateOverrides, operatingHou
                     date={selectedDate}
                     override={overridesByDate.get(selectedDate)}
                     dayBookings={grouped.get(selectedDate) ?? []}
-                    operatingHours={operatingHours}
+                    redirectStart={format(startOfMonth(monthCursor), 'yyyy-MM-dd')}
+                    redirectEnd={format(endOfMonth(monthCursor), 'yyyy-MM-dd')}
                     onClose={() => setSelectedDate(null)}
                 />
             )}
@@ -353,28 +340,33 @@ function DateOverrideDialog({
     date,
     override,
     dayBookings,
-    operatingHours,
+    redirectStart,
+    redirectEnd,
     onClose,
 }: {
     date: string;
     override?: DateOverride;
     dayBookings: ResourceBooking[];
-    operatingHours: OperatingHours;
+    redirectStart: string;
+    redirectEnd: string;
     onClose: () => void;
 }) {
     const wasOpen = override?.is_closed === false;
     const [isOpen, setIsOpen] = useState(wasOpen);
-    const suggested = defaultHoursFor(date, operatingHours);
 
     const openForm = useForm({
         date,
-        open_time: override?.open_time?.slice(0, 5) ?? suggested.open ?? '07:00',
-        close_time: override?.close_time?.slice(0, 5) ?? suggested.close ?? '22:00',
+        open_time: override?.open_time?.slice(0, 5) ?? DEFAULT_HOURS.open,
+        close_time: override?.close_time?.slice(0, 5) ?? DEFAULT_HOURS.close,
+        redirect_start: redirectStart,
+        redirect_end: redirectEnd,
     });
 
     const closeForm = useForm({
         date,
         reason: override?.reason ?? '',
+        redirect_start: redirectStart,
+        redirect_end: redirectEnd,
     });
 
     function submit(e: FormEvent) {

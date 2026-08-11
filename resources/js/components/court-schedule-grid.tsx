@@ -23,7 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
-import type { BookedSlot, DateOverride, RecurringScheduleLock, Resource, ScheduleBlock } from '@/types/booking';
+import type { BookedSlot, DateOverride, Resource } from '@/types/booking';
 
 export type WalkInCustomerPayload =
     | { mode: 'existing'; user_id: number }
@@ -40,8 +40,6 @@ type SlotSelection = {
 type Props = {
     courts: Resource[];
     bookedSlots: BookedSlot[];
-    scheduleBlocks?: ScheduleBlock[];
-    recurringLocks?: RecurringScheduleLock[];
     dateOverrides?: DateOverride[];
     isAuthenticated: boolean;
     processing?: boolean;
@@ -167,57 +165,9 @@ function slotIsBooked(
     });
 }
 
-function slotIsBlocked(
-    courtId: number,
-    date: string,
-    slot: string,
-    scheduleBlocks: ScheduleBlock[],
-): boolean {
-    const slotStart = new Date(`${date}T${slot}:00`);
-    const slotEnd = new Date(slotStart);
-    slotEnd.setHours(slotEnd.getHours() + 1);
-
-    return scheduleBlocks.some((block) => {
-        if (block.resource_id !== null && block.resource_id !== courtId) {
-            return false;
-        }
-
-        const blockStart = parseISO(block.starts_at);
-        const blockEnd = parseISO(block.ends_at);
-
-        return slotStart < blockEnd && slotEnd > blockStart;
-    });
-}
-
 function slotIsPast(date: string, slot: string): boolean {
     const slotStart = new Date(`${date}T${slot}:00`);
     return slotStart <= new Date();
-}
-
-function slotIsRecurringLocked(
-    courtId: number,
-    date: string,
-    slot: string,
-    recurringLocks: RecurringScheduleLock[],
-): boolean {
-    const slotStart = slotToMinutes(slot);
-    const slotEnd = slotStart + 60;
-    const dayOfWeek = parseISO(`${date}T12:00:00`).getDay();
-
-    return recurringLocks.some((lock) => {
-        if (lock.resource_id !== null && lock.resource_id !== courtId) {
-            return false;
-        }
-
-        if (lock.day_of_week !== dayOfWeek) {
-            return false;
-        }
-
-        const lockStart = slotToMinutes(lock.starts_at);
-        const lockEnd = slotToMinutes(lock.ends_at);
-
-        return slotStart < lockEnd && slotEnd > lockStart;
-    });
 }
 
 function formatSlotRange(slot: string): string {
@@ -244,8 +194,6 @@ function capitalize(value: string): string {
 export function CourtScheduleGrid({
     courts,
     bookedSlots,
-    scheduleBlocks = [],
-    recurringLocks = [],
     dateOverrides = [],
     isAuthenticated,
     processing = false,
@@ -312,14 +260,6 @@ export function CourtScheduleGrid({
         }
 
         if (slotIsBooked(court.id, selectedDate, slot, bookedSlots)) {
-            return;
-        }
-
-        if (slotIsBlocked(court.id, selectedDate, slot, scheduleBlocks)) {
-            return;
-        }
-
-        if (slotIsRecurringLocked(court.id, selectedDate, slot, recurringLocks)) {
             return;
         }
 
@@ -556,10 +496,6 @@ export function CourtScheduleGrid({
                     <span className="size-4 rounded border border-slate-200 bg-slate-100" />
                     Booked
                 </span>
-                <span className="flex items-center gap-2">
-                    <span className="size-4 rounded border border-slate-300 bg-slate-200" />
-                    Locked
-                </span>
             </div>
 
             {availableSports.length > 1 && (
@@ -652,24 +588,12 @@ export function CourtScheduleGrid({
                                             slot,
                                             bookedSlots,
                                         );
-                                        const blocked = slotIsBlocked(
-                                            court.id,
-                                            selectedDate,
-                                            slot,
-                                            scheduleBlocks,
-                                        );
-                                        const locked = slotIsRecurringLocked(
-                                            court.id,
-                                            selectedDate,
-                                            slot,
-                                            recurringLocks,
-                                        );
                                         const past = slotIsPast(selectedDate, slot);
                                         const selected = selectedKeys.has(
                                             selectionKey(court.id, slot),
                                         );
                                         const disabled =
-                                            unavailable || booked || blocked || locked || past;
+                                            unavailable || booked || past;
 
                                         return (
                                             <td key={court.id} className="p-1">
@@ -683,7 +607,7 @@ export function CourtScheduleGrid({
                                                         'w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
                                                         disabled &&
                                                             'cursor-not-allowed bg-slate-100 text-slate-400',
-                                                        (blocked || locked || unavailable || past) &&
+                                                        (unavailable || past) &&
                                                             !booked &&
                                                             'bg-slate-200 text-slate-500',
                                                         !disabled &&
@@ -700,13 +624,9 @@ export function CourtScheduleGrid({
                                                           ? 'Unavailable'
                                                           : past
                                                             ? 'Passed'
-                                                            : locked
-                                                              ? 'Locked'
-                                                              : blocked
-                                                                ? 'Blocked'
-                                                                : selected
-                                                                  ? 'Selected'
-                                                                  : 'Open'}
+                                                            : selected
+                                                              ? 'Selected'
+                                                              : 'Open'}
                                                 </button>
                                             </td>
                                         );

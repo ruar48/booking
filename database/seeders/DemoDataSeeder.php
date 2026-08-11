@@ -20,11 +20,9 @@ use App\Models\OpenPlaySession;
 use App\Models\Payment;
 use App\Models\Player;
 use App\Models\Product;
-use App\Models\RecurringScheduleLock;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Sale;
-use App\Models\ScheduleBlock;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\OpenPlayBracketService;
@@ -44,20 +42,6 @@ class DemoDataSeeder extends Seeder
             'password' => $password,
         ]);
         $owner->assignRole(RoleEnum::SuperAdmin);
-
-        Setting::query()->create([
-            'group' => 'schedule',
-            'key' => 'operating_hours',
-            'value' => [
-                'monday' => ['open' => '07:00', 'close' => '23:00'],
-                'tuesday' => ['open' => '07:00', 'close' => '23:00'],
-                'wednesday' => ['open' => '07:00', 'close' => '23:00'],
-                'thursday' => ['open' => '07:00', 'close' => '23:00'],
-                'friday' => ['open' => '07:00', 'close' => '23:00'],
-                'saturday' => ['open' => '07:00', 'close' => '23:00'],
-                'sunday' => ['open' => '07:00', 'close' => '23:00'],
-            ],
-        ]);
 
         Setting::query()->create([
             'group' => 'venue',
@@ -197,6 +181,8 @@ class DemoDataSeeder extends Seeder
 
         $doublesEntry = OpenPlayRegistration::query()->create([
             'open_play_session_id' => $fridaySession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $fridaySession->price_per_player ?? 0,
             'player_id' => $members[0]->id,
             'partner_player_id' => $members[1]->id,
             'created_by' => $owner->id,
@@ -204,12 +190,16 @@ class DemoDataSeeder extends Seeder
 
         $singleEntryA = OpenPlayRegistration::query()->create([
             'open_play_session_id' => $fridaySession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $fridaySession->price_per_player ?? 0,
             'player_id' => $members[2]->id,
             'created_by' => $owner->id,
         ]);
 
         $singleEntryB = OpenPlayRegistration::query()->create([
             'open_play_session_id' => $fridaySession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $fridaySession->price_per_player ?? 0,
             'player_id' => $members[3]->id,
             'created_by' => $owner->id,
         ]);
@@ -247,12 +237,16 @@ class DemoDataSeeder extends Seeder
 
         OpenPlayRegistration::query()->create([
             'open_play_session_id' => $saturdaySession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $saturdaySession->price_per_player ?? 0,
             'player_id' => $members[0]->id,
             'created_by' => $owner->id,
         ]);
 
         OpenPlayRegistration::query()->create([
             'open_play_session_id' => $saturdaySession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $saturdaySession->price_per_player ?? 0,
             'player_id' => $members[2]->id,
             'created_by' => $owner->id,
         ]);
@@ -264,18 +258,24 @@ class DemoDataSeeder extends Seeder
 
         OpenPlayRegistration::query()->create([
             'open_play_session_id' => $bracketSession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $bracketSession->price_per_player ?? 0,
             'player_id' => $members[1]->id,
             'created_by' => $owner->id,
         ]);
 
         OpenPlayRegistration::query()->create([
             'open_play_session_id' => $bracketSession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $bracketSession->price_per_player ?? 0,
             'player_id' => $members[2]->id,
             'created_by' => $owner->id,
         ]);
 
         OpenPlayRegistration::query()->create([
             'open_play_session_id' => $bracketSession->id,
+            'payment_status' => PaymentStatus::Paid,
+            'amount' => $bracketSession->price_per_player ?? 0,
             'player_id' => $members[3]->id,
             'created_by' => $owner->id,
         ]);
@@ -310,6 +310,8 @@ class DemoDataSeeder extends Seeder
         foreach ([[4, 5], [6, 7], [8, 9], [10, 11]] as [$a, $b]) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $doublesMixer->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $doublesMixer->price_per_player ?? 0,
                 'player_id' => $members[$a]->id,
                 'partner_player_id' => $members[$b]->id,
                 'created_by' => $owner->id,
@@ -345,6 +347,8 @@ class DemoDataSeeder extends Seeder
         foreach (range(0, 7) as $index) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $knockoutSession->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $knockoutSession->price_per_player ?? 0,
                 'player_id' => $members[$index]->id,
                 'created_by' => $owner->id,
             ]);
@@ -392,6 +396,8 @@ class DemoDataSeeder extends Seeder
         foreach ([12, 13, 14] as $index) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $beginnerSession->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $beginnerSession->price_per_player ?? 0,
                 'player_id' => $members[$index]->id,
                 'created_by' => $owner->id,
             ]);
@@ -411,6 +417,8 @@ class DemoDataSeeder extends Seeder
         foreach (range(0, 3) as $index) {
             $manualEntries->push(OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $manualSession->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $manualSession->price_per_player ?? 0,
                 'player_id' => $members[$index]->id,
                 'created_by' => $owner->id,
             ]));
@@ -453,6 +461,8 @@ class DemoDataSeeder extends Seeder
         foreach ([5, 7, 9, 11] as $index) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $singlesLadder->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $singlesLadder->price_per_player ?? 0,
                 'player_id' => $members[$index]->id,
                 'created_by' => $owner->id,
             ]);
@@ -492,6 +502,8 @@ class DemoDataSeeder extends Seeder
         foreach ([0, 6, 8, 13] as $index) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $singlesKnockout->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $singlesKnockout->price_per_player ?? 0,
                 'player_id' => $members[$index]->id,
                 'created_by' => $owner->id,
             ]);
@@ -545,6 +557,8 @@ class DemoDataSeeder extends Seeder
         foreach ([[12, 13], [14, 15], [0, 5]] as [$a, $b]) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $doublesSocial->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $doublesSocial->price_per_player ?? 0,
                 'player_id' => $members[$a]->id,
                 'partner_player_id' => $members[$b]->id,
                 'created_by' => $owner->id,
@@ -585,6 +599,8 @@ class DemoDataSeeder extends Seeder
         foreach ([[1, 8], [2, 9], [3, 10], [4, 11]] as [$a, $b]) {
             OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $doublesKnockout->id,
+                'payment_status' => PaymentStatus::Paid,
+                'amount' => $doublesKnockout->price_per_player ?? 0,
                 'player_id' => $members[$a]->id,
                 'partner_player_id' => $members[$b]->id,
                 'created_by' => $owner->id,
@@ -697,43 +713,6 @@ class DemoDataSeeder extends Seeder
             });
 
         // -----------------------------------------------------------------
-        // Schedule blocks & recurring locks (Admin > Schedule page).
-        // -----------------------------------------------------------------
-        ScheduleBlock::query()->create([
-            'resource_id' => $courts[1]->id,
-            'starts_at' => now()->addDays(6)->setTime(9, 0),
-            'ends_at' => now()->addDays(6)->setTime(13, 0),
-            'reason' => 'Court resurfacing maintenance',
-            'created_by' => $owner->id,
-        ]);
-
-        ScheduleBlock::query()->create([
-            'resource_id' => null,
-            'starts_at' => now()->addDays(20)->setTime(0, 0),
-            'ends_at' => now()->addDays(20)->setTime(23, 59),
-            'reason' => 'Club closed — public holiday',
-            'created_by' => $owner->id,
-        ]);
-
-        RecurringScheduleLock::query()->create([
-            'resource_id' => $courts[0]->id,
-            'day_of_week' => 1,
-            'starts_at' => '12:00',
-            'ends_at' => '13:00',
-            'reason' => 'Weekly court cleaning',
-            'created_by' => $owner->id,
-        ]);
-
-        RecurringScheduleLock::query()->create([
-            'resource_id' => null,
-            'day_of_week' => 0,
-            'starts_at' => '06:00',
-            'ends_at' => '07:00',
-            'reason' => 'Facility inspection',
-            'created_by' => $owner->id,
-        ]);
-
-        // -----------------------------------------------------------------
         // More announcements for the club feed.
         // -----------------------------------------------------------------
         Announcement::factory()->published()->create([
@@ -764,7 +743,6 @@ class DemoDataSeeder extends Seeder
             ['user' => $owner, 'action' => 'sale.voided', 'type' => Sale::class, 'days' => 3],
             ['user' => $owner, 'action' => 'product.restocked', 'type' => Product::class, 'days' => 3],
             ['user' => $owner, 'action' => 'announcement.published', 'type' => Announcement::class, 'days' => 2],
-            ['user' => $owner, 'action' => 'schedule.block_created', 'type' => ScheduleBlock::class, 'days' => 2],
             ['user' => $members->first()->user, 'action' => 'auth.login', 'type' => null, 'days' => 1],
             ['user' => $owner, 'action' => 'payment.marked_paid', 'type' => Payment::class, 'days' => 0],
             ['user' => $owner, 'action' => 'open_play.bracket_generated', 'type' => OpenPlaySession::class, 'days' => 1],

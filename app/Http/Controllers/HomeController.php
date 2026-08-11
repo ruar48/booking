@@ -73,11 +73,6 @@ class HomeController extends Controller
             ->where('key', 'profile')
             ->value('value') ?? [];
 
-        $operatingHours = Setting::query()
-            ->where('group', 'schedule')
-            ->where('key', 'operating_hours')
-            ->value('value');
-
-        return [...$profile, 'operating_hours' => $operatingHours];
+        return $profile;
     }
 }

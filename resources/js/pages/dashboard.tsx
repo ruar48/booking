@@ -221,8 +221,8 @@ export default function Dashboard({ data }: Props) {
                     />
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                    <Card className="lg:col-span-2">
+                <div>
+                    <Card>
                         <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <CardTitle>Revenue</CardTitle>
@@ -292,25 +292,6 @@ export default function Dashboard({ data }: Props) {
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Today's court usage</CardTitle>
-                            <CardDescription>Share of operating hours booked</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {resourceAvailability.length ? (
-                                resourceAvailability.map((resource) => (
-                                    <OccupancyBar
-                                        key={resource.id}
-                                        name={resource.name}
-                                        percentage={occupancyPercentage(resource, stats.operating_window_minutes)}
-                                    />
-                                ))
-                            ) : (
-                                <p className="text-muted-foreground text-sm">No courts configured</p>
-                            )}
-                        </CardContent>
-                    </Card>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-3">
@@ -552,19 +533,6 @@ function pctChange(current: number, previous: number): number | null {
     return Math.round(((current - previous) / previous) * 100);
 }
 
-function occupancyPercentage(resource: Resource, windowMinutes: number): number {
-    if (!windowMinutes) {
-        return 0;
-    }
-
-    const bookedMinutes = (resource.bookings ?? []).reduce(
-        (sum, booking) => sum + differenceInMinutes(parseISO(booking.ends_at), parseISO(booking.starts_at)),
-        0,
-    );
-
-    return Math.min(100, Math.round((bookedMinutes / windowMinutes) * 100));
-}
-
 function getLiveStatus(resource: Resource, now: Date): LiveStatus {
     if (resource.status !== 'available') {
         return 'other';
@@ -637,23 +605,6 @@ function TrendText({ value, label }: { value: number | null; label: string }) {
             {value}%
             <span className="text-muted-foreground">{label}</span>
         </span>
-    );
-}
-
-function OccupancyBar({ name, percentage }: { name: string; percentage: number }) {
-    return (
-        <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">{name}</span>
-                <span className="text-muted-foreground tabular-nums">{percentage}%</span>
-            </div>
-            <div className="bg-muted h-2 overflow-hidden rounded-full">
-                <div
-                    className="h-full rounded-full"
-                    style={{ width: `${percentage}%`, backgroundColor: 'var(--chart-2)' }}
-                />
-            </div>
-        </div>
     );
 }
 

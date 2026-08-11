@@ -55,45 +55,10 @@ type Props = {
     dateOverrides?: DateOverride[];
 };
 
-const DAY_ORDER = [
-    'monday',
-    'tuesday',
-    'wednesday',
-    'thursday',
-    'friday',
-    'saturday',
-    'sunday',
-] as const;
-
-const DAY_LABELS: Record<(typeof DAY_ORDER)[number], string> = {
-    monday: 'Monday',
-    tuesday: 'Tuesday',
-    wednesday: 'Wednesday',
-    thursday: 'Thursday',
-    friday: 'Friday',
-    saturday: 'Saturday',
-    sunday: 'Sunday',
-};
-
 function venueAddress(venue: VenueProfile): string {
     return [venue.address_line_1, venue.city, venue.state, venue.postal_code]
         .filter(Boolean)
         .join(', ');
-}
-
-function formatHoursRange(open?: string | null, close?: string | null): string {
-    if (!open || !close) {
-        return 'Closed';
-    }
-
-    const toLabel = (time: string) => {
-        const [hour, minute] = time.split(':').map(Number);
-        const date = new Date();
-        date.setHours(hour, minute, 0, 0);
-        return format(date, 'ha').toLowerCase();
-    };
-
-    return `${toLabel(open)} to ${toLabel(close)}`;
 }
 
 function formatSkillLevel(level?: string): string {
@@ -292,7 +257,6 @@ function HeroLanding({
 }
 
 function AboutTab({ venue }: { venue: VenueProfile }) {
-    const hours = venue.operating_hours ?? {};
     const amenities = venue.amenities ?? [];
 
     return (
@@ -334,35 +298,6 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                                 <span>{venueAddress(venue)}</span>
                             </div>
                         )}
-                    </CardContent>
-                </Card>
-
-                <Card className="border-slate-200 shadow-sm">
-                    <CardHeader className="flex flex-row items-center gap-2 pb-3">
-                        <Clock className="size-5 text-brand-court" />
-                        <CardTitle className="text-base">Operating hours</CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-2 sm:grid-cols-2">
-                        {DAY_ORDER.map((day) => {
-                            const schedule = hours[day];
-                            if (!schedule) {
-                                return null;
-                            }
-
-                            return (
-                                <div
-                                    key={day}
-                                    className="flex justify-between gap-4 text-sm"
-                                >
-                                    <span className="font-medium text-slate-700">
-                                        {DAY_LABELS[day]}
-                                    </span>
-                                    <span className="text-slate-500">
-                                        {formatHoursRange(schedule.open, schedule.close)}
-                                    </span>
-                                </div>
-                            );
-                        })}
                     </CardContent>
                 </Card>
 

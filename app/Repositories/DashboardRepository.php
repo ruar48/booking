@@ -13,9 +13,7 @@ use App\Models\Player;
 use App\Models\Ranking;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
-use App\Models\Setting;
 use App\Models\Tournament;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -74,7 +72,6 @@ class DashboardRepository implements DashboardRepositoryInterface
                 ->where('created_at', '>=', now()->startOfWeek())
                 ->count(),
             'courts_available' => (clone $resourcesQuery)->where('status', 'available')->count(),
-            'operating_window_minutes' => $this->todaysOperatingWindowMinutes(),
         ];
     }
 
@@ -95,25 +92,6 @@ class DashboardRepository implements DashboardRepositoryInterface
             ->filter(fn (array $row) => $row['count'] > 0)
             ->values()
             ->all();
-    }
-
-    private function todaysOperatingWindowMinutes(): int
-    {
-        $hours = Setting::query()
-            ->where('group', 'schedule')
-            ->where('key', 'operating_hours')
-            ->value('value');
-
-        $today = $hours[strtolower(now()->format('l'))] ?? null;
-
-        if (! $today || ($today['closed'] ?? false) || empty($today['open']) || empty($today['close'])) {
-            return 14 * 60;
-        }
-
-        $open = Carbon::createFromFormat('H:i', $today['open']);
-        $close = Carbon::createFromFormat('H:i', $today['close']);
-
-        return max(60, $open->diffInMinutes($close));
     }
 
     public function getRecentMatches(int $limit = 10): Collection

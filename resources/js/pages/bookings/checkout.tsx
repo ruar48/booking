@@ -414,10 +414,10 @@ function PaymentPanel({
                     </ol>
                 </div>
 
-                <Button className="w-full" disabled={refreshing} onClick={() => onRefresh("I've Paid")}>
-                    <CheckCircle2 className="size-4" />
-                    I&apos;ve Paid
-                </Button>
+                <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
+                    <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
+                    Waiting for payment — this page updates automatically once it&apos;s received.
+                </div>
                 <div className="flex items-center justify-center gap-3">
                     <button
                         type="button"

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { index as adminSettingsIndex, update } from '@/routes/admin/settings';
+import { index as adminSettingsIndex, update, updatePaymentWindow } from '@/routes/admin/settings';
 import type { Setting } from '@/types/booking';
 
 type JsonPrimitive = string | number | boolean | null;
@@ -16,6 +16,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 
 type Props = {
     settings: Record<string, Setting[]>;
+    unpaidCancelMinutes: number | null;
 };
 
 function humanize(key: string): string {
@@ -113,7 +114,7 @@ function SettingValueEditor({
     );
 }
 
-export default function AdminSettingsIndex({ settings }: Props) {
+export default function AdminSettingsIndex({ settings, unpaidCancelMinutes }: Props) {
     const flatSettings = Object.entries(settings).flatMap(([group, items]) =>
         items.map((setting) => ({
             group,
@@ -130,9 +131,21 @@ export default function AdminSettingsIndex({ settings }: Props) {
             : [{ group: 'general', key: 'site_name', value: '' }],
     });
 
+    const paymentWindowForm = useForm({
+        minutes: unpaidCancelMinutes !== null ? String(unpaidCancelMinutes) : '',
+    });
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
         put(update().url);
+    };
+
+    const submitPaymentWindow = (event: FormEvent) => {
+        event.preventDefault();
+        paymentWindowForm.transform((data) => ({
+            minutes: data.minutes ? Number(data.minutes) : null,
+        }));
+        paymentWindowForm.put(updatePaymentWindow().url, { preserveScroll: true });
     };
 
     const updateSetting = (index: number, value: JsonValue) => {
@@ -149,6 +162,45 @@ export default function AdminSettingsIndex({ settings }: Props) {
                     title="Venue settings"
                     description="Manage your pickleball court booking preferences"
                 />
+
+                <form onSubmit={submitPaymentWindow} className="mx-auto w-full max-w-3xl">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Payment window</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                            <p className="text-muted-foreground text-sm">
+                                Automatically cancel a booking if payment isn't
+                                received within this many minutes of creation.
+                                Leave blank to allow unlimited time to pay.
+                            </p>
+                            <div className="grid max-w-xs gap-1">
+                                <Label htmlFor="unpaid-cancel-minutes">
+                                    Minutes before auto-cancel
+                                </Label>
+                                <Input
+                                    id="unpaid-cancel-minutes"
+                                    type="number"
+                                    min={1}
+                                    placeholder="No limit"
+                                    value={paymentWindowForm.data.minutes}
+                                    onChange={(e) =>
+                                        paymentWindowForm.setData(
+                                            'minutes',
+                                            e.target.value,
+                                        )
+                                    }
+                                />
+                                <InputError message={paymentWindowForm.errors.minutes} />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <div className="mt-4 flex justify-end">
+                        <Button type="submit" disabled={paymentWindowForm.processing}>
+                            Save payment window
+                        </Button>
+                    </div>
+                </form>
 
                 <form onSubmit={submit} className="mx-auto w-full max-w-3xl space-y-6">
                     {Object.entries(settings).map(([group, items]) => (

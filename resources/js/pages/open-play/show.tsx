@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, Clock, MapPin, Trophy } from 'lucide-react';
 
 import {
@@ -6,11 +6,12 @@ import {
     ReadOnlyDoubleEliminationBracket,
 } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTime } from '@/lib/format';
 import { computeStandings } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
-import { browse as openPlayBrowse } from '@/routes/open-play';
+import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
 import type { OpenPlaySession } from '@/types/booking';
 
 type Props = {
@@ -55,42 +56,52 @@ export default function OpenPlayShow({ session }: Props) {
             <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
                     <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white">
-                        <div className="space-y-2">
-                            <span
-                                className={cn(
-                                    'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
-                                    isSessionComplete
-                                        ? 'bg-sky-400/20 text-sky-200'
+                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div className="space-y-2">
+                                <span
+                                    className={cn(
+                                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold',
+                                        isSessionComplete
+                                            ? 'bg-sky-400/20 text-sky-200'
+                                            : matches.length === 0
+                                              ? 'bg-slate-400/20 text-slate-200'
+                                              : 'bg-brand-lime/20 text-brand-lime',
+                                    )}
+                                >
+                                    {isSessionComplete
+                                        ? 'Completed'
                                         : matches.length === 0
-                                          ? 'bg-slate-400/20 text-slate-200'
-                                          : 'bg-brand-lime/20 text-brand-lime',
-                                )}
-                            >
-                                {isSessionComplete
-                                    ? 'Completed'
-                                    : matches.length === 0
-                                      ? 'Awaiting bracket'
-                                      : 'Active tournament'}
-                            </span>
-                            <h1 className="text-2xl font-bold sm:text-3xl">🏓 {session.title}</h1>
-                            <p className="text-sm text-white/70">{formatBracketFormat(session.bracket_format)}</p>
-                            <div className="flex flex-wrap items-center gap-2 pt-1">
-                                <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
-                                    <CalendarDays className="size-3.5" />
-                                    {formatDate(session.starts_at)}
+                                          ? 'Awaiting bracket'
+                                          : 'Active tournament'}
                                 </span>
-                                <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
-                                    <Clock className="size-3.5" />
-                                    {formatTime(session.starts_at)}
-                                    {session.ends_at && ` – ${formatTime(session.ends_at)}`}
-                                </span>
-                                {session.location && (
+                                <h1 className="text-2xl font-bold sm:text-3xl">🏓 {session.title}</h1>
+                                <p className="text-sm text-white/70">{formatBracketFormat(session.bracket_format)}</p>
+                                <div className="flex flex-wrap items-center gap-2 pt-1">
                                     <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
-                                        <MapPin className="size-3.5" />
-                                        {session.location}
+                                        <CalendarDays className="size-3.5" />
+                                        {formatDate(session.starts_at)}
                                     </span>
-                                )}
+                                    <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
+                                        <Clock className="size-3.5" />
+                                        {formatTime(session.starts_at)}
+                                        {session.ends_at && ` – ${formatTime(session.ends_at)}`}
+                                    </span>
+                                    {session.location && (
+                                        <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs">
+                                            <MapPin className="size-3.5" />
+                                            {session.location}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
+                            {!isSessionComplete && (
+                                <Button
+                                    asChild
+                                    className="bg-brand-lime shrink-0 font-bold text-brand-navy hover:bg-brand-lime-dark"
+                                >
+                                    <Link href={openPlayJoin(session)}>Join / Pay</Link>
+                                </Button>
+                            )}
                         </div>
                     </div>
 
