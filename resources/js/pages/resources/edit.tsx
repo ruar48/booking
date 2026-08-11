@@ -52,6 +52,16 @@ export default function ResourcesEdit({ resource }: Props) {
                     description="Update rates, sport, and availability"
                 />
                 <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
+                    {Object.keys(errors).length > 0 && (
+                        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+                            <p className="font-medium">Please fix the following before saving:</p>
+                            <ul className="mt-1 list-inside list-disc">
+                                {Object.entries(errors).map(([field, message]) => (
+                                    <li key={field}>{message}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                     <Card>
                         <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
                             <div className="grid gap-2 sm:col-span-2">

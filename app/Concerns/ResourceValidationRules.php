@@ -26,8 +26,18 @@ trait ResourceValidationRules
                     ->where(fn ($query) => $query->where('sport', $this->input('sport')))
                     ->ignore($resourceId),
             ],
-            'surface_type' => ['required', 'string', Rule::in(['hard', 'clay', 'grass', 'carpet', 'synthetic'])],
-            'location_type' => ['required', 'string', Rule::in(['indoor', 'outdoor'])],
+            'surface_type' => [
+                'required_if:sport,'.Sport::Pickleball->value,
+                'nullable',
+                'string',
+                Rule::in(['hard', 'clay', 'grass', 'carpet', 'synthetic', 'felt']),
+            ],
+            'location_type' => [
+                'required_if:sport,'.Sport::Pickleball->value,
+                'nullable',
+                'string',
+                Rule::in(['indoor', 'outdoor']),
+            ],
             'has_lighting' => ['sometimes', 'boolean'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
             'status' => ['sometimes', 'string', Rule::enum(ResourceStatus::class)],
