@@ -128,8 +128,19 @@ class OpenPlayJoinController extends Controller
 
         $open_play->load([
             'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
+            'registrations.player:id,user_id',
             'registrations.player.user:id,name',
+            'registrations.partner:id,user_id',
             'registrations.partner.user:id,name',
+            'matches' => fn ($query) => $query->orderBy('round')->orderBy('bracket_position'),
+            'matches.entry1.player:id,user_id',
+            'matches.entry1.player.user:id,name',
+            'matches.entry1.partner:id,user_id',
+            'matches.entry1.partner.user:id,name',
+            'matches.entry2.player:id,user_id',
+            'matches.entry2.player.user:id,name',
+            'matches.entry2.partner:id,user_id',
+            'matches.entry2.partner.user:id,name',
         ]);
 
         return Inertia::render('open-play/join', [
@@ -139,6 +150,7 @@ class OpenPlayJoinController extends Controller
             'paymentPending' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Unpaid,
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
             'needsProfile' => $player === null || $player->birthdate === null,
+            'myRegistrationId' => $myRegistration?->payment_status === PaymentStatus::Paid ? $myRegistration->id : null,
         ]);
     }
 

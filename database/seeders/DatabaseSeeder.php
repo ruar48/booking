@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             RentalItemSeeder::class,
             OpenPlayDoubleEliminationSeeder::class,
+            OpenPlayPaidJoinSeeder::class,
         ]);
     }
 }
