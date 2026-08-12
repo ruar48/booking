@@ -19,15 +19,19 @@ export function initPaymentEcho(): Echo<'pusher'> | null {
         return null;
     }
 
+    // Let Echo construct the Pusher client itself (via the `Pusher` class
+    // reference) instead of handing it a pre-built instance. Echo's
+    // PusherConnector adopts a pre-built `client:` verbatim and never
+    // applies its own `authEndpoint`/CSRF-header options to it — that
+    // silently fell back to pusher-js's hard-coded default `/pusher/auth`,
+    // which doesn't exist on this server (only `/broadcasting/pusher/auth`
+    // does), producing a 404 on every private-channel subscription.
     paymentEchoInstance = new Echo({
         broadcaster: 'pusher',
         key: pusherKey,
+        Pusher,
         cluster: pusherCluster,
         forceTLS: true,
-        client: new Pusher(pusherKey, {
-            cluster: pusherCluster,
-            forceTLS: true,
-        }),
         authEndpoint: '/broadcasting/pusher/auth',
     });
 
