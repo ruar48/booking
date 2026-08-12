@@ -23,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -182,6 +183,14 @@ class ResourceBookingController extends Controller
             ->latest()
             ->first();
 
+        Log::info('checkout.show.qr_state', [
+            'booking_id' => $booking->id,
+            'payment_id' => $pendingPayment?->id,
+            'qr_expires_at' => $pendingPayment?->qr_expires_at?->toIso8601String(),
+            'qr_expires_at_is_future' => $pendingPayment?->qr_expires_at?->isFuture(),
+            'now' => now()->toIso8601String(),
+        ]);
+
         return Inertia::render('bookings/checkout', [
             ...$this->bookingShowProps($booking),
             'qrPayment' => $pendingPayment ? [
@@ -219,6 +228,14 @@ class ResourceBookingController extends Controller
                 'qrCodeUrl' => $payment->qr_code_url,
                 'expiresAt' => $payment->qr_expires_at,
             ];
+
+            Log::info('checkout.generate.qr_state', [
+                'booking_id' => $booking->id,
+                'payment_id' => $payment->id,
+                'qr_expires_at' => $payment->qr_expires_at?->toIso8601String(),
+                'qr_expires_at_is_future' => $payment->qr_expires_at?->isFuture(),
+                'now' => now()->toIso8601String(),
+            ]);
         }
 
         return Inertia::render('bookings/checkout', [

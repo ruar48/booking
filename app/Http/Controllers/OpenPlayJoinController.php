@@ -10,6 +10,7 @@ use App\Services\OpenPlayRegistrationService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -237,6 +238,14 @@ class OpenPlayJoinController extends Controller
             ->latest()
             ->first();
 
+        Log::info('checkout.show.qr_state', [
+            'registration_id' => $registration->id,
+            'payment_id' => $pendingPayment?->id,
+            'qr_expires_at' => $pendingPayment?->qr_expires_at?->toIso8601String(),
+            'qr_expires_at_is_future' => $pendingPayment?->qr_expires_at?->isFuture(),
+            'now' => now()->toIso8601String(),
+        ]);
+
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,
             'registration' => $registration,
@@ -261,6 +270,14 @@ class OpenPlayJoinController extends Controller
         }
 
         $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration($registration, $request->user());
+
+        Log::info('checkout.generate.qr_state', [
+            'registration_id' => $registration->id,
+            'payment_id' => $payment->id,
+            'qr_expires_at' => $payment->qr_expires_at?->toIso8601String(),
+            'qr_expires_at_is_future' => $payment->qr_expires_at?->isFuture(),
+            'now' => now()->toIso8601String(),
+        ]);
 
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,

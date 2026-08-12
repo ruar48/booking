@@ -93,12 +93,19 @@ class PaymentService
         // instantly landing in the past. Carbon::parse() handles the actual
         // ISO8601 shape correctly; is_numeric() covers the case where
         // PayMongo does send a bare Unix timestamp.
+        //
+        // Carbon::parse()/createFromTimestamp() on an offset-bearing input
+        // keep the instance in UTC. The `datetime` cast persists a naive
+        // "Y-m-d H:i:s" string with no offset, and re-reads it assuming
+        // APP_TIMEZONE (Asia/Manila, UTC+8) — so a UTC-labeled instant gets
+        // reinterpreted ~8 hours earlier on the very next load unless it's
+        // normalized to app timezone before being handed to ->update().
         $rawExpiresAt = $code['expires_at'] ?? null;
-        $qrExpiresAt = match (true) {
+        $qrExpiresAt = (match (true) {
             $rawExpiresAt === null => now()->addMinutes(30),
             is_numeric($rawExpiresAt) => Carbon::createFromTimestamp($rawExpiresAt),
             default => Carbon::parse($rawExpiresAt),
-        };
+        })->setTimezone(config('app.timezone'));
 
         $payment->update([
             'paymongo_payment_intent_id' => $intent['id'],
@@ -117,7 +124,21 @@ class PaymentService
             'qr_expires_at_stored' => $qrExpiresAt->toIso8601String(),
         ]);
 
-        return $payment->fresh();
+        $fresh = $payment->fresh();
+
+        // Re-log after the fresh() re-read from the DB — this is what
+        // actually gets handed to the controller/frontend. Comparing this
+        // against qr_expires_at_stored above is what would have caught the
+        // Eloquent naive-datetime-cast bug immediately, instead of only
+        // showing up as a silent "QR code expired" in the browser.
+        Log::info('paymongo.qr.generate.fresh_read', [
+            'payment_id' => $fresh->id,
+            'qr_expires_at_read_back' => $fresh->qr_expires_at?->toIso8601String(),
+            'qr_expires_at_is_future' => $fresh->qr_expires_at?->isFuture(),
+            'now' => now()->toIso8601String(),
+        ]);
+
+        return $fresh;
     }
 
     public function create(
