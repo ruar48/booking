@@ -7,7 +7,9 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymongoWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
@@ -17,7 +19,26 @@ Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->
 // confirmation — kept separate from the default /broadcasting/auth route (Reverb)
 // because the auth signature must match the app secret the client connected with.
 Route::middleware(['auth'])->post('broadcasting/pusher/auth', function (Request $request) {
-    return Broadcast::connection('pusher')->auth($request);
+    try {
+        $response = Broadcast::connection('pusher')->auth($request);
+
+        Log::info('broadcasting.pusher.auth.success', [
+            'user_id' => $request->user()?->id,
+            'channel_name' => $request->input('channel_name'),
+        ]);
+
+        return $response;
+    } catch (\Throwable $e) {
+        Log::warning('broadcasting.pusher.auth.denied', [
+            'user_id' => $request->user()?->id,
+            'channel_name' => $request->input('channel_name'),
+            'exception' => $e::class,
+            'status' => $e instanceof HttpExceptionInterface ? $e->getStatusCode() : null,
+            'message' => $e->getMessage(),
+        ]);
+
+        throw $e;
+    }
 })->name('broadcasting.pusher.auth');
 
 Route::get('/sitemap.xml', function () {

@@ -289,7 +289,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     home.form = homeForm
 /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
 export const sitemap = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -303,7 +303,7 @@ sitemap.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
 sitemap.url = (options?: RouteQueryOptions) => {
@@ -311,7 +311,7 @@ sitemap.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
 sitemap.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -319,7 +319,7 @@ sitemap.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
 sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -328,7 +328,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
     /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
     const sitemapForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -337,7 +337,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     })
 
             /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
         sitemapForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -345,7 +345,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
             method: 'get',
         })
             /**
- * @see routes/web.php:23
+ * @see routes/web.php:44
  * @route '/sitemap.xml'
  */
         sitemapForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
