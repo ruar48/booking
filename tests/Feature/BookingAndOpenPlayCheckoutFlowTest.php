@@ -35,7 +35,10 @@ function fakePaymongoGateway(bool $includeExpiresAt = true): void
     $code = ['image_url' => 'https://api.paymongo.com/qr/test.png'];
 
     if ($includeExpiresAt) {
-        $code['expires_at'] = now()->addMinutes(15)->timestamp;
+        // Real PayMongo sends expires_at as an ISO8601 string, not a Unix
+        // timestamp — mocking it as anything else lets a regression like
+        // that slip past this test.
+        $code['expires_at'] = now()->addMinutes(15)->toIso8601String();
     }
 
     Http::fake([
@@ -154,6 +157,13 @@ it('lets a customer book a court, pay via QR Ph, and see the booking confirmed',
         ->and($payment->paymongo_payment_intent_id)->toBe('pi_test_123')
         ->and($payment->status->value)->toBe('pending');
 
+    // Regression: PayMongo sends expires_at as an ISO8601 string. Parsing it
+    // as if it were a Unix timestamp truncates it to its leading digits and
+    // yields a near-epoch-zero date, making the QR look expired the instant
+    // it's generated.
+    expect($payment->qr_expires_at->isFuture())->toBeTrue()
+        ->and($payment->qr_expires_at->diffInMinutes(now()))->toBeLessThan(16);
+
     // Step 4: PayMongo notifies us the QR was scanned and paid.
     postPaymongoWebhook($payment->paymongo_payment_intent_id)->assertOk();
 
@@ -212,7 +222,9 @@ it('lets a customer join a paid open play session, pay via QR Ph, and get regist
         ->firstOrFail();
 
     expect($payment->qr_code_url)->toBe('https://api.paymongo.com/qr/test.png')
-        ->and($payment->paymongo_payment_intent_id)->toBe('pi_test_123');
+        ->and($payment->paymongo_payment_intent_id)->toBe('pi_test_123')
+        ->and($payment->qr_expires_at->isFuture())->toBeTrue()
+        ->and($payment->qr_expires_at->diffInMinutes(now()))->toBeLessThan(16);
 
     // Step 4: PayMongo notifies us the QR was scanned and paid.
     postPaymongoWebhook($payment->paymongo_payment_intent_id)->assertOk();

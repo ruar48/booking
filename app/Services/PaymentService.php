@@ -85,9 +85,20 @@ class PaymentService
         // ResourceBookingController::showCheckout() / OpenPlayJoinController
         // (which filters on qr_expires_at > now()) would never match,
         // silently forcing a brand-new payment/QR on every page reload.
-        $qrExpiresAt = isset($code['expires_at'])
-            ? Carbon::parse($code['expires_at'])
-            : now()->addMinutes(30);
+        //
+        // PayMongo sends expires_at as an ISO8601 string (e.g.
+        // "2026-08-12T03:36:11.447765846Z"), not a Unix timestamp — feeding
+        // that into Carbon::createFromTimestamp() truncates it to its
+        // leading digits ("2026") and yields a near-epoch-zero date,
+        // instantly landing in the past. Carbon::parse() handles the actual
+        // ISO8601 shape correctly; is_numeric() covers the case where
+        // PayMongo does send a bare Unix timestamp.
+        $rawExpiresAt = $code['expires_at'] ?? null;
+        $qrExpiresAt = match (true) {
+            $rawExpiresAt === null => now()->addMinutes(30),
+            is_numeric($rawExpiresAt) => Carbon::createFromTimestamp($rawExpiresAt),
+            default => Carbon::parse($rawExpiresAt),
+        };
 
         $payment->update([
             'paymongo_payment_intent_id' => $intent['id'],
