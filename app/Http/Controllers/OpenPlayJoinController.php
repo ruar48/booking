@@ -217,15 +217,23 @@ class OpenPlayJoinController extends Controller
 
     public function showCheckout(Request $request, OpenPlaySession $open_play): RedirectResponse|Response
     {
-        $registration = $this->unpaidRegistrationFor($request, $open_play);
+        // Not filtered to unpaid only: once PayMongo confirms payment (via
+        // webhook -> broadcast -> a partial reload of this same page), the
+        // registration is already paid by the time this reloads. Redirecting
+        // away here would yank the customer off the checkout page instead of
+        // letting the "Payment Successful" confirmation step render.
+        $registration = $this->registrationFor($request, $open_play);
 
         if ($registration === null) {
             return to_route('open-play.join', $open_play);
         }
 
+        // Deliberately not filtered by qr_expires_at > now() — an expired QR
+        // still needs to be reported to the frontend so a page refresh keeps
+        // the customer on the payment step (with a "generate new QR" prompt)
+        // instead of silently bouncing them back to step 1.
         $pendingPayment = $registration->payments()
             ->where('status', PaymentStatus::Pending)
-            ->where('qr_expires_at', '>', now())
             ->latest()
             ->first();
 
@@ -277,6 +285,21 @@ class OpenPlayJoinController extends Controller
             ->where('open_play_session_id', $open_play->id)
             ->where('player_id', $player->id)
             ->where('payment_status', PaymentStatus::Unpaid)
+            ->first();
+    }
+
+    private function registrationFor(Request $request, OpenPlaySession $open_play): ?OpenPlayRegistration
+    {
+        $player = $request->user()->players()->first();
+
+        if ($player === null) {
+            return null;
+        }
+
+        return OpenPlayRegistration::query()
+            ->where('open_play_session_id', $open_play->id)
+            ->where('player_id', $player->id)
+            ->latest()
             ->first();
     }
 }

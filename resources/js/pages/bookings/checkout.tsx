@@ -20,7 +20,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
+import { cancel as bookingsCancel, create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
 import checkoutActions from '@/routes/bookings/checkout';
 import type { ResourceBooking } from '@/types/booking';
 
@@ -77,12 +77,19 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
 
     const [step, setStep] = useState<Step>(() => {
         if (isPaid) return 4;
-        if (qrPayment?.qrCodeUrl) return 3;
+        // A QR record (even an expired one) means the customer already
+        // started paying — a refresh should keep them on the payment step
+        // with a "generate new QR" prompt, not bounce them back to step 1.
+        if (qrPayment) return 3;
         return 1;
     });
     const [agreed, setAgreed] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
+
+    const qrExpiry = useDeadlineCountdown(qrPayment?.expiresAt ?? null);
+    const qrExpired = qrPayment ? qrExpiry.expired : false;
 
     useBookingPaymentChannel(isUnpaid ? booking.id : null);
 
@@ -130,6 +137,18 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
         });
     };
 
+    const cancelBooking = () => {
+        if (!window.confirm('Cancel this booking? This cannot be undone.')) {
+            return;
+        }
+        setCancelling(true);
+        router.patch(
+            bookingsCancel({ booking: booking.id }).url,
+            { cancellation_reason: 'Cancelled by customer during checkout' },
+            { onFinish: () => setCancelling(false) },
+        );
+    };
+
     return (
         <>
             <Head title={`Checkout — Booking #${booking.id}`} />
@@ -169,11 +188,14 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                 <PaymentPanel
                                     amount={booking.amount}
                                     qrPayment={qrPayment}
+                                    qrExpired={qrExpired}
                                     generating={generating}
                                     refreshing={refreshing}
+                                    cancelling={cancelling}
                                     countdownLabel={deadline.label}
-                                    onBack={() => setStep(2)}
                                     onRefresh={refresh}
+                                    onGenerateNew={generateQr}
+                                    onCancel={cancelBooking}
                                 />
                             ) : (
                                 <ConfirmationPanel booking={booking} />
@@ -363,20 +385,28 @@ function PaymentOption({
 function PaymentPanel({
     amount,
     qrPayment,
+    qrExpired,
     generating,
     refreshing,
+    cancelling,
     countdownLabel,
-    onBack,
     onRefresh,
+    onGenerateNew,
+    onCancel,
 }: {
     amount?: number | null;
     qrPayment: QrPayment | null;
+    qrExpired: boolean;
     generating: boolean;
     refreshing: boolean;
+    cancelling: boolean;
     countdownLabel: string | null;
-    onBack: () => void;
     onRefresh: (label: string) => void;
+    onGenerateNew: () => void;
+    onCancel: () => void;
 }) {
+    const showExpired = qrExpired && !generating;
+
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -384,7 +414,14 @@ function PaymentPanel({
             </CardHeader>
             <CardContent className="space-y-3 px-4">
                 <div className="flex flex-col items-center gap-2">
-                    {qrPayment?.qrCodeUrl ? (
+                    {showExpired ? (
+                        <div className="text-muted-foreground flex size-44 flex-col items-center justify-center gap-2 rounded-lg border text-center text-sm">
+                            <span>QR code expired</span>
+                            <Button size="sm" onClick={onGenerateNew} disabled={generating}>
+                                Generate new QR
+                            </Button>
+                        </div>
+                    ) : qrPayment?.qrCodeUrl ? (
                         <img
                             src={qrPayment.qrCodeUrl}
                             alt="QR Ph payment code"
@@ -395,7 +432,7 @@ function PaymentPanel({
                             {generating ? 'Generating QR…' : 'Preparing payment…'}
                         </div>
                     )}
-                    {countdownLabel ? (
+                    {countdownLabel && !showExpired ? (
                         <p className="text-muted-foreground text-center text-xs">
                             Complete within{' '}
                             <span className="text-foreground font-medium">{countdownLabel}</span>
@@ -414,10 +451,12 @@ function PaymentPanel({
                     </ol>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
-                    <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
-                    Waiting for payment — this page updates automatically once it&apos;s received.
-                </div>
+                {!showExpired ? (
+                    <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
+                        <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
+                        Waiting for payment — this page updates automatically once it&apos;s received.
+                    </div>
+                ) : null}
                 <div className="flex items-center justify-center gap-3">
                     <button
                         type="button"
@@ -430,10 +469,11 @@ function PaymentPanel({
                     <span className="text-muted-foreground text-xs">·</span>
                     <button
                         type="button"
-                        onClick={onBack}
-                        className="text-muted-foreground hover:text-foreground text-xs"
+                        disabled={cancelling}
+                        onClick={onCancel}
+                        className="text-destructive/80 hover:text-destructive text-xs disabled:opacity-50"
                     >
-                        ← Change method
+                        {cancelling ? 'Cancelling…' : 'Cancel booking'}
                     </button>
                 </div>
             </CardContent>

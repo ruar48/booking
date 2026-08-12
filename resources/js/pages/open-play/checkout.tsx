@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -28,17 +28,42 @@ type Props = {
 
 type Step = 1 | 2 | 3;
 
+function useExpired(deadline: string | null | undefined) {
+    const target = useMemo(() => (deadline ? new Date(deadline).getTime() : null), [deadline]);
+    const [expired, setExpired] = useState(() => (target ? target - Date.now() <= 0 : false));
+
+    useEffect(() => {
+        if (!target) {
+            setExpired(false);
+            return;
+        }
+
+        setExpired(target - Date.now() <= 0);
+        const interval = window.setInterval(() => {
+            setExpired(target - Date.now() <= 0);
+        }, 1000);
+
+        return () => window.clearInterval(interval);
+    }, [target]);
+
+    return expired;
+}
+
 export default function OpenPlayCheckout({ session, registration, qrPayment = null }: Props) {
     const isPaid = registration.payment_status === 'paid';
 
     const [step, setStep] = useState<Step>(() => {
         if (isPaid) return 3;
-        if (qrPayment?.qrCodeUrl) return 2;
+        // A QR record (even an expired one) means the customer already
+        // started paying — a refresh should keep them on the payment step
+        // with a "generate new QR" prompt, not bounce them back to step 1.
+        if (qrPayment) return 2;
         return 1;
     });
     const [agreed, setAgreed] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
+    const qrExpired = useExpired(qrPayment?.expiresAt) && Boolean(qrPayment);
 
     useOpenPlayPaymentChannel(isPaid ? null : registration.id);
 
@@ -96,9 +121,11 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                         <PayCard
                             amount={registration.amount}
                             qrPayment={qrPayment}
+                            qrExpired={qrExpired}
                             generating={generating}
                             refreshing={refreshing}
                             onRefresh={refresh}
+                            onGenerateNew={generateQr}
                         />
                     ) : (
                         <ConfirmationCard session={session} registration={registration} />
@@ -224,16 +251,22 @@ function PaymentMethodCard({
 function PayCard({
     amount,
     qrPayment,
+    qrExpired,
     generating,
     refreshing,
     onRefresh,
+    onGenerateNew,
 }: {
     amount?: number | string | null;
     qrPayment: QrPayment | null;
+    qrExpired: boolean;
     generating: boolean;
     refreshing: boolean;
     onRefresh: (label: string) => void;
+    onGenerateNew: () => void;
 }) {
+    const showExpired = qrExpired && !generating;
+
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -241,7 +274,14 @@ function PayCard({
             </CardHeader>
             <CardContent className="space-y-3 px-4">
                 <div className="flex flex-col items-center gap-2">
-                    {qrPayment?.qrCodeUrl ? (
+                    {showExpired ? (
+                        <div className="text-muted-foreground flex size-44 flex-col items-center justify-center gap-2 rounded-lg border text-center text-sm">
+                            <span>QR code expired</span>
+                            <Button size="sm" onClick={onGenerateNew} disabled={generating}>
+                                Generate new QR
+                            </Button>
+                        </div>
+                    ) : qrPayment?.qrCodeUrl ? (
                         <img
                             src={qrPayment.qrCodeUrl}
                             alt="QR Ph payment code"
@@ -265,10 +305,12 @@ function PayCard({
                     </ol>
                 </div>
 
-                <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
-                    <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
-                    Waiting for payment — this page updates automatically once it's received.
-                </div>
+                {!showExpired ? (
+                    <div className="flex items-center justify-center gap-2 rounded-md bg-slate-50 py-2.5 text-xs font-medium text-slate-500">
+                        <span className="size-1.5 animate-pulse rounded-full bg-slate-400" />
+                        Waiting for payment — this page updates automatically once it's received.
+                    </div>
+                ) : null}
                 <button
                     type="button"
                     disabled={refreshing}

@@ -162,8 +162,14 @@ it('lets a customer book a court, pay via QR Ph, and see the booking confirmed',
     expect($booking->payment_status->value)->toBe('paid')
         ->and($booking->status->value)->toBe('approved');
 
-    // Step 5: checkout page now shows the confirmation step.
-    $this->get(route('bookings.checkout', $booking))->assertOk();
+    // Step 5: checkout page now renders with the props that drive the
+    // frontend's confirmation step (isPaid -> step 4).
+    $this->get(route('bookings.checkout', $booking))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('booking.payment_status', 'paid')
+            ->where('booking.status', 'approved')
+        );
 });
 
 it('lets a customer join a paid open play session, pay via QR Ph, and get registered', function () {
@@ -215,7 +221,13 @@ it('lets a customer join a paid open play session, pay via QR Ph, and get regist
 
     expect($registration->payment_status->value)->toBe('paid');
 
-    // Step 5: the player now shows as registered when browsing/joining again.
+    // Step 5: back on checkout, the props that drive the frontend's
+    // confirmation step (isPaid -> step 3) reflect the paid registration.
+    $this->get(route('open-play.checkout', $session))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('registration.payment_status', 'paid'));
+
+    // And the player now shows as registered when browsing/joining again.
     $this->get(route('open-play.join', $session))->assertOk();
 });
 

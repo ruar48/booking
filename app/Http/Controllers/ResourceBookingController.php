@@ -172,10 +172,13 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('view', $booking);
 
+        // Deliberately not filtered by qr_expires_at > now() — an expired QR
+        // still needs to be reported to the frontend so a page refresh keeps
+        // the customer on the payment step (with a "generate new QR" prompt)
+        // instead of silently bouncing them back to step 1.
         $pendingPayment = $booking->payments()
             ->where('payment_method', PaymentMethod::Qrph->value)
             ->where('status', PaymentStatus::Pending)
-            ->where('qr_expires_at', '>', now())
             ->latest()
             ->first();
 
