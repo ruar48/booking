@@ -4,6 +4,7 @@ import {
     CalendarDays,
     CreditCard,
     Dumbbell,
+    FileText,
     LayoutGrid,
     MapPin,
     Megaphone,
@@ -15,6 +16,7 @@ import {
 
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { dashboard } from '@/routes';
+import { index as adminPoliciesIndex } from '@/routes/admin/policies';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
@@ -67,7 +69,10 @@ export function useNavItems(): NavItems {
         : [];
 
     const adminNavItems: NavItem[] = isVenueAdmin
-        ? [{ title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings }]
+        ? [
+              { title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings },
+              { title: 'Policies', href: adminPoliciesIndex(), icon: FileText },
+          ]
         : [];
 
     return { homeHref, mainNavItems, manageNavItems, adminNavItems };

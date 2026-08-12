@@ -3,7 +3,6 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldC
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,10 +19,17 @@ type QrPayment = {
     expiresAt: string | null;
 };
 
+type CheckoutPolicy = {
+    id: number;
+    title: string;
+    body: string;
+};
+
 type Props = {
     session: OpenPlaySession;
     registration: OpenPlayRegistration;
     qrPayment?: QrPayment | null;
+    policies?: CheckoutPolicy[];
 };
 
 type Step = 1 | 2 | 3;
@@ -60,7 +66,7 @@ function useExpired(deadline: string | null | undefined) {
     return expired;
 }
 
-export default function OpenPlayCheckout({ session, registration, qrPayment = null }: Props) {
+export default function OpenPlayCheckout({ session, registration, qrPayment = null, policies = [] }: Props) {
     const isPaid = registration.payment_status === 'paid';
 
     const [step, setStep] = useState<Step>(() => {
@@ -123,6 +129,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                         <PaymentMethodCard
                             session={session}
                             registration={registration}
+                            policies={policies}
                             agreed={agreed}
                             onAgreedChange={setAgreed}
                             generating={generating}
@@ -173,6 +180,7 @@ OpenPlayCheckout.layout = {
 function PaymentMethodCard({
     session,
     registration,
+    policies,
     agreed,
     onAgreedChange,
     generating,
@@ -180,11 +188,14 @@ function PaymentMethodCard({
 }: {
     session: OpenPlaySession;
     registration: OpenPlayRegistration;
+    policies: { id: number; title: string; body: string }[];
     agreed: boolean;
     onAgreedChange: (value: boolean) => void;
     generating: boolean;
     onContinue: () => void;
 }) {
+    const requiresAgreement = policies.length > 0;
+
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -229,31 +240,44 @@ function PaymentMethodCard({
                     </div>
                 </div>
 
-                <Card className="bg-muted/40 py-0">
-                    <CardContent className="space-y-1.5 p-3 text-sm">
-                        <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold">Payment &amp; Refund Policy</p>
-                            <Badge variant="outline" className="text-[9px]">
-                                Draft
-                            </Badge>
-                        </div>
-                        <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
-                            <li>Your spot is reserved only once payment is received in full.</li>
-                            <li>Non-refundable once confirmed, except if the session is cancelled.</li>
-                        </ul>
-                        <label className="flex items-start gap-2 pt-1 text-xs">
-                            <Checkbox
-                                checked={agreed}
-                                onCheckedChange={(checked) => onAgreedChange(checked === true)}
-                            />
-                            <span>I have read and agree to the payment terms above.</span>
-                        </label>
-                    </CardContent>
-                </Card>
+                {policies.map((policy) => (
+                    <PolicyCard key={policy.id} title={policy.title} body={policy.body} />
+                ))}
 
-                <Button className="w-full" onClick={onContinue} disabled={!agreed || generating}>
+                {requiresAgreement ? (
+                    <label className="flex items-start gap-2 px-1 text-xs">
+                        <Checkbox
+                            checked={agreed}
+                            onCheckedChange={(checked) => onAgreedChange(checked === true)}
+                        />
+                        <span>I have read and agree to the policies above.</span>
+                    </label>
+                ) : null}
+
+                <Button
+                    className="w-full"
+                    onClick={onContinue}
+                    disabled={(requiresAgreement && !agreed) || generating}
+                >
                     {generating ? 'Generating QR…' : 'Continue to Payment'}
                 </Button>
+            </CardContent>
+        </Card>
+    );
+}
+
+function PolicyCard({ title, body }: { title: string; body: string }) {
+    const lines = body.split('\n').map((line) => line.trim()).filter(Boolean);
+
+    return (
+        <Card className="bg-muted/40 py-0">
+            <CardContent className="space-y-1.5 p-3 text-sm">
+                <p className="text-xs font-semibold">{title}</p>
+                <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
+                    {lines.map((line, index) => (
+                        <li key={index}>{line}</li>
+                    ))}
+                </ul>
             </CardContent>
         </Card>
     );

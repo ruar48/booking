@@ -330,6 +330,21 @@ export type Setting = {
     value: unknown;
 };
 
+export type Policy = {
+    id: number;
+    title: string;
+    slug: string;
+    placement: 'checkout' | 'general';
+    body: string;
+    is_active: boolean;
+    version: number;
+    sort_order: number;
+    updated_by?: number | null;
+    updatedBy?: { id: number; name: string } | null;
+    created_at?: string;
+    updated_at?: string;
+};
+
 export type VenueProfile = {
     description?: string | null;
     phone?: string | null;

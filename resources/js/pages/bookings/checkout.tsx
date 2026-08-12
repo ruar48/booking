@@ -39,11 +39,18 @@ type QrPayment = {
     expiresAt: string | null;
 };
 
+type CheckoutPolicy = {
+    id: number;
+    title: string;
+    body: string;
+};
+
 type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
     qrPayment?: QrPayment | null;
     paymentDeadline?: string | null;
+    policies?: CheckoutPolicy[];
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -90,7 +97,7 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
     };
 }
 
-export default function BookingsCheckout({ booking, qrPayment = null, paymentDeadline = null }: Props) {
+export default function BookingsCheckout({ booking, qrPayment = null, paymentDeadline = null, policies = [] }: Props) {
     const isPaid = booking.payment_status === 'paid';
     const isCancelled = booking.status === 'cancelled';
     const isUnpaid = booking.payment_status === 'unpaid' && !isCancelled;
@@ -200,6 +207,7 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                 />
                             ) : step === 2 ? (
                                 <MethodAndPolicyPanel
+                                    policies={policies}
                                     agreed={agreed}
                                     onAgreedChange={setAgreed}
                                     generating={generating}
@@ -348,18 +356,22 @@ function BookingDetailsCard({
 }
 
 function MethodAndPolicyPanel({
+    policies,
     agreed,
     onAgreedChange,
     generating,
     onBack,
     onContinue,
 }: {
+    policies: { id: number; title: string; body: string }[];
     agreed: boolean;
     onAgreedChange: (value: boolean) => void;
     generating: boolean;
     onBack: () => void;
     onContinue: () => void;
 }) {
+    const requiresAgreement = policies.length > 0;
+
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -372,28 +384,19 @@ function MethodAndPolicyPanel({
                     <PaymentOption icon={Wallet} label="Maya" description="Coming soon" disabled />
                 </div>
 
-                <Card className="bg-muted/40 py-0">
-                    <CardContent className="space-y-1.5 p-3 text-sm">
-                        <div className="flex items-center justify-between gap-2">
-                            <p className="text-xs font-semibold">Payment &amp; Refund Policy</p>
-                            <Badge variant="outline" className="text-[9px]">
-                                Draft
-                            </Badge>
-                        </div>
-                        <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
-                            <li>Confirmed only once payment is received in full.</li>
-                            <li>Non-refundable once confirmed, except if the venue cancels or reschedules.</li>
-                            <li>Unpaid bookings are auto-cancelled after the time shown.</li>
-                        </ul>
-                        <label className="flex items-start gap-2 pt-1 text-xs">
-                            <Checkbox
-                                checked={agreed}
-                                onCheckedChange={(checked) => onAgreedChange(checked === true)}
-                            />
-                            <span>I have read and agree to the payment terms above.</span>
-                        </label>
-                    </CardContent>
-                </Card>
+                {policies.map((policy) => (
+                    <PolicyCard key={policy.id} title={policy.title} body={policy.body} />
+                ))}
+
+                {requiresAgreement ? (
+                    <label className="flex items-start gap-2 px-1 text-xs">
+                        <Checkbox
+                            checked={agreed}
+                            onCheckedChange={(checked) => onAgreedChange(checked === true)}
+                        />
+                        <span>I have read and agree to the policies above.</span>
+                    </label>
+                ) : null}
 
                 <div className="flex gap-2">
                     <Button variant="outline" className="flex-1" onClick={onBack} disabled={generating}>
@@ -402,11 +405,28 @@ function MethodAndPolicyPanel({
                     <Button
                         className="flex-1"
                         onClick={onContinue}
-                        disabled={!agreed || generating}
+                        disabled={(requiresAgreement && !agreed) || generating}
                     >
                         {generating ? 'Generating QR…' : 'Continue to Payment'}
                     </Button>
                 </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function PolicyCard({ title, body }: { title: string; body: string }) {
+    const lines = body.split('\n').map((line) => line.trim()).filter(Boolean);
+
+    return (
+        <Card className="bg-muted/40 py-0">
+            <CardContent className="space-y-1.5 p-3 text-sm">
+                <p className="text-xs font-semibold">{title}</p>
+                <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
+                    {lines.map((line, index) => (
+                        <li key={index}>{line}</li>
+                    ))}
+                </ul>
             </CardContent>
         </Card>
     );

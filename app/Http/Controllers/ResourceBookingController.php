@@ -12,6 +12,7 @@ use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
 use App\Models\DateOverride;
+use App\Models\Policy;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
@@ -255,7 +256,22 @@ class ResourceBookingController extends Controller
         return [
             'booking' => $booking,
             'canManage' => request()->user()->isVenueAdmin(),
+            'policies' => $this->checkoutPolicies(),
         ];
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkoutPolicies(): array
+    {
+        return Policy::query()
+            ->where('placement', 'checkout')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get(['id', 'title', 'body'])
+            ->all();
     }
 
     protected function paymentDeadline(ResourceBooking $booking): ?string

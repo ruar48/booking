@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PaymentStatus;
-use App\Models\OpenPlaySession;
 use App\Models\OpenPlayRegistration;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
+use App\Models\Policy;
 use App\Services\OpenPlayRegistrationService;
 use App\Services\PaymentService;
 use Illuminate\Http\RedirectResponse;
@@ -254,7 +255,22 @@ class OpenPlayJoinController extends Controller
                 'qrCodeUrl' => $pendingPayment->qr_code_url,
                 'expiresAt' => $pendingPayment->qr_expires_at,
             ] : null,
+            'policies' => $this->checkoutPolicies(),
         ]);
+    }
+
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function checkoutPolicies(): array
+    {
+        return Policy::query()
+            ->where('placement', 'checkout')
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get(['id', 'title', 'body'])
+            ->all();
     }
 
     public function checkout(Request $request, OpenPlaySession $open_play): RedirectResponse|Response
@@ -287,6 +303,7 @@ class OpenPlayJoinController extends Controller
                 'qrCodeUrl' => $payment->qr_code_url,
                 'expiresAt' => $payment->qr_expires_at,
             ],
+            'policies' => $this->checkoutPolicies(),
         ]);
     }
 
