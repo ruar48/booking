@@ -2,7 +2,7 @@ import { router, usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { destroyEcho, initEcho } from '@/lib/echo';
+import { initEcho } from '@/lib/echo';
 
 type NotificationPayload = {
     type?: string;
@@ -42,7 +42,6 @@ export function useRealtimeNotifications(): void {
                 '.Illuminate\\Notifications\\Events\\BroadcastNotificationCreated',
             );
             echo.leave(`private-App.Models.User.${userId}`);
-            destroyEcho();
         };
     }, [userId]);
 }

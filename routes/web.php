@@ -15,12 +15,11 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
 
-// Dedicated channel-auth endpoint for the Pusher connection used only by payment
-// confirmation — kept separate from the default /broadcasting/auth route (Reverb)
-// because the auth signature must match the app secret the client connected with.
+// Channel-auth endpoint for the Pusher connection, with logging on top of the
+// default Broadcast::auth() behaviour to make denied subscriptions debuggable.
 Route::middleware(['auth'])->post('broadcasting/pusher/auth', function (Request $request) {
     try {
-        $response = Broadcast::connection('pusher')->auth($request);
+        $response = Broadcast::auth($request);
 
         Log::info('broadcasting.pusher.auth.success', [
             'user_id' => $request->user()?->id,

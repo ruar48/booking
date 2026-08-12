@@ -6,7 +6,6 @@ use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithBroadcasting;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -15,15 +14,11 @@ use Illuminate\Queue\SerializesModels;
 
 class PaymentSuccessful implements ShouldBroadcastNow
 {
-    use Dispatchable, InteractsWithBroadcasting, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public function __construct(
         public readonly Payment $payment,
-    ) {
-        // Payment confirmation is broadcast over Pusher specifically — every
-        // other realtime feature in this app stays on the default Reverb connection.
-        $this->broadcastVia('pusher');
-    }
+    ) {}
 
     /**
      * @return array<int, Channel>

@@ -24,14 +24,3 @@ $openPlayRegistrationsChannel = function ($user, $id) {
 
 Broadcast::channel('bookings.{id}', $bookingsChannel);
 Broadcast::channel('open-play-registrations.{id}', $openPlayRegistrationsChannel);
-
-// Broadcast::channel() only registers on the DEFAULT broadcast connection
-// (BROADCAST_CONNECTION, i.e. Reverb) — routes/web.php authenticates the
-// dedicated payment-notification connection via
-// `Broadcast::connection('pusher')->auth($request)`, a separate broadcaster
-// instance that never receives the registrations above. Without registering
-// the same callbacks on it directly, every pusher channel auth request finds
-// no matching pattern and gets rejected with a blanket 403, regardless of
-// the requesting user or channel.
-Broadcast::connection('pusher')->channel('bookings.{id}', $bookingsChannel);
-Broadcast::connection('pusher')->channel('open-play-registrations.{id}', $openPlayRegistrationsChannel);

@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
 
-import { initPaymentEcho } from '@/lib/payment-pusher-echo';
+import { initEcho } from '@/lib/echo';
 
 type PaymentPaidPayload = {
     booking_id: number;
@@ -14,7 +14,7 @@ export function useBookingPaymentChannel(bookingId: number | null): void {
             return;
         }
 
-        const echo = initPaymentEcho();
+        const echo = initEcho();
 
         if (!echo) {
             return;

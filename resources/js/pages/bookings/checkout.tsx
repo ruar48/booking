@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
+    AlertTriangle,
     CheckCircle2,
     MapPin,
     PartyPopper,
@@ -16,6 +17,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
@@ -98,6 +107,7 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
     const [generating, setGenerating] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [cancelling, setCancelling] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     const qrExpiry = useDeadlineCountdown(qrPayment?.expiresAt ?? null);
     const qrExpired = qrPayment ? qrExpiry.expired : false;
@@ -148,15 +158,16 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
         });
     };
 
-    const cancelBooking = () => {
-        if (!window.confirm('Cancel this booking? This cannot be undone.')) {
-            return;
-        }
+    const confirmCancelBooking = () => {
+        setCancelDialogOpen(false);
         setCancelling(true);
         router.patch(
             bookingsCancel({ booking: booking.id }).url,
             { cancellation_reason: 'Cancelled by customer during checkout' },
-            { onFinish: () => setCancelling(false) },
+            {
+                onError: () => toast.error("Couldn't cancel this booking. Please try again."),
+                onFinish: () => setCancelling(false),
+            },
         );
     };
 
@@ -206,7 +217,7 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                     countdownLabel={deadline.label}
                                     onRefresh={refresh}
                                     onGenerateNew={generateQr}
-                                    onCancel={cancelBooking}
+                                    onCancel={() => setCancelDialogOpen(true)}
                                 />
                             ) : (
                                 <ConfirmationPanel booking={booking} />
@@ -228,10 +239,53 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                 </CardContent>
                             </Card>
                         ) : null}
+
+                        <CancelBookingDialog
+                            open={cancelDialogOpen}
+                            cancelling={cancelling}
+                            onOpenChange={setCancelDialogOpen}
+                            onConfirm={confirmCancelBooking}
+                        />
                     </>
                 )}
             </div>
         </>
+    );
+}
+
+function CancelBookingDialog({
+    open,
+    cancelling,
+    onOpenChange,
+    onConfirm,
+}: {
+    open: boolean;
+    cancelling: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+}) {
+    return (
+        <Dialog open={open} onOpenChange={(next) => (cancelling ? null : onOpenChange(next))}>
+            <DialogContent className="sm:max-w-sm">
+                <DialogHeader className="items-center text-center sm:items-center sm:text-center">
+                    <div className="bg-destructive/10 text-destructive flex size-11 items-center justify-center rounded-full">
+                        <AlertTriangle className="size-5.5" />
+                    </div>
+                    <DialogTitle>Cancel this booking?</DialogTitle>
+                    <DialogDescription>
+                        This will release your court reservation and this action cannot be undone.
+                    </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="sm:justify-center">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={cancelling}>
+                        Keep booking
+                    </Button>
+                    <Button variant="destructive" onClick={onConfirm} disabled={cancelling}>
+                        {cancelling ? 'Cancelling…' : 'Yes, cancel booking'}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 
