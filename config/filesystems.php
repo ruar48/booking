@@ -47,10 +47,15 @@ return [
             'report' => false,
         ],
 
+        // Written directly under public/profile instead of storage/app + a
+        // symlink, since shared hosts (e.g. Hostinger) often don't allow
+        // `storage:link` to create symlinks (disabled by the hosting panel,
+        // or wiped on deploy) — this way avatars are served with no symlink
+        // required.
         'avatars' => [
             'driver' => 'local',
-            'root' => storage_path('app/avatars'),
-            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/avatars',
+            'root' => public_path('profile'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/profile',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -84,7 +89,6 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
-        public_path('avatars') => storage_path('app/avatars'),
     ],
 
 ];
