@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { differenceInMinutes } from 'date-fns';
 import {
+    AlertTriangle,
     Calendar,
     CheckCircle2,
     Circle,
@@ -12,7 +13,7 @@ import {
     Wallet,
     XCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {ComponentType, ReactNode} from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -34,20 +35,60 @@ import type { ResourceBooking } from '@/types/booking';
 type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
+    paymentDeadline?: string | null;
 };
 
-export default function BookingsShow({ booking, canManage = false }: Props) {
+function useDeadlineCountdown(deadline: string | null | undefined) {
+    const target = useMemo(() => (deadline ? new Date(deadline).getTime() : null), [deadline]);
+    const [remainingMs, setRemainingMs] = useState(() => (target ? target - Date.now() : null));
+
+    useEffect(() => {
+        if (!target) {
+            return;
+        }
+
+        const interval = window.setInterval(() => {
+            setRemainingMs(target - Date.now());
+        }, 1000);
+
+        return () => window.clearInterval(interval);
+    }, [target]);
+
+    if (remainingMs === null) {
+        return { expired: false, label: null as string | null };
+    }
+
+    const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    return {
+        expired: remainingMs <= 0,
+        label: `${minutes}:${String(seconds).padStart(2, '0')}`,
+    };
+}
+
+export default function BookingsShow({ booking, canManage = false, paymentDeadline = null }: Props) {
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
 
     const isUnpaid = booking.payment_status === 'unpaid';
     useBookingPaymentChannel(isUnpaid ? booking.id : null);
 
-    const canMarkPaid =
-        canManage &&
+    const canPay =
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
-    const canPay =
+    const showDeadline = canPay && Boolean(paymentDeadline);
+    const deadline = useDeadlineCountdown(showDeadline ? paymentDeadline : null);
+
+    useEffect(() => {
+        if (deadline.expired) {
+            router.reload({ only: ['booking'] });
+        }
+    }, [deadline.expired]);
+
+    const canMarkPaid =
+        canManage &&
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
     const canCancel = !['cancelled', 'completed', 'rejected'].includes(
@@ -108,6 +149,29 @@ export default function BookingsShow({ booking, canManage = false }: Props) {
         <>
             <Head title={`Booking #${booking.id}`} />
             <div className="flex flex-1 flex-col gap-6 p-4">
+                {showDeadline ? (
+                    <Card className="border-amber-500/20 bg-amber-500/5">
+                        <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="flex items-start gap-2.5">
+                                <AlertTriangle className="mt-0.5 size-4.5 shrink-0 text-amber-600" />
+                                <div>
+                                    <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                                        Continue your payment
+                                        {deadline.label ? ` — ${deadline.label} left` : ''}
+                                    </p>
+                                    <p className="text-muted-foreground text-xs">
+                                        If payment isn&apos;t received in time, this booking will be
+                                        automatically cancelled and the slot released to other customers.
+                                    </p>
+                                </div>
+                            </div>
+                            <Button asChild size="sm" className="shrink-0">
+                                <Link href={checkout(booking)}>Continue payment</Link>
+                            </Button>
+                        </CardContent>
+                    </Card>
+                ) : null}
+
                 {/* Hero */}
                 <Card>
                     <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">

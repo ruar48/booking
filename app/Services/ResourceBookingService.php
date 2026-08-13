@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\ResourceStatus;
 use App\Events\BookingApproved;
 use App\Events\BookingCancelled;
@@ -103,6 +104,55 @@ class ResourceBookingService
         event(new BookingCancelled($booking));
 
         return $booking;
+    }
+
+    /**
+     * Cancel a booking together with every sibling from the same bulk
+     * submission (see ResourceBooking::groupBookings()), so a customer
+     * cancelling one part of a multi-slot booking doesn't leave the rest
+     * dangling as Pending/still holding the court. Already-cancelled
+     * siblings are left alone. Returns the cancelled version of $booking.
+     */
+    public function cancelGroup(ResourceBooking $booking, ?string $reason = null): ResourceBooking
+    {
+        $cancelled = null;
+
+        foreach ($booking->groupBookings() as $sibling) {
+            if ($sibling->status === BookingStatus::Cancelled) {
+                continue;
+            }
+
+            $result = $this->cancel($sibling, $reason);
+
+            if ($sibling->id === $booking->id) {
+                $cancelled = $result;
+            }
+        }
+
+        return $cancelled ?? $booking->fresh();
+    }
+
+    /**
+     * Mark a booking together with every sibling from the same bulk
+     * submission as paid, since a single QR payment covers the whole group
+     * (see ResourceBookingController::checkout()). Siblings already paid are
+     * left alone.
+     */
+    public function markGroupPaid(ResourceBooking $booking): void
+    {
+        foreach ($booking->groupBookings() as $sibling) {
+            if ($sibling->payment_status === PaymentStatus::Paid) {
+                continue;
+            }
+
+            $updates = ['payment_status' => PaymentStatus::Paid];
+
+            if ($sibling->status === BookingStatus::Pending) {
+                $updates['status'] = BookingStatus::Approved;
+            }
+
+            $this->bookingRepository->update($sibling, $updates);
+        }
     }
 
     public function getForCalendar(

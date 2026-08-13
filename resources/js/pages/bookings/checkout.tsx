@@ -51,6 +51,12 @@ type Props = {
     qrPayment?: QrPayment | null;
     paymentDeadline?: string | null;
     policies?: CheckoutPolicy[];
+    // Present when this booking was submitted together with others (e.g. a
+    // multi-hour or multi-court selection) — the whole group shares one
+    // payment, so checkout must total and display all of them, not just
+    // this one row.
+    groupBookings?: ResourceBooking[] | null;
+    groupTotalAmount?: number | null;
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -97,10 +103,18 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
     };
 }
 
-export default function BookingsCheckout({ booking, qrPayment = null, paymentDeadline = null, policies = [] }: Props) {
+export default function BookingsCheckout({
+    booking,
+    qrPayment = null,
+    paymentDeadline = null,
+    policies = [],
+    groupBookings = null,
+    groupTotalAmount = null,
+}: Props) {
     const isPaid = booking.payment_status === 'paid';
     const isCancelled = booking.status === 'cancelled';
     const isUnpaid = booking.payment_status === 'unpaid' && !isCancelled;
+    const amountDue = groupTotalAmount ?? booking.amount;
 
     const [step, setStep] = useState<Step>(() => {
         if (isPaid) return 4;
@@ -201,6 +215,8 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                             {step === 1 ? (
                                 <BookingDetailsCard
                                     booking={booking}
+                                    groupBookings={groupBookings}
+                                    groupTotalAmount={groupTotalAmount}
                                     showDeadline={Boolean(paymentDeadline)}
                                     deadlineLabel={deadline.label}
                                     onContinue={() => setStep(2)}
@@ -216,7 +232,7 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                 />
                             ) : step === 3 ? (
                                 <PaymentPanel
-                                    amount={booking.amount}
+                                    amount={amountDue}
                                     qrPayment={qrPayment}
                                     qrExpired={qrExpired}
                                     generating={generating}
@@ -228,7 +244,7 @@ export default function BookingsCheckout({ booking, qrPayment = null, paymentDea
                                     onCancel={() => setCancelDialogOpen(true)}
                                 />
                             ) : (
-                                <ConfirmationPanel booking={booking} />
+                                <ConfirmationPanel booking={booking} amount={amountDue} />
                             )}
                         </div>
 
@@ -299,15 +315,21 @@ function CancelBookingDialog({
 
 function BookingDetailsCard({
     booking,
+    groupBookings,
+    groupTotalAmount,
     showDeadline,
     deadlineLabel,
     onContinue,
 }: {
     booking: ResourceBooking;
+    groupBookings?: ResourceBooking[] | null;
+    groupTotalAmount?: number | null;
     showDeadline: boolean;
     deadlineLabel: string | null;
     onContinue: () => void;
 }) {
+    const isGrouped = groupBookings != null && groupBookings.length > 1;
+
     return (
         <Card className="gap-3 py-4">
             <CardHeader className="px-4">
@@ -317,7 +339,7 @@ function BookingDetailsCard({
                     </div>
                     <div className="min-w-0">
                         <CardTitle className="flex items-center gap-2 text-base">
-                            Court Booking #{booking.id}
+                            {isGrouped ? `Court Booking (${groupBookings.length} slots)` : `Court Booking #${booking.id}`}
                             <StatusBadge status={booking.status} />
                         </CardTitle>
                         <p className="text-muted-foreground text-xs">{booking.resource?.name ?? 'Court'}</p>
@@ -325,16 +347,35 @@ function BookingDetailsCard({
                 </div>
             </CardHeader>
             <CardContent className="space-y-3 px-4">
-                <div>
-                    <SummaryRow label="Date">{formatDate(booking.starts_at)}</SummaryRow>
-                    <SummaryRow label="Time">
-                        {formatTime(booking.starts_at)} – {formatTime(booking.ends_at)}
-                    </SummaryRow>
-                    <SummaryRow label="Court">{booking.resource?.name ?? '—'}</SummaryRow>
-                    <SummaryRow label="Amount">
-                        {booking.amount != null ? formatCurrency(booking.amount) : '—'}
-                    </SummaryRow>
-                </div>
+                {isGrouped ? (
+                    <div className="space-y-2">
+                        {groupBookings.map((slot) => (
+                            <div key={slot.id} className="border-border/60 rounded-md border px-2.5 py-2 text-xs">
+                                <div className="flex items-center justify-between font-medium">
+                                    <span>{slot.resource?.name ?? 'Court'}</span>
+                                    <span>{slot.amount != null ? formatCurrency(slot.amount) : '—'}</span>
+                                </div>
+                                <p className="text-muted-foreground">
+                                    {formatDate(slot.starts_at)} · {formatTime(slot.starts_at)} – {formatTime(slot.ends_at)}
+                                </p>
+                            </div>
+                        ))}
+                        <SummaryRow label="Total Amount">
+                            {groupTotalAmount != null ? formatCurrency(groupTotalAmount) : '—'}
+                        </SummaryRow>
+                    </div>
+                ) : (
+                    <div>
+                        <SummaryRow label="Date">{formatDate(booking.starts_at)}</SummaryRow>
+                        <SummaryRow label="Time">
+                            {formatTime(booking.starts_at)} – {formatTime(booking.ends_at)}
+                        </SummaryRow>
+                        <SummaryRow label="Court">{booking.resource?.name ?? '—'}</SummaryRow>
+                        <SummaryRow label="Amount">
+                            {booking.amount != null ? formatCurrency(booking.amount) : '—'}
+                        </SummaryRow>
+                    </div>
+                )}
 
                 {showDeadline ? (
                     <div className="bg-amber-500/10 border-amber-500/20 rounded-md border p-2.5 text-xs">
@@ -566,14 +607,14 @@ function PaymentPanel({
     );
 }
 
-function ConfirmationPanel({ booking }: { booking: ResourceBooking }) {
+function ConfirmationPanel({ booking, amount }: { booking: ResourceBooking; amount?: number | null }) {
     return (
         <Card className="border-emerald-500/20">
             <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
                 <PartyPopper className="size-14 text-emerald-500" />
                 <p className="text-lg font-semibold">Payment Successful!</p>
                 <p className="text-muted-foreground text-sm">
-                    {booking.amount != null ? `${formatCurrency(booking.amount)} paid. ` : ''}
+                    {amount != null ? `${formatCurrency(amount)} paid. ` : ''}
                     Your reservation is confirmed — see you on the court.
                 </p>
                 <Button asChild className="mt-2">

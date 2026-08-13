@@ -17,6 +17,7 @@ use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Models\User;
+use App\Repositories\ResourceBookingRepository;
 use App\Services\PaymentService;
 use App\Services\ResourceBookingService;
 use Illuminate\Http\JsonResponse;
@@ -25,6 +26,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -84,12 +86,18 @@ class ResourceBookingController extends Controller
 
     public function storeBulk(StoreBulkResourceBookingRequest $request): RedirectResponse
     {
+        $bookings = $request->validated('bookings');
+        // Multiple runs from one submission (e.g. a multi-hour or multi-court
+        // selection) share a group id so checkout can total and pay them
+        // together instead of only charging for the first one. A lone
+        // booking doesn't need a group.
+        $bookingGroupId = count($bookings) > 1 ? (string) Str::uuid() : null;
         $firstBooking = null;
 
         try {
-            foreach ($request->validated('bookings') as $data) {
+            foreach ($bookings as $data) {
                 $booking = $this->resourceBookingService->create(
-                    $this->attributesForNewBooking($data, $request->user()->id),
+                    $this->attributesForNewBooking($data, $request->user()->id, $bookingGroupId),
                 );
 
                 $firstBooking ??= $booking;
@@ -199,7 +207,6 @@ class ResourceBookingController extends Controller
                 'qrCodeUrl' => $pendingPayment->qr_code_url,
                 'expiresAt' => $pendingPayment->qr_expires_at,
             ] : null,
-            'paymentDeadline' => $this->paymentDeadline($booking),
         ]);
     }
 
@@ -222,7 +229,12 @@ class ResourceBookingController extends Controller
         $qrPayment = null;
 
         if ($booking->payment_status !== PaymentStatus::Paid) {
-            $payment = $this->paymentService->createQrphPaymentForBooking($booking, $request->user());
+            // A bulk submission may have split into several bookings sharing
+            // a booking_group_id (see attributesForNewBooking()) — the QR
+            // must cover all of them, not just this one row, or the customer
+            // is charged for only a fraction of what they booked.
+            $groupTotal = (string) round((float) $booking->groupBookings()->sum('amount'), 2);
+            $payment = $this->paymentService->createQrphPaymentForBooking($booking, $request->user(), $groupTotal);
 
             $qrPayment = [
                 'id' => $payment->id,
@@ -242,7 +254,6 @@ class ResourceBookingController extends Controller
         return Inertia::render('bookings/checkout', [
             ...$this->bookingShowProps($booking),
             'qrPayment' => $qrPayment,
-            'paymentDeadline' => $this->paymentDeadline($booking),
         ]);
     }
 
@@ -253,10 +264,20 @@ class ResourceBookingController extends Controller
     {
         $booking->load(['resource', 'user', 'approver']);
 
+        // Sibling bookings from the same bulk submission (see
+        // attributesForNewBooking()) — surfaced so checkout can show/charge
+        // the full group instead of just this one row. Null when this
+        // booking wasn't part of a multi-slot submission.
+        $groupBookings = $booking->groupBookings()->load('resource');
+        $isGrouped = $groupBookings->count() > 1;
+
         return [
             'booking' => $booking,
             'canManage' => request()->user()->isVenueAdmin(),
             'policies' => $this->checkoutPolicies(),
+            'groupBookings' => $isGrouped ? $groupBookings->values() : null,
+            'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
+            'paymentDeadline' => $this->paymentDeadline($booking),
         ];
     }
 
@@ -296,13 +317,10 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('markPaid', $booking);
 
-        $updates = ['payment_status' => PaymentStatus::Paid];
-
-        if ($booking->status === BookingStatus::Pending) {
-            $updates['status'] = BookingStatus::Approved;
-        }
-
-        $this->resourceBookingRepository->update($booking, $updates);
+        // Cascades to every sibling in the booking group too, so staff
+        // marking one row paid doesn't leave the rest of a bulk submission
+        // sitting Unpaid (see attributesForNewBooking()/cancelGroup()).
+        $this->resourceBookingService->markGroupPaid($booking);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment marked as paid.')]);
 
@@ -313,10 +331,14 @@ class ResourceBookingController extends Controller
     {
         $this->authorize('cancel', $booking);
 
-        $this->resourceBookingRepository->update($booking, [
-            'status' => BookingStatus::Cancelled,
-            'cancellation_reason' => $request->input('cancellation_reason'),
-        ]);
+        // Cancelling a booking that's part of a bulk group cancels every
+        // sibling too — otherwise the rest of the group is left dangling as
+        // Pending/Unpaid, still holding the court, with no way for the
+        // customer to pay or cancel them (see attributesForNewBooking()).
+        $this->resourceBookingService->cancelGroup(
+            $booking,
+            $request->input('cancellation_reason'),
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking cancelled.')]);
 
@@ -423,7 +445,7 @@ class ResourceBookingController extends Controller
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
-    protected function attributesForNewBooking(array $data, int $userId): array
+    protected function attributesForNewBooking(array $data, int $userId, ?string $bookingGroupId = null): array
     {
         $resource = Resource::query()->findOrFail($data['resource_id']);
         $startsAt = Carbon::parse($data['starts_at']);
@@ -433,6 +455,7 @@ class ResourceBookingController extends Controller
         return [
             ...$data,
             'user_id' => $userId,
+            'booking_group_id' => $bookingGroupId,
             'status' => BookingStatus::Pending,
             'payment_status' => PaymentStatus::Unpaid,
             'amount' => round((float) $resource->hourly_rate * $hours, 2),
@@ -450,12 +473,12 @@ class ResourceBookingController extends Controller
 
         $bookedSlots = ResourceBooking::query()
             ->where('starts_at', '>=', now()->startOfDay())
-            ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
+            ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
             ->with('resource:id,name')
             ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
 
         $dateOverrides = DateOverride::query()
-            ->where('date', '>=', now()->startOfDay())
+            ->where('date', '>=', now()->toDateString())
             ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
         return [

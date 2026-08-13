@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -72,7 +73,8 @@ class HandleInertiaRequests extends Middleware
             'name' => $user->name,
             'email' => $user->email,
             'phone' => $user->phone,
-            'avatar' => $user->avatar,
+            'avatar' => $user->avatar ? Storage::disk('avatars')->url($user->avatar) : null,
+            'gender' => $user->players()->value('gender'),
             'email_verified_at' => $user->email_verified_at,
             'last_login_at' => $user->last_login_at,
             'roles' => $user->getRoleNames()->values()->all(),

@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 
 export type GetInitialsFn = (fullName: string) => string;
+export type GetAvatarFallbackFn = (fullName: string, gender?: string | null) => string;
 
 function getInitial(name: string): string {
     return Array.from(name)[0] ?? '';
@@ -23,4 +24,22 @@ export function useInitials(): GetInitialsFn {
 
         return `${firstInitial}${lastInitial}`.toUpperCase();
     }, []);
+}
+
+/**
+ * Avatar fallback text: "M"/"F" when the person's gender is known, otherwise
+ * falls back to name initials.
+ */
+export function useAvatarFallback(): GetAvatarFallbackFn {
+    const getInitials = useInitials();
+
+    return useCallback(
+        (fullName: string, gender?: string | null): string => {
+            if (gender === 'male') return 'M';
+            if (gender === 'female') return 'F';
+
+            return getInitials(fullName);
+        },
+        [getInitials],
+    );
 }

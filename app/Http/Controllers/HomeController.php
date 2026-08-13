@@ -43,7 +43,7 @@ class HomeController extends Controller
             ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
 
         $dateOverrides = DateOverride::query()
-            ->where('date', '>=', now()->startOfDay())
+            ->where('date', '>=', now()->toDateString())
             ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
         $bookingsToday = ResourceBooking::query()

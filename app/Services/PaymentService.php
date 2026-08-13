@@ -20,14 +20,22 @@ class PaymentService
     public function __construct(
         private readonly PaymongoService $paymongo,
         private readonly OpenPlayRegistrationService $openPlayRegistrations,
+        private readonly ResourceBookingService $resourceBookings,
     ) {}
 
-    public function createQrphPaymentForBooking(ResourceBooking $booking, User $user): Payment
+    /**
+     * @param  string|null  $amount  Overrides $booking->amount — needed when
+     *                               $booking is one row of a bulk group
+     *                               submission and the QR must cover the
+     *                               whole group's total, not just this row
+     *                               (see ResourceBookingController::checkout()).
+     */
+    public function createQrphPaymentForBooking(ResourceBooking $booking, User $user, ?string $amount = null): Payment
     {
         return $this->createQrphPayment(
             payable: $booking,
             user: $user,
-            amount: (string) $booking->amount,
+            amount: $amount ?? (string) $booking->amount,
             description: "Payment for booking #{$booking->id}",
         );
     }
@@ -189,6 +197,14 @@ class PaymentService
                 }
 
                 $payable->update($updates);
+
+                // One QR payment covers the whole booking_group_id batch
+                // (see ResourceBookingController::checkout()) — cascade paid
+                // status to the siblings too, or the rest of the group stays
+                // Unpaid forever despite the customer having paid for it.
+                if ($payable instanceof ResourceBooking) {
+                    $this->resourceBookings->markGroupPaid($payable);
+                }
 
                 if ($payable instanceof OpenPlayRegistration) {
                     $this->openPlayRegistrations->pairRandomly($payable->openPlaySession);

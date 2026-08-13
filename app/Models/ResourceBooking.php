@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use Database\Factories\ResourceBookingFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property string|null $booking_group_id
  * @property int $resource_id
  * @property int $user_id
  * @property int|null $created_by
@@ -31,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[Fillable([
+    'booking_group_id',
     'resource_id',
     'user_id',
     'created_by',
@@ -85,5 +88,26 @@ class ResourceBooking extends Model
     public function payments(): MorphMany
     {
         return $this->morphMany(Payment::class, 'payable');
+    }
+
+    /**
+     * All bookings created together in the same bulk submission (e.g. a
+     * multi-hour or multi-court selection on the calendar), including this
+     * one — so checkout/payment can operate on the whole batch instead of
+     * silently acting on just this single row. Bookings without a group
+     * (single/legacy submissions) return a collection of just themselves.
+     *
+     * @return Collection<int, static>
+     */
+    public function groupBookings(): Collection
+    {
+        if (! $this->booking_group_id) {
+            return new Collection([$this]);
+        }
+
+        return static::query()
+            ->where('booking_group_id', $this->booking_group_id)
+            ->orderBy('starts_at')
+            ->get();
     }
 }

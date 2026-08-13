@@ -13,6 +13,7 @@ use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Testing\TestResponse;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -69,7 +70,7 @@ function fakePaymongoGateway(bool $includeExpiresAt = true): void
  * signature is in li=. This is what tripped up production: the code required
  * te to be non-empty before ever checking li.
  */
-function postPaymongoWebhook(string $paymentIntentId, bool $livemode = false): \Illuminate\Testing\TestResponse
+function postPaymongoWebhook(string $paymentIntentId, bool $livemode = false): TestResponse
 {
     $secret = config('services.paymongo.webhook_secret');
     $timestamp = time();
@@ -180,6 +181,90 @@ it('lets a customer book a court, pay via QR Ph, and see the booking confirmed',
             ->where('booking.payment_status', 'paid')
             ->where('booking.status', 'approved')
         );
+});
+
+it('charges the full total for a multi-slot bulk booking, not just the first run', function () {
+    // Regression test: selecting several non-contiguous hours (or several
+    // courts) in one submission creates one ResourceBooking row per run, but
+    // checkout used to operate on only the first row returned from
+    // storeBulk() — silently dropping the rest of the customer's hours from
+    // the QR payment amount. booking_group_id ties the rows together so
+    // checkout totals and pays them all.
+    fakePaymongoGateway();
+
+    $user = playerUser();
+    $resource = Resource::factory()->create([
+        'sport' => Sport::Pickleball,
+        'status' => ResourceStatus::Available,
+        'hourly_rate' => 1,
+    ]);
+
+    $day = now()->addDay();
+
+    DateOverride::query()->create([
+        'date' => $day->toDateString(),
+        'is_closed' => false,
+        'open_time' => '08:00',
+        'close_time' => '22:00',
+    ]);
+
+    $this->actingAs($user);
+
+    // Two non-contiguous runs: 9-12 (3h) and 14-18 (4h) = 7 total hours.
+    $firstRun = ['starts_at' => $day->clone()->setTime(9, 0), 'ends_at' => $day->clone()->setTime(12, 0)];
+    $secondRun = ['starts_at' => $day->clone()->setTime(14, 0), 'ends_at' => $day->clone()->setTime(18, 0)];
+
+    $this->post(route('bookings.store-bulk'), [
+        'bookings' => [
+            [
+                'resource_id' => $resource->id,
+                'starts_at' => $firstRun['starts_at']->toDateTimeString(),
+                'ends_at' => $firstRun['ends_at']->toDateTimeString(),
+            ],
+            [
+                'resource_id' => $resource->id,
+                'starts_at' => $secondRun['starts_at']->toDateTimeString(),
+                'ends_at' => $secondRun['ends_at']->toDateTimeString(),
+            ],
+        ],
+    ])->assertRedirect();
+
+    $bookings = ResourceBooking::query()->where('resource_id', $resource->id)->orderBy('starts_at')->get();
+
+    expect($bookings)->toHaveCount(2)
+        ->and((float) $bookings[0]->amount)->toBe(3.0)
+        ->and((float) $bookings[1]->amount)->toBe(4.0)
+        ->and($bookings[0]->booking_group_id)->not->toBeNull()
+        ->and($bookings[0]->booking_group_id)->toBe($bookings[1]->booking_group_id);
+
+    $primary = $bookings[0];
+
+    // Checkout must reflect the group total, not just this row's amount.
+    $this->get(route('bookings.checkout', $primary))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('groupTotalAmount', 7));
+
+    $this->post(route('bookings.checkout.generate', $primary), [
+        'payment_method' => 'qrph',
+    ])->assertOk();
+
+    $payment = Payment::query()
+        ->where('payable_type', ResourceBooking::class)
+        ->where('payable_id', $primary->id)
+        ->latest()
+        ->firstOrFail();
+
+    // This is the core of the bug: the QR must be for ₱7, not ₱3.
+    expect((float) $payment->amount)->toBe(7.0);
+
+    // Paying the primary booking's QR marks the whole group paid.
+    postPaymongoWebhook($payment->paymongo_payment_intent_id)->assertOk();
+
+    foreach ($bookings as $booking) {
+        $booking->refresh();
+        expect($booking->payment_status->value)->toBe('paid')
+            ->and($booking->status->value)->toBe('approved');
+    }
 });
 
 it('lets a customer join a paid open play session, pay via QR Ph, and get registered', function () {

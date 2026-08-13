@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 class ResourceBookingRepository implements ResourceBookingRepositoryInterface
 {
     /** @var list<BookingStatus> */
-    private const BLOCKING_STATUSES = [
+    public const BLOCKING_STATUSES = [
         BookingStatus::Pending,
         BookingStatus::Approved,
         BookingStatus::Completed,
