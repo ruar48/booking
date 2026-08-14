@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
@@ -42,16 +42,43 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+<<<<<<< Updated upstream
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
  * @route '/rentals/transactions'
+>>>>>>> Stashed changes
  */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
+export const report = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: report.url(options),
+    method: 'get',
+})
 
+<<<<<<< Updated upstream
+report.definition = {
+    methods: ["get","head"],
+    url: '/rentals/report',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+report.url = (options?: RouteQueryOptions) => {
+    return report.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+=======
             /**
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
@@ -65,18 +92,65 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
  * @route '/rentals/transactions'
+>>>>>>> Stashed changes
  */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
+report.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: report.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: report.url(options),
+    method: 'head',
+})
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::exportReport
+ * @see app/Http/Controllers/RentalTransactionController.php:61
+ * @route '/rentals/report/export'
+ */
+export const exportReport = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportReport.url(options),
+    method: 'get',
+})
+
+exportReport.definition = {
+    methods: ["get","head"],
+    url: '/rentals/report/export',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::exportReport
+ * @see app/Http/Controllers/RentalTransactionController.php:61
+ * @route '/rentals/report/export'
+ */
+exportReport.url = (options?: RouteQueryOptions) => {
+    return exportReport.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::exportReport
+ * @see app/Http/Controllers/RentalTransactionController.php:61
+ * @route '/rentals/report/export'
+ */
+exportReport.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: exportReport.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\RentalTransactionController::exportReport
+ * @see app/Http/Controllers/RentalTransactionController.php:61
+ * @route '/rentals/report/export'
+ */
+exportReport.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: exportReport.url(options),
+    method: 'head',
+})
+
 /**
 * @see \App\Http\Controllers\RentalTransactionController::report
  * @see app/Http/Controllers/RentalTransactionController.php:45
@@ -300,6 +374,8 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
     method: 'head',
 })
 
+<<<<<<< Updated upstream
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::show
  * @see app/Http/Controllers/RentalTransactionController.php:95
@@ -335,6 +411,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
         })
     
     show.form = showForm
+>>>>>>> Stashed changes
 /**
 * @see \App\Http\Controllers\RentalTransactionController::returnItems
  * @see app/Http/Controllers/RentalTransactionController.php:106
@@ -393,6 +470,8 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
     method: 'patch',
 })
 
+<<<<<<< Updated upstream
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::returnItems
  * @see app/Http/Controllers/RentalTransactionController.php:106
@@ -424,6 +503,7 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
         })
     
     returnItems.form = returnItemsForm
+>>>>>>> Stashed changes
 /**
 * @see \App\Http\Controllers\RentalTransactionController::approve
  * @see app/Http/Controllers/RentalTransactionController.php:123
@@ -481,6 +561,8 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
     url: approve.url(args, options),
     method: 'post',
 })
+<<<<<<< Updated upstream
+=======
 
     /**
 * @see \App\Http\Controllers\RentalTransactionController::approve
@@ -503,6 +585,7 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
         })
     
     approve.form = approveForm
+>>>>>>> Stashed changes
 const RentalTransactionController = { index, report, exportReport, show, returnItems, approve }
 
 export default RentalTransactionController

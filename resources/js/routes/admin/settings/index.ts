@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\SettingController::index
  * @see app/Http/Controllers/Admin/SettingController.php:16
@@ -42,6 +42,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\Admin\SettingController::index
  * @see app/Http/Controllers/Admin/SettingController.php:16
@@ -77,6 +78,8 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     index.form = indexForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
  * @see app/Http/Controllers/Admin/SettingController.php:50
@@ -111,6 +114,7 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     method: 'put',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\Admin\SettingController::update
  * @see app/Http/Controllers/Admin/SettingController.php:50
@@ -142,6 +146,8 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
         })
     
     update.form = updateForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
  * @see app/Http/Controllers/Admin/SettingController.php:78
@@ -176,21 +182,24 @@ updatePaymentWindow.put = (options?: RouteQueryOptions): RouteDefinition<'put'> 
     method: 'put',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
  * @see app/Http/Controllers/Admin/SettingController.php:78
  * @route '/admin/settings/payment-window'
+=======
+/**
+* @see \App\Http\Controllers\Admin\SettingController::updateNotifications
+ * @see app/Http/Controllers/Admin/SettingController.php:96
+ * @route '/admin/settings/notifications'
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  */
-    const updatePaymentWindowForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: updatePaymentWindow.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
+export const updateNotifications = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+    url: updateNotifications.url(options),
+    method: 'put',
+})
 
+<<<<<<< HEAD
             /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
  * @see app/Http/Controllers/Admin/SettingController.php:78
@@ -227,6 +236,18 @@ updateNotifications.definition = {
  * @see app/Http/Controllers/Admin/SettingController.php:96
  * @route '/admin/settings/notifications'
  */
+=======
+updateNotifications.definition = {
+    methods: ["put"],
+    url: '/admin/settings/notifications',
+} satisfies RouteDefinition<["put"]>
+
+/**
+* @see \App\Http\Controllers\Admin\SettingController::updateNotifications
+ * @see app/Http/Controllers/Admin/SettingController.php:96
+ * @route '/admin/settings/notifications'
+ */
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 updateNotifications.url = (options?: RouteQueryOptions) => {
     return updateNotifications.definition.url + queryParams(options)
 }
@@ -240,6 +261,7 @@ updateNotifications.put = (options?: RouteQueryOptions): RouteDefinition<'put'> 
     url: updateNotifications.url(options),
     method: 'put',
 })
+<<<<<<< HEAD
 
     /**
 * @see \App\Http\Controllers\Admin\SettingController::updateNotifications
@@ -272,6 +294,8 @@ updateNotifications.put = (options?: RouteQueryOptions): RouteDefinition<'put'> 
         })
     
     updateNotifications.form = updateNotificationsForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 const settings = {
     index: Object.assign(index, index),
 update: Object.assign(update, update),

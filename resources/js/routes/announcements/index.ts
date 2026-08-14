@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\AnnouncementController::index
  * @see app/Http/Controllers/AnnouncementController.php:26
@@ -42,6 +42,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\AnnouncementController::index
  * @see app/Http/Controllers/AnnouncementController.php:26
@@ -77,6 +78,8 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     index.form = indexForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\AnnouncementController::create
  * @see app/Http/Controllers/AnnouncementController.php:35
@@ -120,6 +123,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\AnnouncementController::create
  * @see app/Http/Controllers/AnnouncementController.php:35
@@ -155,6 +159,8 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     create.form = createForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\AnnouncementController::store
  * @see app/Http/Controllers/AnnouncementController.php:44
@@ -189,6 +195,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\AnnouncementController::store
  * @see app/Http/Controllers/AnnouncementController.php:44
@@ -210,6 +217,8 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
         })
     
     store.form = storeForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\AnnouncementController::edit
  * @see app/Http/Controllers/AnnouncementController.php:62
@@ -277,6 +286,7 @@ edit.head = (args: { announcement: number | { id: number } } | [announcement: nu
     method: 'head',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\AnnouncementController::edit
  * @see app/Http/Controllers/AnnouncementController.php:62
@@ -312,6 +322,8 @@ edit.head = (args: { announcement: number | { id: number } } | [announcement: nu
         })
     
     edit.form = editForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\AnnouncementController::update
  * @see app/Http/Controllers/AnnouncementController.php:72
@@ -379,6 +391,7 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
     method: 'patch',
 })
 
+<<<<<<< HEAD
     /**
 * @see \App\Http\Controllers\AnnouncementController::update
  * @see app/Http/Controllers/AnnouncementController.php:72
@@ -424,6 +437,8 @@ update.patch = (args: { announcement: number | { id: number } } | [announcement:
         })
     
     update.form = updateForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
  * @see app/Http/Controllers/AnnouncementController.php:89
@@ -481,6 +496,7 @@ destroy.delete = (args: { announcement: number | { id: number } } | [announcemen
     url: destroy.url(args, options),
     method: 'delete',
 })
+<<<<<<< HEAD
 
     /**
 * @see \App\Http\Controllers\AnnouncementController::destroy
@@ -513,6 +529,8 @@ destroy.delete = (args: { announcement: number | { id: number } } | [announcemen
         })
     
     destroy.form = destroyForm
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
 const announcements = {
     index: Object.assign(index, index),
 create: Object.assign(create, create),

@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
 use App\Models\Player;
+<<<<<<< Updated upstream
 use App\Services\PlayerService;
+=======
+>>>>>>> Stashed changes
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,11 +34,15 @@ class ProfileController extends Controller
         return Inertia::render('settings/profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => $request->session()->get('status'),
+<<<<<<< Updated upstream
             'birthdate' => $player?->birthdate?->toDateString(),
             'gender' => $player?->gender,
             'avatarUrl' => $request->user()->avatar
                 ? Storage::disk('avatars')->url($request->user()->avatar)
                 : null,
+=======
+            'birthdate' => $request->user()->players()->first()?->birthdate?->toDateString(),
+>>>>>>> Stashed changes
         ]);
     }
 
@@ -54,6 +61,7 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
+<<<<<<< Updated upstream
         if ($request->hasFile('avatar')) {
             $this->playerService->uploadAvatar($request->user(), $request->file('avatar'));
         }
@@ -64,6 +72,11 @@ class ProfileController extends Controller
                 'birthdate' => $validated['birthdate'] ?? null,
                 'gender' => $validated['gender'] ?? null,
             ],
+=======
+        Player::query()->updateOrCreate(
+            ['user_id' => $request->user()->id],
+            ['birthdate' => $validated['birthdate'] ?? null],
+>>>>>>> Stashed changes
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Profile updated.')]);

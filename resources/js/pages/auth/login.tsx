@@ -21,12 +21,15 @@ export default function Login({ status, canResetPassword }: Props) {
         <>
             <Head title="Log in" />
 
+<<<<<<< Updated upstream
             {status && (
                 <div className="mb-6 rounded-lg border border-emerald-600/20 bg-emerald-600/10 px-4 py-2 text-center text-sm font-medium text-emerald-600 dark:text-emerald-400">
                     {status}
                 </div>
             )}
 
+=======
+>>>>>>> Stashed changes
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}

@@ -45,6 +45,12 @@ interface RentalRepositoryInterface
     public function returnItems(RentalTransaction $transaction, array $returnLines, User $actor): RentalTransaction;
 
     /**
+<<<<<<< HEAD
+=======
+<<<<<<< Updated upstream
+     * @return array{total_revenue: float, total_rentals_count: int, revenue_by_day: array<int, array{date: string, revenue: float}>, top_items: array<int, array{rental_item_id: int, rental_item_name: string, quantity_rented: int, revenue: float}>}
+=======
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
      * @return array{
      *     kpis: array{
      *         revenue: array{value: float, trend_pct: float|null},
@@ -59,6 +65,10 @@ interface RentalRepositoryInterface
      *     inventory_alerts: array<int, array{id: int, name: string, available_quantity: int, total_quantity: int, status: string}>,
      *     recent_rentals: array<int, array{id: int, reference_number: string, renter_name: string, item_summary: string, total_amount: float, rented_at: string|null, status: string}>,
      * }
+<<<<<<< HEAD
+=======
+>>>>>>> Stashed changes
+>>>>>>> 607da1784b926d2e8bad5158935321557db75b66
      */
     public function revenueReport(CarbonInterface $start, CarbonInterface $end): array;
 }
