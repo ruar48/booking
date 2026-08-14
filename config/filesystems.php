@@ -62,11 +62,15 @@ return [
         ],
 
         // Same rationale as the 'avatars' disk above: written directly under
-        // public/announcements so no `storage:link` symlink is required.
+        // public/ so no `storage:link` symlink is required. Named
+        // 'announcement-media' rather than 'announcements' because the
+        // latter collides with the /announcements route — a real directory
+        // at that path shadows the router on the dev server (and via
+        // Apache's `!-d` rewrite condition in production too).
         'announcements' => [
             'driver' => 'local',
-            'root' => public_path('announcements'),
-            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/announcements',
+            'root' => public_path('announcement-media'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/announcement-media',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,

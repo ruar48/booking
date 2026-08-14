@@ -160,10 +160,7 @@ class OpenPlayJoinController extends Controller
             'paymentPending' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Unpaid,
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
             'needsProfile' => $player === null || $player->birthdate === null,
-<<<<<<< Updated upstream
             'myRegistrationId' => $myRegistration?->payment_status === PaymentStatus::Paid ? $myRegistration->id : null,
-=======
->>>>>>> Stashed changes
         ]);
     }
 
@@ -197,7 +194,6 @@ class OpenPlayJoinController extends Controller
             return to_route('profile.edit');
         }
 
-<<<<<<< Updated upstream
         $pendingRegistration = OpenPlayRegistration::query()
             ->where('open_play_session_id', $open_play->id)
             ->where('player_id', $player->id)
@@ -208,8 +204,6 @@ class OpenPlayJoinController extends Controller
             return to_route('open-play.checkout', $open_play);
         }
 
-=======
->>>>>>> Stashed changes
         $partner = isset($validated['partner_player_id'])
             ? Player::query()->findOrFail($validated['partner_player_id'])
             : null;
