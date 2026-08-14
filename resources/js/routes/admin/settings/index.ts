@@ -1,7 +1,7 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
+ * @see app/Http/Controllers/Admin/SettingController.php:16
  * @route '/admin/settings'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
+ * @see app/Http/Controllers/Admin/SettingController.php:16
  * @route '/admin/settings'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
+ * @see app/Http/Controllers/Admin/SettingController.php:16
  * @route '/admin/settings'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
+ * @see app/Http/Controllers/Admin/SettingController.php:16
  * @route '/admin/settings'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -42,44 +42,9 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
- * @route '/admin/settings'
- */
-    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: index.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
- * @route '/admin/settings'
- */
-        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\Admin\SettingController::index
- * @see app/Http/Controllers/Admin/SettingController.php:15
- * @route '/admin/settings'
- */
-        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: index.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    index.form = indexForm
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:34
+ * @see app/Http/Controllers/Admin/SettingController.php:50
  * @route '/admin/settings'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -94,7 +59,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:34
+ * @see app/Http/Controllers/Admin/SettingController.php:50
  * @route '/admin/settings'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -103,7 +68,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:34
+ * @see app/Http/Controllers/Admin/SettingController.php:50
  * @route '/admin/settings'
  */
 update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -111,40 +76,9 @@ update.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
     method: 'put',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:34
- * @route '/admin/settings'
- */
-    const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: update.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\Admin\SettingController::update
- * @see app/Http/Controllers/Admin/SettingController.php:34
- * @route '/admin/settings'
- */
-        updateForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: update.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    update.form = updateForm
 /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
- * @see app/Http/Controllers/Admin/SettingController.php:62
+ * @see app/Http/Controllers/Admin/SettingController.php:78
  * @route '/admin/settings/payment-window'
  */
 export const updatePaymentWindow = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -159,7 +93,7 @@ updatePaymentWindow.definition = {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
- * @see app/Http/Controllers/Admin/SettingController.php:62
+ * @see app/Http/Controllers/Admin/SettingController.php:78
  * @route '/admin/settings/payment-window'
  */
 updatePaymentWindow.url = (options?: RouteQueryOptions) => {
@@ -168,7 +102,7 @@ updatePaymentWindow.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
- * @see app/Http/Controllers/Admin/SettingController.php:62
+ * @see app/Http/Controllers/Admin/SettingController.php:78
  * @route '/admin/settings/payment-window'
  */
 updatePaymentWindow.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -176,41 +110,44 @@ updatePaymentWindow.put = (options?: RouteQueryOptions): RouteDefinition<'put'> 
     method: 'put',
 })
 
-    /**
-* @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
- * @see app/Http/Controllers/Admin/SettingController.php:62
- * @route '/admin/settings/payment-window'
+/**
+* @see \App\Http\Controllers\Admin\SettingController::updateNotifications
+ * @see app/Http/Controllers/Admin/SettingController.php:96
+ * @route '/admin/settings/notifications'
  */
-    const updatePaymentWindowForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: updatePaymentWindow.url({
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PUT',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
+export const updateNotifications = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+    url: updateNotifications.url(options),
+    method: 'put',
+})
 
-            /**
-* @see \App\Http\Controllers\Admin\SettingController::updatePaymentWindow
- * @see app/Http/Controllers/Admin/SettingController.php:62
- * @route '/admin/settings/payment-window'
+updateNotifications.definition = {
+    methods: ["put"],
+    url: '/admin/settings/notifications',
+} satisfies RouteDefinition<["put"]>
+
+/**
+* @see \App\Http\Controllers\Admin\SettingController::updateNotifications
+ * @see app/Http/Controllers/Admin/SettingController.php:96
+ * @route '/admin/settings/notifications'
  */
-        updatePaymentWindowForm.put = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: updatePaymentWindow.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PUT',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    updatePaymentWindow.form = updatePaymentWindowForm
+updateNotifications.url = (options?: RouteQueryOptions) => {
+    return updateNotifications.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\Admin\SettingController::updateNotifications
+ * @see app/Http/Controllers/Admin/SettingController.php:96
+ * @route '/admin/settings/notifications'
+ */
+updateNotifications.put = (options?: RouteQueryOptions): RouteDefinition<'put'> => ({
+    url: updateNotifications.url(options),
+    method: 'put',
+})
 const settings = {
     index: Object.assign(index, index),
 update: Object.assign(update, update),
 updatePaymentWindow: Object.assign(updatePaymentWindow, updatePaymentWindow),
+updateNotifications: Object.assign(updateNotifications, updateNotifications),
 }
 
 export default settings

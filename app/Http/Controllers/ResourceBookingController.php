@@ -7,6 +7,7 @@ use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Events\BookingFailed;
 use App\Exceptions\BookingConflictException;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
@@ -45,6 +46,7 @@ class ResourceBookingController extends Controller
 
         $user = $request->user();
         $filters = $request->only(['search', 'status', 'payment_status', 'resource_id', 'date']);
+<<<<<<< Updated upstream
         $canManage = $user->isVenueAdmin();
 
         return Inertia::render('bookings/index', [
@@ -56,6 +58,16 @@ class ResourceBookingController extends Controller
                 : [],
             'stats' => $canManage ? null : $this->resourceBookingRepository->statsForUser($user),
             'nextBooking' => $canManage ? null : $this->resourceBookingRepository->nextBookingForUser($user),
+=======
+
+        return Inertia::render('bookings/index', [
+            'bookings' => $this->resourceBookingRepository->paginateForUser($user, $filters),
+            'canManage' => $user->isVenueAdmin(),
+            'filters' => $filters,
+            'resources' => $user->isVenueAdmin()
+                ? Resource::query()->orderBy('name')->get(['id', 'name'])
+                : [],
+>>>>>>> Stashed changes
         ]);
     }
 
@@ -76,6 +88,14 @@ class ResourceBookingController extends Controller
                 ),
             );
         } catch (BookingConflictException $e) {
+            event(new BookingFailed(
+                $request->user(),
+                (int) $request->validated('resource_id'),
+                Carbon::parse($request->validated('starts_at')),
+                Carbon::parse($request->validated('ends_at')),
+                $e->getMessage(),
+            ));
+
             throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
         }
 
@@ -103,6 +123,14 @@ class ResourceBookingController extends Controller
                 $firstBooking ??= $booking;
             }
         } catch (BookingConflictException $e) {
+            event(new BookingFailed(
+                $request->user(),
+                (int) $data['resource_id'],
+                Carbon::parse($data['starts_at']),
+                Carbon::parse($data['ends_at']),
+                $e->getMessage(),
+            ));
+
             throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
         }
 

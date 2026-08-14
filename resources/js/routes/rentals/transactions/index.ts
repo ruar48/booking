@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
@@ -42,6 +42,8 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+<<<<<<< Updated upstream
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::index
  * @see app/Http/Controllers/RentalTransactionController.php:24
@@ -77,6 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     index.form = indexForm
+>>>>>>> Stashed changes
 /**
 * @see \App\Http\Controllers\RentalTransactionController::show
  * @see app/Http/Controllers/RentalTransactionController.php:95
@@ -144,6 +147,8 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
     method: 'head',
 })
 
+<<<<<<< Updated upstream
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::show
  * @see app/Http/Controllers/RentalTransactionController.php:95
@@ -179,6 +184,7 @@ show.head = (args: { rental_transaction: number | { id: number } } | [rental_tra
         })
     
     show.form = showForm
+>>>>>>> Stashed changes
 /**
 * @see \App\Http\Controllers\RentalTransactionController::returnItems
  * @see app/Http/Controllers/RentalTransactionController.php:106
@@ -237,6 +243,8 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
     method: 'patch',
 })
 
+<<<<<<< Updated upstream
+=======
     /**
 * @see \App\Http\Controllers\RentalTransactionController::returnItems
  * @see app/Http/Controllers/RentalTransactionController.php:106
@@ -268,6 +276,7 @@ returnItems.patch = (args: { rental_transaction: number | { id: number } } | [re
         })
     
     returnItems.form = returnItemsForm
+>>>>>>> Stashed changes
 /**
 * @see \App\Http\Controllers\RentalTransactionController::approve
  * @see app/Http/Controllers/RentalTransactionController.php:123
@@ -325,6 +334,8 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
     url: approve.url(args, options),
     method: 'post',
 })
+<<<<<<< Updated upstream
+=======
 
     /**
 * @see \App\Http\Controllers\RentalTransactionController::approve
@@ -347,6 +358,7 @@ approve.post = (args: { rental_transaction: number | { id: number } } | [rental_
         })
     
     approve.form = approveForm
+>>>>>>> Stashed changes
 const transactions = {
     index: Object.assign(index, index),
 show: Object.assign(show, show),

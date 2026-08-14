@@ -19,8 +19,11 @@ trait ProfileValidationRules
             'name' => $this->nameRules(),
             'email' => $this->emailRules($userId),
             'birthdate' => ['nullable', 'date', 'before:today'],
+<<<<<<< Updated upstream
             'gender' => ['nullable', 'string', Rule::in(['male', 'female', 'other', 'prefer_not_to_say'])],
             'avatar' => ['nullable', 'image', 'max:2048'],
+=======
+>>>>>>> Stashed changes
         ];
     }
 
