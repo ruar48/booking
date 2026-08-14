@@ -7,6 +7,7 @@ use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Events\BookingFailed;
 use App\Exceptions\BookingConflictException;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
@@ -76,6 +77,14 @@ class ResourceBookingController extends Controller
                 ),
             );
         } catch (BookingConflictException $e) {
+            event(new BookingFailed(
+                $request->user(),
+                (int) $request->validated('resource_id'),
+                Carbon::parse($request->validated('starts_at')),
+                Carbon::parse($request->validated('ends_at')),
+                $e->getMessage(),
+            ));
+
             throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
         }
 
@@ -103,6 +112,14 @@ class ResourceBookingController extends Controller
                 $firstBooking ??= $booking;
             }
         } catch (BookingConflictException $e) {
+            event(new BookingFailed(
+                $request->user(),
+                (int) $data['resource_id'],
+                Carbon::parse($data['starts_at']),
+                Carbon::parse($data['ends_at']),
+                $e->getMessage(),
+            ));
+
             throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
         }
 

@@ -493,8 +493,16 @@ export function CourtScheduleGrid({
                     Selected
                 </span>
                 <span className="flex items-center gap-2">
-                    <span className="size-4 rounded border border-slate-200 bg-slate-100" />
+                    <span className="size-4 rounded border border-slate-300 bg-slate-200" />
                     Booked
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="size-4 rounded border border-amber-200 bg-amber-50" />
+                    Unavailable
+                </span>
+                <span className="flex items-center gap-2">
+                    <span className="size-4 rounded border border-rose-200 bg-rose-50" />
+                    Passed
                 </span>
             </div>
 
@@ -605,11 +613,15 @@ export function CourtScheduleGrid({
                                                     }
                                                     className={cn(
                                                         'w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
-                                                        disabled &&
-                                                            'cursor-not-allowed bg-slate-100 text-slate-400',
-                                                        (unavailable || past) &&
-                                                            !booked &&
-                                                            'bg-slate-200 text-slate-500',
+                                                        disabled && 'cursor-not-allowed',
+                                                        booked && 'bg-slate-200 text-slate-500',
+                                                        !booked &&
+                                                            unavailable &&
+                                                            'border border-amber-200 bg-amber-50 text-amber-600',
+                                                        !booked &&
+                                                            !unavailable &&
+                                                            past &&
+                                                            'border border-rose-200 bg-rose-50 text-rose-500',
                                                         !disabled &&
                                                             selected &&
                                                             'bg-brand-lime/35 text-brand-navy ring-1 ring-brand-lime',

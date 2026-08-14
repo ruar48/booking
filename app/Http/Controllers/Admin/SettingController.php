@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Support\BookingNotificationSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,12 +23,27 @@ class SettingController extends Controller
             ->where(fn ($query) => $query
                 ->where('group', '!=', 'bookings')
                 ->orWhere('key', '!=', 'unpaid_cancel_minutes'))
+            ->where('group', '!=', 'notifications')
             ->get()
             ->groupBy('group');
 
         return Inertia::render('admin/settings/index', [
             'settings' => $settings,
             'unpaidCancelMinutes' => $this->unpaidCancelMinutes(),
+            'notificationSettings' => collect(BookingNotificationSettings::EVENT_KEYS)
+                ->map(function (string $key) {
+                    $config = BookingNotificationSettings::config($key);
+
+                    return [
+                        'key' => $key,
+                        'enabled' => $config['enabled'],
+                        'recipients' => [
+                            ...($config['notifyCustomer'] ? ['customer'] : []),
+                            ...($config['notifyOwners'] ? ['owners'] : []),
+                        ],
+                    ];
+                })
+                ->values(),
         ]);
     }
 
@@ -73,6 +89,33 @@ class SettingController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment window updated.')]);
+
+        return back();
+    }
+
+    public function updateNotifications(Request $request): RedirectResponse
+    {
+        abort_unless($request->user()->hasRole(Role::SuperAdmin->value), 403);
+
+        $validated = $request->validate([
+            'notifications' => ['required', 'array'],
+            'notifications.*.key' => ['required', 'string', 'in:'.implode(',', BookingNotificationSettings::EVENT_KEYS)],
+            'notifications.*.enabled' => ['required', 'boolean'],
+            'notifications.*.recipients' => ['array'],
+            'notifications.*.recipients.*' => ['string', 'in:customer,owners'],
+        ]);
+
+        foreach ($validated['notifications'] as $notification) {
+            Setting::query()->updateOrCreate(
+                ['group' => 'notifications', 'key' => $notification['key']],
+                ['value' => [
+                    'enabled' => $notification['enabled'],
+                    'recipients' => $notification['recipients'] ?? [],
+                ]],
+            );
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Notification settings updated.')]);
 
         return back();
     }

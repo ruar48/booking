@@ -9,6 +9,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
     Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
     Route::put('settings/payment-window', [SettingController::class, 'updatePaymentWindow'])->name('settings.update-payment-window');
+    Route::put('settings/notifications', [SettingController::class, 'updateNotifications'])->name('settings.update-notifications');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
 
     Route::get('policies', [PolicyController::class, 'index'])->name('policies.index');

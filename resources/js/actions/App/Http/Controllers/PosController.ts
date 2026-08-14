@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\PosController::checkout
  * @see app/Http/Controllers/PosController.php:27
@@ -42,41 +42,6 @@ checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-    /**
-* @see \App\Http\Controllers\PosController::checkout
- * @see app/Http/Controllers/PosController.php:27
- * @route '/pos'
- */
-    const checkoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-        action: checkout.url(options),
-        method: 'get',
-    })
-
-            /**
-* @see \App\Http\Controllers\PosController::checkout
- * @see app/Http/Controllers/PosController.php:27
- * @route '/pos'
- */
-        checkoutForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: checkout.url(options),
-            method: 'get',
-        })
-            /**
-* @see \App\Http\Controllers\PosController::checkout
- * @see app/Http/Controllers/PosController.php:27
- * @route '/pos'
- */
-        checkoutForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
-            action: checkout.url({
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'HEAD',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'get',
-        })
-    
-    checkout.form = checkoutForm
 /**
 * @see \App\Http\Controllers\PosController::store
  * @see app/Http/Controllers/PosController.php:45
@@ -111,27 +76,6 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     method: 'post',
 })
 
-    /**
-* @see \App\Http\Controllers\PosController::store
- * @see app/Http/Controllers/PosController.php:45
- * @route '/pos/sales'
- */
-    const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: store.url(options),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\PosController::store
- * @see app/Http/Controllers/PosController.php:45
- * @route '/pos/sales'
- */
-        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: store.url(options),
-            method: 'post',
-        })
-    
-    store.form = storeForm
 /**
 * @see \App\Http\Controllers\PosController::voidMethod
  * @see app/Http/Controllers/PosController.php:67
@@ -189,38 +133,6 @@ voidMethod.patch = (args: { sale: number | { id: number } } | [sale: number | { 
     url: voidMethod.url(args, options),
     method: 'patch',
 })
-
-    /**
-* @see \App\Http\Controllers\PosController::voidMethod
- * @see app/Http/Controllers/PosController.php:67
- * @route '/pos/sales/{sale}/void'
- */
-    const voidMethodForm = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-        action: voidMethod.url(args, {
-                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                        _method: 'PATCH',
-                        ...(options?.query ?? options?.mergeQuery ?? {}),
-                    }
-                }),
-        method: 'post',
-    })
-
-            /**
-* @see \App\Http\Controllers\PosController::voidMethod
- * @see app/Http/Controllers/PosController.php:67
- * @route '/pos/sales/{sale}/void'
- */
-        voidMethodForm.patch = (args: { sale: number | { id: number } } | [sale: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
-            action: voidMethod.url(args, {
-                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
-                            _method: 'PATCH',
-                            ...(options?.query ?? options?.mergeQuery ?? {}),
-                        }
-                    }),
-            method: 'post',
-        })
-    
-    voidMethod.form = voidMethodForm
 const PosController = { checkout, store, voidMethod, void: voidMethod }
 
 export default PosController

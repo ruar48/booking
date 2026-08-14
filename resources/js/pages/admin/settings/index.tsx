@@ -5,11 +5,26 @@ import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { index as adminSettingsIndex, update, updatePaymentWindow } from '@/routes/admin/settings';
+import { index as adminSettingsIndex, update, updateNotifications, updatePaymentWindow } from '@/routes/admin/settings';
 import type { Setting } from '@/types/booking';
+
+type NotificationSetting = {
+    key: string;
+    enabled: boolean;
+    recipients: string[];
+};
+
+const NOTIFICATION_EVENT_LABELS: Record<string, string> = {
+    booking_created: 'Booking created',
+    booking_failed: 'Booking failed',
+    booking_approved: 'Booking approved',
+    booking_cancelled: 'Booking cancelled',
+};
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
@@ -17,6 +32,7 @@ type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 type Props = {
     settings: Record<string, Setting[]>;
     unpaidCancelMinutes: number | null;
+    notificationSettings: NotificationSetting[];
 };
 
 function humanize(key: string): string {
@@ -114,7 +130,7 @@ function SettingValueEditor({
     );
 }
 
-export default function AdminSettingsIndex({ settings, unpaidCancelMinutes }: Props) {
+export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, notificationSettings }: Props) {
     const flatSettings = Object.entries(settings).flatMap(([group, items]) =>
         items.map((setting) => ({
             group,
@@ -135,6 +151,10 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes }: Pr
         minutes: unpaidCancelMinutes !== null ? String(unpaidCancelMinutes) : '',
     });
 
+    const notificationsForm = useForm<{ notifications: NotificationSetting[] }>({
+        notifications: notificationSettings,
+    });
+
     const submit = (event: FormEvent) => {
         event.preventDefault();
         put(update().url);
@@ -146,6 +166,34 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes }: Pr
             minutes: data.minutes ? Number(data.minutes) : null,
         }));
         paymentWindowForm.put(updatePaymentWindow().url, { preserveScroll: true });
+    };
+
+    const submitNotifications = (event: FormEvent) => {
+        event.preventDefault();
+        notificationsForm.put(updateNotifications().url, { preserveScroll: true });
+    };
+
+    const updateNotificationSetting = (key: string, changes: Partial<NotificationSetting>) => {
+        notificationsForm.setData(
+            'notifications',
+            notificationsForm.data.notifications.map((notification) =>
+                notification.key === key ? { ...notification, ...changes } : notification,
+            ),
+        );
+    };
+
+    const toggleNotificationRecipient = (key: string, recipient: string, checked: boolean) => {
+        const notification = notificationsForm.data.notifications.find((n) => n.key === key);
+
+        if (!notification) {
+            return;
+        }
+
+        const recipients = checked
+            ? [...notification.recipients, recipient]
+            : notification.recipients.filter((r) => r !== recipient);
+
+        updateNotificationSetting(key, { recipients });
     };
 
     const updateSetting = (index: number, value: JsonValue) => {
@@ -198,6 +246,69 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes }: Pr
                     <div className="mt-4 flex justify-end">
                         <Button type="submit" disabled={paymentWindowForm.processing}>
                             Save payment window
+                        </Button>
+                    </div>
+                </form>
+
+                <form onSubmit={submitNotifications} className="mx-auto w-full max-w-3xl">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Booking notifications</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            <p className="text-muted-foreground text-sm">
+                                Choose which booking emails are sent, and who receives them.
+                                Admins are notified as the venue's owners.
+                            </p>
+                            {notificationsForm.data.notifications.map((notification) => (
+                                <div key={notification.key} className="grid gap-3 rounded-lg border p-4">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor={`notif-${notification.key}-enabled`}>
+                                            {NOTIFICATION_EVENT_LABELS[notification.key] ?? notification.key}
+                                        </Label>
+                                        <Switch
+                                            id={`notif-${notification.key}-enabled`}
+                                            checked={notification.enabled}
+                                            onCheckedChange={(checked) =>
+                                                updateNotificationSetting(notification.key, { enabled: checked })
+                                            }
+                                        />
+                                    </div>
+                                    <div className="flex flex-wrap gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`notif-${notification.key}-customer`}
+                                                checked={notification.recipients.includes('customer')}
+                                                disabled={!notification.enabled}
+                                                onCheckedChange={(checked) =>
+                                                    toggleNotificationRecipient(notification.key, 'customer', checked === true)
+                                                }
+                                            />
+                                            <Label htmlFor={`notif-${notification.key}-customer`} className="font-normal">
+                                                Notify customer
+                                            </Label>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Checkbox
+                                                id={`notif-${notification.key}-owners`}
+                                                checked={notification.recipients.includes('owners')}
+                                                disabled={!notification.enabled}
+                                                onCheckedChange={(checked) =>
+                                                    toggleNotificationRecipient(notification.key, 'owners', checked === true)
+                                                }
+                                            />
+                                            <Label htmlFor={`notif-${notification.key}-owners`} className="font-normal">
+                                                Notify admins (owners)
+                                            </Label>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                    <div className="mt-4 flex justify-end">
+                        <Button type="submit" disabled={notificationsForm.processing}>
+                            Save notification settings
                         </Button>
                     </div>
                 </form>

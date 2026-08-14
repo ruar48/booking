@@ -8,6 +8,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\ResourceStatus;
 use App\Events\BookingApproved;
 use App\Events\BookingCancelled;
+use App\Events\BookingCreated;
 use App\Exceptions\BookingConflictException;
 use App\Models\DateOverride;
 use App\Models\Resource;
@@ -42,7 +43,11 @@ class ResourceBookingService
             Carbon::parse($data['ends_at']),
         );
 
-        return $this->bookingRepository->create($data);
+        $booking = $this->bookingRepository->create($data);
+
+        event(new BookingCreated($booking));
+
+        return $booking;
     }
 
     public function update(ResourceBooking $booking, array $data): ResourceBooking
