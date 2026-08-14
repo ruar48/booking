@@ -26,6 +26,7 @@ use Illuminate\Support\Carbon;
  * @property int $target_score
  * @property TournamentFormat|null $bracket_format
  * @property BracketGenerationMode $bracket_generation
+ * @property bool $bracket_visible
  * @property string $skill_level
  * @property TeamSize $team_size
  * @property Carbon|null $created_at
@@ -43,6 +44,7 @@ use Illuminate\Support\Carbon;
     'target_score',
     'bracket_format',
     'bracket_generation',
+    'bracket_visible',
     'skill_level',
     'team_size',
 ])]
@@ -64,6 +66,7 @@ class OpenPlaySession extends Model
             'target_score' => 'integer',
             'bracket_format' => TournamentFormat::class,
             'bracket_generation' => BracketGenerationMode::class,
+            'bracket_visible' => 'boolean',
             'team_size' => TeamSize::class,
         ];
     }

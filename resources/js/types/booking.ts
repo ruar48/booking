@@ -34,6 +34,7 @@ export type OpenPlaySession = {
     target_score: number;
     bracket_format: 'single_elimination' | 'double_elimination' | 'round_robin' | null;
     bracket_generation: 'automatic' | 'random' | 'manual';
+    bracket_visible: boolean;
     team_size: 'singles' | 'doubles';
     skill_level?: string;
     registrations_count?: number;

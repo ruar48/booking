@@ -1,5 +1,17 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CircleDollarSign, Maximize2, Minus, Plus, Trophy, UserPlus, X } from 'lucide-react';
+import {
+    Check,
+    CircleDollarSign,
+    Eye,
+    EyeOff,
+    Maximize2,
+    Minus,
+    Pencil,
+    Plus,
+    Trophy,
+    UserPlus,
+    X,
+} from 'lucide-react';
 import type { FormEvent} from 'react';
 import { useState } from 'react';
 
@@ -20,6 +32,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
     Table,
     TableBody,
@@ -47,7 +60,11 @@ import { cn } from '@/lib/utils';
 import { edit, index as openPlayIndex } from '@/routes/open-play';
 import { generate as generateBracket, reset as resetBracket } from '@/routes/open-play/bracket';
 import { store as storeBracketMatch } from '@/routes/open-play/bracket/matches';
-import { destroy as destroyBracketMatch } from '@/routes/open-play/bracket-matches';
+import { update as updateBracketVisibility } from '@/routes/open-play/bracket/visibility';
+import {
+    destroy as destroyBracketMatch,
+    update as updateBracketMatch,
+} from '@/routes/open-play/bracket-matches';
 import { updateScore } from '@/routes/open-play/matches';
 import {
     addAll as addAllMembers,
@@ -63,17 +80,114 @@ type Props = {
     session: OpenPlaySession;
 };
 
+// Sentinel for "no entry in this slot yet" — Radix's Select can't take an
+// empty string as an item value, so we map this to `null` on save instead.
+const EMPTY_SLOT = '__empty__';
+
+// Shared by the round-robin/manual table rows and the elimination bracket
+// cards: lets the organizer hand-pick either slot of any not-yet-completed
+// match, regardless of whether the bracket was generated automatically,
+// randomly, or built manually.
+function useMatchupEditor(match: OpenPlayMatch) {
+    const [editing, setEditing] = useState(false);
+    const [entry1Id, setEntry1Id] = useState(match.entry1_id ? String(match.entry1_id) : EMPTY_SLOT);
+    const [entry2Id, setEntry2Id] = useState(match.entry2_id ? String(match.entry2_id) : EMPTY_SLOT);
+    const [processing, setProcessing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const start = () => {
+        setEntry1Id(match.entry1_id ? String(match.entry1_id) : EMPTY_SLOT);
+        setEntry2Id(match.entry2_id ? String(match.entry2_id) : EMPTY_SLOT);
+        setError(null);
+        setEditing(true);
+    };
+
+    const cancel = () => {
+        setEditing(false);
+        setError(null);
+    };
+
+    const save = () => {
+        setProcessing(true);
+        setError(null);
+
+        router.patch(
+            updateBracketMatch(match).url,
+            {
+                entry1_id: entry1Id === EMPTY_SLOT ? null : Number(entry1Id),
+                entry2_id: entry2Id === EMPTY_SLOT ? null : Number(entry2Id),
+            },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => setEditing(false),
+                onError: (errors) => setError(Object.values(errors)[0] as string),
+                onFinish: () => setProcessing(false),
+            },
+        );
+    };
+
+    return {
+        editing,
+        start,
+        cancel,
+        save,
+        entry1Id,
+        setEntry1Id,
+        entry2Id,
+        setEntry2Id,
+        processing,
+        error,
+    };
+}
+
+function MatchupEntrySelect({
+    label,
+    value,
+    onChange,
+    registrations,
+    className,
+}: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    registrations: OpenPlayRegistration[];
+    className?: string;
+}) {
+    return (
+        <div className="grid gap-1">
+            {label && <Label className="text-muted-foreground text-xs">{label}</Label>}
+            <Select value={value} onValueChange={onChange}>
+                <SelectTrigger className={className}>
+                    <SelectValue placeholder="TBD" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value={EMPTY_SLOT}>TBD / empty</SelectItem>
+                    {registrations.map((registration) => (
+                        <SelectItem key={registration.id} value={String(registration.id)}>
+                            {entryLabel(registration)}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+    );
+}
+
 function MatchRow({
     match,
+    registrations,
     onRemove,
 }: {
     match: OpenPlayMatch;
+    registrations: OpenPlayRegistration[];
     onRemove?: (match: OpenPlayMatch) => void;
 }) {
     const [score1, setScore1] = useState(match.entry1_score?.toString() ?? '');
     const [score2, setScore2] = useState(match.entry2_score?.toString() ?? '');
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const editor = useMatchupEditor(match);
 
     const completed = match.status === 'completed';
     const entry1Won = completed && match.winner_registration_id === match.entry1_id;
@@ -101,6 +215,51 @@ function MatchRow({
             },
         );
     };
+
+    if (editor.editing) {
+        return (
+            <TableRow>
+                <TableCell>
+                    <MatchupEntrySelect
+                        label=""
+                        value={editor.entry1Id}
+                        onChange={editor.setEntry1Id}
+                        registrations={registrations}
+                        className="w-full"
+                    />
+                </TableCell>
+                <TableCell>
+                    <MatchupEntrySelect
+                        label=""
+                        value={editor.entry2Id}
+                        onChange={editor.setEntry2Id}
+                        registrations={registrations}
+                        className="w-full"
+                    />
+                </TableCell>
+                <TableCell colSpan={2}>
+                    {editor.error && <p className="text-destructive text-xs">{editor.error}</p>}
+                </TableCell>
+                <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                        <Button size="sm" onClick={editor.save} disabled={editor.processing}>
+                            <Check className="size-4" />
+                            Save
+                        </Button>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={editor.cancel}
+                            disabled={editor.processing}
+                        >
+                            Cancel
+                        </Button>
+                    </div>
+                </TableCell>
+            </TableRow>
+        );
+    }
 
     return (
         <TableRow>
@@ -147,6 +306,17 @@ function MatchRow({
             </TableCell>
             <TableCell className="text-right">
                 <div className="flex justify-end gap-1">
+                    {!completed && (
+                        <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={editor.start}
+                            aria-label="Edit matchup"
+                        >
+                            <Pencil className="size-4" />
+                        </Button>
+                    )}
                     <Button
                         size="sm"
                         onClick={save}
@@ -252,11 +422,18 @@ function ManualMatchupForm({
     );
 }
 
-function BracketMatchCard({ match }: { match: OpenPlayMatch }) {
+function BracketMatchCard({
+    match,
+    registrations,
+}: {
+    match: OpenPlayMatch;
+    registrations: OpenPlayRegistration[];
+}) {
     const [score1, setScore1] = useState(match.entry1_score?.toString() ?? '');
     const [score2, setScore2] = useState(match.entry2_score?.toString() ?? '');
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const editor = useMatchupEditor(match);
 
     const completed = match.status === 'completed';
     // A completed match with an empty slot is a bye or walkover — the entry
@@ -291,8 +468,62 @@ function BracketMatchCard({ match }: { match: OpenPlayMatch }) {
         );
     };
 
+    if (editor.editing) {
+        return (
+            <div className="w-56 shrink-0 space-y-2 rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm">
+                <MatchupEntrySelect
+                    label="Entry 1"
+                    value={editor.entry1Id}
+                    onChange={editor.setEntry1Id}
+                    registrations={registrations}
+                    className="w-full"
+                />
+                <MatchupEntrySelect
+                    label="Entry 2"
+                    value={editor.entry2Id}
+                    onChange={editor.setEntry2Id}
+                    registrations={registrations}
+                    className="w-full"
+                />
+                {editor.error && <p className="text-destructive text-xs">{editor.error}</p>}
+                <div className="flex gap-1">
+                    <Button
+                        size="sm"
+                        className="flex-1"
+                        onClick={editor.save}
+                        disabled={editor.processing}
+                    >
+                        <Check className="size-4" />
+                        Save
+                    </Button>
+                    <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={editor.cancel}
+                        disabled={editor.processing}
+                    >
+                        Cancel
+                    </Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="w-56 shrink-0 rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm">
+        <div className="group relative w-56 shrink-0 rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm">
+            {!completed && (
+                <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full border border-slate-200 bg-white opacity-0 shadow-sm group-hover:opacity-100"
+                    onClick={editor.start}
+                    aria-label="Edit matchup"
+                >
+                    <Pencil className="size-3" />
+                </Button>
+            )}
             <div
                 className={cn(
                     'flex items-center justify-between gap-2 py-1',
@@ -436,10 +667,12 @@ function DirectBracketConnector() {
 function BracketTree({
     matches,
     totalRounds,
+    registrations,
     labelForRound = roundLabel,
 }: {
     matches: OpenPlayMatch[];
     totalRounds: number;
+    registrations: OpenPlayRegistration[];
     labelForRound?: (round: number, totalRounds: number) => string;
 }) {
     const rounds = groupByRound(matches);
@@ -460,7 +693,7 @@ function BracketTree({
                                     className="relative flex items-center justify-center"
                                     style={{ height: BRACKET_SLOT_HEIGHT * 2 ** roundIndex }}
                                 >
-                                    <BracketMatchCard match={match} />
+                                    <BracketMatchCard match={match} registrations={registrations} />
                                     {round < totalRounds && (
                                         <BracketConnector
                                             isTop={(match.bracket_position ?? 0) % 2 === 0}
@@ -483,9 +716,11 @@ function BracketTree({
 // gets a plain straight connector instead of the top/bottom merge shape.
 function LosersBracketTree({
     matches,
+    registrations,
     labelForRound,
 }: {
     matches: OpenPlayMatch[];
+    registrations: OpenPlayRegistration[];
     labelForRound: (round: number) => string;
 }) {
     const rounds = groupByRound(matches);
@@ -513,7 +748,7 @@ function LosersBracketTree({
                                         className="relative flex items-center justify-center"
                                         style={{ height: BRACKET_SLOT_HEIGHT * heights.get(round)! }}
                                     >
-                                        <BracketMatchCard match={match} />
+                                        <BracketMatchCard match={match} registrations={registrations} />
                                         {hasNext &&
                                             (isMergeTransition ? (
                                                 <BracketConnector
@@ -533,7 +768,13 @@ function LosersBracketTree({
     );
 }
 
-function DoubleEliminationBracket({ matches }: { matches: OpenPlayMatch[] }) {
+function DoubleEliminationBracket({
+    matches,
+    registrations,
+}: {
+    matches: OpenPlayMatch[];
+    registrations: OpenPlayRegistration[];
+}) {
     const { winners, losers, final } = matchesByBracketSide(matches);
     const totalWbRounds = winners.length > 0 ? Math.max(...winners.map((m) => m.round)) : 0;
     const totalLbRounds = losers.length > 0 ? Math.max(...losers.map((m) => m.round)) : 0;
@@ -545,7 +786,7 @@ function DoubleEliminationBracket({ matches }: { matches: OpenPlayMatch[] }) {
         <div className="space-y-8">
             <div>
                 <h4 className="mb-3 text-sm font-semibold">Winners bracket</h4>
-                <BracketTree matches={winners} totalRounds={totalWbRounds} />
+                <BracketTree matches={winners} totalRounds={totalWbRounds} registrations={registrations} />
             </div>
 
             {losers.length > 0 && (
@@ -553,6 +794,7 @@ function DoubleEliminationBracket({ matches }: { matches: OpenPlayMatch[] }) {
                     <h4 className="mb-3 text-sm font-semibold">Losers bracket</h4>
                     <LosersBracketTree
                         matches={losers}
+                        registrations={registrations}
                         labelForRound={(round) => losersRoundLabel(round, totalLbRounds)}
                     />
                 </div>
@@ -567,7 +809,7 @@ function DoubleEliminationBracket({ matches }: { matches: OpenPlayMatch[] }) {
                                 <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
                                     {finalMatchLabel(match.round)}
                                 </h5>
-                                <BracketMatchCard match={match} />
+                                <BracketMatchCard match={match} registrations={registrations} />
                             </div>
                         ))}
                     </div>
@@ -609,6 +851,7 @@ export default function OpenPlayManage({ session }: Props) {
 
     const [resetOpen, setResetOpen] = useState(false);
     const [bracketProcessing, setBracketProcessing] = useState(false);
+    const [visibilityProcessing, setVisibilityProcessing] = useState(false);
     const [fullscreenOpen, setFullscreenOpen] = useState(false);
     const [pairingProcessing, setPairingProcessing] = useState(false);
     const [addAllProcessing, setAddAllProcessing] = useState(false);
@@ -736,6 +979,19 @@ export default function OpenPlayManage({ session }: Props) {
                 setResetOpen(false);
             },
         });
+    };
+
+    const toggleBracketVisibility = (visible: boolean) => {
+        setVisibilityProcessing(true);
+        router.patch(
+            updateBracketVisibility(session).url,
+            { visible },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => setVisibilityProcessing(false),
+            },
+        );
     };
 
     return (
@@ -946,28 +1202,47 @@ export default function OpenPlayManage({ session }: Props) {
                     </Card>
 
                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Trophy className="size-5" />
-                                {session.bracket_generation === 'manual'
-                                    ? 'Manual matchups'
-                                    : session.bracket_format === 'single_elimination'
-                                      ? 'Single elimination bracket'
-                                      : session.bracket_format === 'double_elimination'
-                                        ? 'Double elimination bracket'
-                                        : session.bracket_format === 'round_robin'
-                                          ? 'Round robin bracket'
-                                          : 'Bracket'}
-                            </CardTitle>
-                            <CardDescription>
-                                {session.bracket_generation === 'manual'
-                                    ? "Build the pairing list yourself below, then enter each match's final score."
-                                    : session.bracket_format === 'single_elimination'
-                                      ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — lose once and you are out. Enter each match score to advance the winner.`
-                                      : session.bracket_format === 'double_elimination'
-                                        ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — a loss drops an entry to the losers bracket; lose twice and you are out. Enter each match score to advance the winner.`
-                                        : `Every entry plays every other entry once (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}). Enter each match's final score to record the winner.`}
-                            </CardDescription>
+                        <CardHeader className="flex flex-row items-start justify-between gap-4">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Trophy className="size-5" />
+                                    {session.bracket_generation === 'manual'
+                                        ? 'Manual matchups'
+                                        : session.bracket_format === 'single_elimination'
+                                          ? 'Single elimination bracket'
+                                          : session.bracket_format === 'double_elimination'
+                                            ? 'Double elimination bracket'
+                                            : session.bracket_format === 'round_robin'
+                                              ? 'Round robin bracket'
+                                              : 'Bracket'}
+                                </CardTitle>
+                                <CardDescription>
+                                    {session.bracket_generation === 'manual'
+                                        ? "Build the pairing list yourself below, then enter each match's final score."
+                                        : session.bracket_format === 'single_elimination'
+                                          ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — lose once and you are out. Enter each match score to advance the winner.`
+                                          : session.bracket_format === 'double_elimination'
+                                            ? `Knockout format (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}) — a loss drops an entry to the losers bracket; lose twice and you are out. Enter each match score to advance the winner.`
+                                            : `Every entry plays every other entry once (${session.bracket_generation === 'random' ? 'random draw' : 'seeded by registration order'}). Enter each match's final score to record the winner.`}
+                                </CardDescription>
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-2 rounded-lg border border-slate-200 py-1.5 pr-3 pl-2.5">
+                                {session.bracket_visible ? (
+                                    <Eye className="text-brand-navy size-4" />
+                                ) : (
+                                    <EyeOff className="text-muted-foreground size-4" />
+                                )}
+                                <Label htmlFor="bracket-visible" className="cursor-pointer text-sm">
+                                    Visible to players
+                                </Label>
+                                <Switch
+                                    id="bracket-visible"
+                                    checked={session.bracket_visible}
+                                    onCheckedChange={toggleBracketVisibility}
+                                    disabled={visibilityProcessing}
+                                />
+                            </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <form
@@ -1026,6 +1301,7 @@ export default function OpenPlayManage({ session }: Props) {
                                                         <MatchRow
                                                             key={match.id}
                                                             match={match}
+                                                            registrations={registrations}
                                                             onRemove={removeMatch}
                                                         />
                                                     ))}
@@ -1140,7 +1416,11 @@ export default function OpenPlayManage({ session }: Props) {
 
                                     {session.bracket_format === 'single_elimination' ? (
                                         <>
-                                            <BracketTree matches={matches} totalRounds={totalRounds} />
+                                            <BracketTree
+                                                matches={matches}
+                                                totalRounds={totalRounds}
+                                                registrations={registrations}
+                                            />
                                             {champion && (
                                                 <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
                                                     <Trophy className="size-5" />
@@ -1151,7 +1431,7 @@ export default function OpenPlayManage({ session }: Props) {
                                             )}
                                         </>
                                     ) : session.bracket_format === 'double_elimination' ? (
-                                        <DoubleEliminationBracket matches={matches} />
+                                        <DoubleEliminationBracket matches={matches} registrations={registrations} />
                                     ) : (
                                         <>
                                             <Table>
@@ -1166,7 +1446,11 @@ export default function OpenPlayManage({ session }: Props) {
                                                 </TableHeader>
                                                 <TableBody>
                                                     {matches.map((match) => (
-                                                        <MatchRow key={match.id} match={match} />
+                                                        <MatchRow
+                                                            key={match.id}
+                                                            match={match}
+                                                            registrations={registrations}
+                                                        />
                                                     ))}
                                                 </TableBody>
                                             </Table>
@@ -1246,10 +1530,14 @@ export default function OpenPlayManage({ session }: Props) {
                     </DialogHeader>
                     <div className="flex-1 overflow-auto pt-2">
                         {session.bracket_format === 'double_elimination' ? (
-                            <DoubleEliminationBracket matches={matches} />
+                            <DoubleEliminationBracket matches={matches} registrations={registrations} />
                         ) : (
                             <>
-                                <BracketTree matches={matches} totalRounds={totalRounds} />
+                                <BracketTree
+                                    matches={matches}
+                                    totalRounds={totalRounds}
+                                    registrations={registrations}
+                                />
                                 {champion && (
                                     <div className="mt-6 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
                                         <Trophy className="size-5" />

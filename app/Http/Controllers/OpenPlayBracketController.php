@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OpenPlaySession;
 use App\Services\OpenPlayBracketService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class OpenPlayBracketController extends Controller
@@ -37,6 +38,26 @@ class OpenPlayBracketController extends Controller
         $open_play->matches()->delete();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Bracket reset.')]);
+
+        return back();
+    }
+
+    public function updateVisibility(Request $request, OpenPlaySession $open_play): RedirectResponse
+    {
+        $this->authorize('update', $open_play);
+
+        $validated = $request->validate([
+            'visible' => ['required', 'boolean'],
+        ]);
+
+        $open_play->update(['bracket_visible' => $validated['visible']]);
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $validated['visible']
+                ? __('Bracket is now visible to players.')
+                : __('Bracket is now hidden from players.'),
+        ]);
 
         return back();
     }

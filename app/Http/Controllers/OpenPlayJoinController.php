@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
+use App\Models\OpenPlayMatch;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
@@ -69,6 +71,8 @@ class OpenPlayJoinController extends Controller
             'matches.entry2.partner.user:id,name',
         ]);
 
+        $this->concealBracketIfHidden($open_play);
+
         return Inertia::render('open-play/show', [
             'session' => $open_play,
         ]);
@@ -107,6 +111,8 @@ class OpenPlayJoinController extends Controller
             'matches.entry2.partner.user:id,name',
         ]);
 
+        $this->concealBracketIfHidden($open_play);
+
         return Inertia::render('open-play/mine', [
             'session' => $open_play,
             'registrationId' => $registration->id,
@@ -144,6 +150,8 @@ class OpenPlayJoinController extends Controller
             'matches.entry2.partner:id,user_id',
             'matches.entry2.partner.user:id,name',
         ]);
+
+        $this->concealBracketIfHidden($open_play);
 
         return Inertia::render('open-play/join', [
             'session' => $open_play,
@@ -335,5 +343,34 @@ class OpenPlayJoinController extends Controller
             ->where('player_id', $player->id)
             ->latest()
             ->first();
+    }
+
+    /**
+     * Until the organizer publishes the bracket, players shouldn't see who
+     * they're matched against or any results — blank out each match's
+     * opponent/score fields so the existing "TBD" rendering on the frontend
+     * (which already handles unfilled bracket slots) kicks in everywhere,
+     * without needing separate hidden-state UI.
+     */
+    private function concealBracketIfHidden(OpenPlaySession $open_play): void
+    {
+        if ($open_play->bracket_visible) {
+            return;
+        }
+
+        $open_play->setRelation(
+            'matches',
+            $open_play->matches->map(function (OpenPlayMatch $match) {
+                $match->setRelation('entry1', null);
+                $match->setRelation('entry2', null);
+                $match->setRelation('winner', null);
+                $match->entry1_score = null;
+                $match->entry2_score = null;
+                $match->winner_registration_id = null;
+                $match->status = MatchStatus::Scheduled;
+
+                return $match;
+            }),
+        );
     }
 }

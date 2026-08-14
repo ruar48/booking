@@ -1,12 +1,13 @@
 import { Form, Head, usePage } from '@inertiajs/react';
 import { Link } from '@inertiajs/react';
+import { Calendar, Camera, Check, Mail, User, Users } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -62,7 +63,7 @@ export default function Profile({
             <div className="space-y-6">
                 <Heading
                     variant="small"
-                    title="Profile"
+                    title="Profile information"
                     description="Update your name and email address"
                 />
 
@@ -76,15 +77,26 @@ export default function Profile({
                     {({ processing, errors }) => (
                         <>
                             <div className="flex items-center gap-4">
-                                <Avatar className="size-16 overflow-hidden rounded-full">
-                                    <AvatarImage
-                                        src={avatarPreview ?? avatarUrl ?? undefined}
-                                        alt={auth.user.name}
-                                    />
-                                    <AvatarFallback className="rounded-full bg-neutral-200 text-lg text-black dark:bg-neutral-700 dark:text-white">
-                                        {getAvatarFallback(auth.user.name, gender)}
-                                    </AvatarFallback>
-                                </Avatar>
+                                <div className="relative shrink-0">
+                                    <Avatar className="size-20 overflow-hidden rounded-full ring-4 ring-brand-navy/10">
+                                        <AvatarImage
+                                            src={avatarPreview ?? avatarUrl ?? undefined}
+                                            alt={auth.user.name}
+                                        />
+                                        <AvatarFallback className="rounded-full bg-neutral-200 text-lg text-black dark:bg-neutral-700 dark:text-white">
+                                            {getAvatarFallback(auth.user.name, gender)}
+                                        </AvatarFallback>
+                                    </Avatar>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="bg-brand-navy text-white absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full ring-2 ring-background transition-opacity hover:opacity-90"
+                                        aria-label="Change photo"
+                                    >
+                                        <Camera className="size-3.5" />
+                                    </button>
+                                </div>
 
                                 <div className="space-y-1">
                                     <input
@@ -101,53 +113,58 @@ export default function Profile({
                                         size="sm"
                                         onClick={() => fileInputRef.current?.click()}
                                     >
+                                        <Camera className="size-4" />
                                         Change photo
                                     </Button>
                                     <p className="text-xs text-muted-foreground">
-                                        JPG or PNG, up to 2MB. If no photo is set, your
-                                        initial or gender (M/F) is shown instead.
+                                        JPG or PNG, up to 2MB.
+                                        <br />
+                                        If no photo is set, your initial or gender (M/F)
+                                        is shown instead.
                                     </p>
                                     <InputError message={errors.avatar} />
                                 </div>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Name</Label>
 
-                                <Input
-                                    id="name"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.name}
-                                    name="name"
-                                    required
-                                    autoComplete="name"
-                                    placeholder="Full name"
-                                />
+                                    <div className="relative">
+                                        <User className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto size-4" />
+                                        <Input
+                                            id="name"
+                                            className="pl-9"
+                                            defaultValue={auth.user.name}
+                                            name="name"
+                                            required
+                                            autoComplete="name"
+                                            placeholder="Full name"
+                                        />
+                                    </div>
 
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.name}
-                                />
-                            </div>
+                                    <InputError message={errors.name} />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">Email address</Label>
 
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
-                                    name="email"
-                                    required
-                                    autoComplete="username"
-                                    placeholder="Email address"
-                                />
+                                    <div className="relative">
+                                        <Mail className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto size-4" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            className="pl-9"
+                                            defaultValue={auth.user.email}
+                                            name="email"
+                                            required
+                                            autoComplete="username"
+                                            placeholder="Email address"
+                                        />
+                                    </div>
 
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.email}
-                                />
+                                    <InputError message={errors.email} />
+                                </div>
                             </div>
 
                             {mustVerifyEmail &&
@@ -175,60 +192,64 @@ export default function Profile({
                                     </div>
                                 )}
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="birthdate">Birthdate</Label>
+                            <div className="grid gap-6 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="birthdate">Birthdate</Label>
 
-                                <Input
-                                    id="birthdate"
-                                    type="date"
-                                    className="mt-1 block w-full"
-                                    defaultValue={birthdate ?? ''}
-                                    name="birthdate"
-                                    max={new Date().toISOString().split('T')[0]}
-                                />
+                                    <div className="relative">
+                                        <Calendar className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto size-4" />
+                                        <Input
+                                            id="birthdate"
+                                            type="date"
+                                            className="pl-9"
+                                            defaultValue={birthdate ?? ''}
+                                            name="birthdate"
+                                            max={new Date().toISOString().split('T')[0]}
+                                        />
+                                    </div>
 
-                                <p className="text-sm text-muted-foreground">
-                                    Required to join Open Play sessions.
-                                </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Required to join Open Play sessions.
+                                    </p>
 
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.birthdate}
-                                />
-                            </div>
+                                    <InputError message={errors.birthdate} />
+                                </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="gender">Gender</Label>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="gender">Gender</Label>
 
-                                <select
-                                    id="gender"
-                                    name="gender"
-                                    defaultValue={gender ?? ''}
-                                    className="border-input dark:bg-input/30 mt-1 flex h-9 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                                >
-                                    <option value="">Prefer not to say</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
-                                </select>
+                                    <div className="relative">
+                                        <Users className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 my-auto size-4" />
+                                        <select
+                                            id="gender"
+                                            name="gender"
+                                            defaultValue={gender ?? ''}
+                                            className="border-input dark:bg-input/30 flex h-9 w-full rounded-md border bg-transparent py-2 pl-9 pr-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                        >
+                                            <option value="">Prefer not to say</option>
+                                            <option value="male">Male</option>
+                                            <option value="female">Female</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
 
-                                <p className="text-sm text-muted-foreground">
-                                    Used to show M/F on your profile picture when you
-                                    haven&apos;t uploaded a photo.
-                                </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Used to show M/F on your profile picture when
+                                        you haven&apos;t uploaded a photo.
+                                    </p>
 
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.gender}
-                                />
+                                    <InputError message={errors.gender} />
+                                </div>
                             </div>
 
                             <div className="flex items-center gap-4">
                                 <Button
                                     disabled={processing}
                                     data-test="update-profile-button"
+                                    className="bg-brand-navy hover:bg-brand-navy-light text-white"
                                 >
-                                    Save
+                                    <Check className="size-4" />
+                                    Save changes
                                 </Button>
                             </div>
                         </>
