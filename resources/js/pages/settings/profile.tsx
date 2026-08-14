@@ -192,7 +192,6 @@ export default function Profile({
                                     </div>
                                 )}
 
-<<<<<<< Updated upstream
                             <div className="grid gap-6 sm:grid-cols-2">
                                 <div className="grid gap-2">
                                     <Label htmlFor="birthdate">Birthdate</Label>
@@ -241,28 +240,6 @@ export default function Profile({
 
                                     <InputError message={errors.gender} />
                                 </div>
-=======
-                            <div className="grid gap-2">
-                                <Label htmlFor="birthdate">Birthdate</Label>
-
-                                <Input
-                                    id="birthdate"
-                                    type="date"
-                                    className="mt-1 block w-full"
-                                    defaultValue={birthdate ?? ''}
-                                    name="birthdate"
-                                    max={new Date().toISOString().split('T')[0]}
-                                />
-
-                                <p className="text-sm text-muted-foreground">
-                                    Required to join Open Play sessions.
-                                </p>
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.birthdate}
-                                />
->>>>>>> Stashed changes
                             </div>
 
                             <div className="flex items-center gap-4">
