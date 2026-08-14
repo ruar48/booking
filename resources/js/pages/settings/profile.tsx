@@ -24,20 +24,14 @@ export default function Profile({
     mustVerifyEmail,
     status,
     birthdate,
-<<<<<<< Updated upstream
     gender,
     avatarUrl,
-=======
->>>>>>> Stashed changes
 }: {
     mustVerifyEmail: boolean;
     status?: string;
     birthdate?: string | null;
-<<<<<<< Updated upstream
     gender?: string | null;
     avatarUrl?: string | null;
-=======
->>>>>>> Stashed changes
 }) {
     const { auth } = usePage<PageProps>().props;
     const getAvatarFallback = useAvatarFallback();
