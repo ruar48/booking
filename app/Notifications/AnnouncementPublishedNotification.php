@@ -2,11 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Enums\AnnouncementType;
 use App\Models\Announcement;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\HtmlString;
 
 class AnnouncementPublishedNotification extends Notification implements ShouldQueue
 {
@@ -26,11 +28,33 @@ class AnnouncementPublishedNotification extends Notification implements ShouldQu
 
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
-            ->subject('New Announcement: '.$this->announcement->title)
+        $prefix = $this->announcement->type->emailPrefix();
+
+        $mail = (new MailMessage)
+            ->subject(($prefix ? "[{$prefix}] " : '').$this->announcement->title)
             ->greeting('Hello '.$notifiable->name.',')
-            ->line($this->announcement->title)
-            ->line($this->announcement->content);
+            ->line($this->announcement->title);
+
+        if ($this->announcement->image_url) {
+            $mail->line(new HtmlString(
+                '<img src="'.$this->announcement->image_url.'" alt="" style="max-width:100%;border-radius:8px;" />',
+            ));
+        }
+
+        $mail->line($this->announcement->content);
+
+        $session = $this->announcement->type === AnnouncementType::OpenPlay
+            ? $this->announcement->openPlaySession
+            : null;
+
+        if ($session) {
+            $mail->line('**'.$session->title.'**')
+                ->line('When: '.$session->starts_at->toDayDateTimeString())
+                ->lineIf((bool) $session->location, 'Where: '.$session->location)
+                ->action('Join this session', route('open-play.join', $session));
+        }
+
+        return $mail;
     }
 
     /**
@@ -41,7 +65,9 @@ class AnnouncementPublishedNotification extends Notification implements ShouldQu
         return [
             'type' => 'announcement_published',
             'announcement_id' => $this->announcement->id,
+            'announcement_type' => $this->announcement->type->value,
             'title' => $this->announcement->title,
+            'image_url' => $this->announcement->image_url,
             'published_at' => $this->announcement->published_at?->toIso8601String(),
         ];
     }

@@ -279,6 +279,11 @@ export type Announcement = {
     id: number;
     title: string;
     content: string;
+    type: 'general' | 'open_play' | 'discount' | 'maintenance';
+    open_play_session_id?: number | null;
+    image_path?: string | null;
+    image_source?: 'upload' | 'auto_qr' | null;
+    image_url?: string | null;
     show_on_dashboard: boolean;
     show_on_home: boolean;
     show_on_player_portal: boolean;

@@ -56,6 +56,7 @@ class EventServiceProvider extends ServiceProvider
 
             if ($config['notifyCustomer']) {
                 $event->user->notify(new BookingFailedNotification(
+                    $event->user,
                     $event->resourceId,
                     $event->startsAt,
                     $event->endsAt,
@@ -66,6 +67,7 @@ class EventServiceProvider extends ServiceProvider
             if ($config['notifyOwners']) {
                 self::ownerUsers()->each(
                     fn ($owner) => $owner->notify(new BookingFailedNotification(
+                        $event->user,
                         $event->resourceId,
                         $event->startsAt,
                         $event->endsAt,

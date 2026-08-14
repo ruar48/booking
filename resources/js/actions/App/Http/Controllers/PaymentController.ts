@@ -1,4 +1,4 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition, applyUrlDefaults } from './../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\PaymentController::index
  * @see app/Http/Controllers/PaymentController.php:16
@@ -42,6 +42,41 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\PaymentController::index
+ * @see app/Http/Controllers/PaymentController.php:16
+ * @route '/payments'
+ */
+    const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: index.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PaymentController::index
+ * @see app/Http/Controllers/PaymentController.php:16
+ * @route '/payments'
+ */
+        indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PaymentController::index
+ * @see app/Http/Controllers/PaymentController.php:16
+ * @route '/payments'
+ */
+        indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: index.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    index.form = indexForm
 /**
 * @see \App\Http\Controllers\PaymentController::show
  * @see app/Http/Controllers/PaymentController.php:35
@@ -109,6 +144,41 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
     method: 'head',
 })
 
+    /**
+* @see \App\Http\Controllers\PaymentController::show
+ * @see app/Http/Controllers/PaymentController.php:35
+ * @route '/payments/{payment}'
+ */
+    const showForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: show.url(args, options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\PaymentController::show
+ * @see app/Http/Controllers/PaymentController.php:35
+ * @route '/payments/{payment}'
+ */
+        showForm.get = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\PaymentController::show
+ * @see app/Http/Controllers/PaymentController.php:35
+ * @route '/payments/{payment}'
+ */
+        showForm.head = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: show.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    show.form = showForm
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
  * @see app/Http/Controllers/PaymentController.php:46
@@ -166,6 +236,38 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
     url: markPaid.url(args, options),
     method: 'patch',
 })
+
+    /**
+* @see \App\Http\Controllers\PaymentController::markPaid
+ * @see app/Http/Controllers/PaymentController.php:46
+ * @route '/payments/{payment}/mark-paid'
+ */
+    const markPaidForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: markPaid.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\PaymentController::markPaid
+ * @see app/Http/Controllers/PaymentController.php:46
+ * @route '/payments/{payment}/mark-paid'
+ */
+        markPaidForm.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: markPaid.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    markPaid.form = markPaidForm
 const PaymentController = { index, show, markPaid }
 
 export default PaymentController

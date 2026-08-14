@@ -5,7 +5,9 @@ import { Megaphone, Pencil, Plus } from 'lucide-react';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { announcementTypeLabel, announcementTypeToneClasses } from '@/lib/announcement-type';
 import { formatDate, formatRelative } from '@/lib/format';
 import { create, edit, index as announcementsIndex } from '@/routes/announcements';
 import type { Announcement, Paginated } from '@/types/booking';
@@ -26,6 +28,15 @@ export default function AnnouncementsIndex({ announcements }: Props) {
                 >
                     {row.original.title}
                 </Link>
+            ),
+        },
+        {
+            accessorKey: 'type',
+            header: 'Type',
+            cell: ({ row }) => (
+                <Badge variant="outline" className={announcementTypeToneClasses(row.original.type)}>
+                    {announcementTypeLabel(row.original.type)}
+                </Badge>
             ),
         },
         {

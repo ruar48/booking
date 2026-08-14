@@ -61,6 +61,17 @@ return [
             'report' => false,
         ],
 
+        // Same rationale as the 'avatars' disk above: written directly under
+        // public/announcements so no `storage:link` symlink is required.
+        'announcements' => [
+            'driver' => 'local',
+            'root' => public_path('announcements'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/announcements',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

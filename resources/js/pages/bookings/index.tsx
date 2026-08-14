@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-<<<<<<< Updated upstream
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import {
     Calendar,
@@ -14,20 +13,13 @@ import {
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
-=======
-import { Calendar, Eye, Plus, X } from 'lucide-react';
-import { useCallback } from 'react';
->>>>>>> Stashed changes
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
-<<<<<<< Updated upstream
 import { Card, CardContent } from '@/components/ui/card';
-=======
->>>>>>> Stashed changes
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -36,13 +28,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-<<<<<<< Updated upstream
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
-=======
-import { formatCurrency, formatDateTime } from '@/lib/format';
->>>>>>> Stashed changes
 import {
     calendar as bookingsCalendar,
     cancel,
@@ -50,11 +38,7 @@ import {
     index as bookingsIndex,
     show,
 } from '@/routes/bookings';
-<<<<<<< Updated upstream
 import type { BookingStats, Resource, ResourceBooking, Paginated } from '@/types/booking';
-=======
-import type { Resource, ResourceBooking, Paginated } from '@/types/booking';
->>>>>>> Stashed changes
 
 type BookingFilters = {
     search?: string;
@@ -69,7 +53,6 @@ type Props = {
     canManage?: boolean;
     filters?: BookingFilters;
     resources?: Pick<Resource, 'id' | 'name'>[];
-<<<<<<< Updated upstream
     stats?: BookingStats | null;
     nextBooking?: ResourceBooking | null;
 };
@@ -94,25 +77,17 @@ function scheduleLabel(booking: ResourceBooking) {
     return `${dayLabel} • ${format(start, 'h:mm a')} – ${format(end, 'h:mm a')}`;
 }
 
-=======
-};
-
->>>>>>> Stashed changes
 export default function BookingsIndex({
     bookings,
     canManage = false,
     filters = {},
     resources = [],
-<<<<<<< Updated upstream
     stats = null,
     nextBooking = null,
 }: Props) {
     const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(null);
     const [cancelReason, setCancelReason] = useState('');
 
-=======
-}: Props) {
->>>>>>> Stashed changes
     const applyFilters = useCallback(
         (next: Partial<BookingFilters>) => {
             router.get(
@@ -149,7 +124,6 @@ export default function BookingsIndex({
         );
     };
 
-<<<<<<< Updated upstream
     const canCancelBooking = useCallback(
         (booking: ResourceBooking) =>
             canManage
@@ -177,8 +151,6 @@ export default function BookingsIndex({
         );
     };
 
-=======
->>>>>>> Stashed changes
     const columns: ColumnDef<ResourceBooking>[] = [
         {
             accessorKey: 'resource',
@@ -369,7 +341,6 @@ export default function BookingsIndex({
                     searchPlaceholder="Search by booked by..."
                     searchValue={filters.search}
                     onSearch={(value) => applyFilters({ search: value || undefined })}
-<<<<<<< Updated upstream
                     rowClassName={(row) => ROW_TINT[row.status]}
                     renderCard={
                         canManage
@@ -382,8 +353,6 @@ export default function BookingsIndex({
                                   />
                               )
                     }
-=======
->>>>>>> Stashed changes
                     filters={
                         <div className="flex flex-wrap items-center gap-2">
                             <Select

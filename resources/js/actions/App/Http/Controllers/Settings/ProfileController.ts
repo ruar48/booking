@@ -1,11 +1,7 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:27
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:21
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 export const edit = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -20,11 +16,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:27
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:21
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 edit.url = (options?: RouteQueryOptions) => {
@@ -33,11 +25,7 @@ edit.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:27
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:21
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 edit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -46,11 +34,7 @@ edit.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:27
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:21
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -58,14 +42,9 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     method: 'head',
 })
 
-<<<<<<< Updated upstream
-/**
-* @see \App\Http\Controllers\Settings\ProfileController::update
- * @see app/Http/Controllers/Settings/ProfileController.php:45
-=======
     /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
- * @see app/Http/Controllers/Settings/ProfileController.php:21
+ * @see app/Http/Controllers/Settings/ProfileController.php:27
  * @route '/settings/profile'
  */
     const editForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -75,7 +54,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
- * @see app/Http/Controllers/Settings/ProfileController.php:21
+ * @see app/Http/Controllers/Settings/ProfileController.php:27
  * @route '/settings/profile'
  */
         editForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -84,7 +63,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Settings\ProfileController::edit
- * @see app/Http/Controllers/Settings/ProfileController.php:21
+ * @see app/Http/Controllers/Settings/ProfileController.php:27
  * @route '/settings/profile'
  */
         editForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -100,8 +79,7 @@ edit.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::update
- * @see app/Http/Controllers/Settings/ProfileController.php:33
->>>>>>> Stashed changes
+ * @see app/Http/Controllers/Settings/ProfileController.php:45
  * @route '/settings/profile'
  */
 export const update = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -116,11 +94,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::update
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:45
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:33
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 update.url = (options?: RouteQueryOptions) => {
@@ -129,11 +103,7 @@ update.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::update
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:45
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:33
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -141,14 +111,9 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     method: 'patch',
 })
 
-<<<<<<< Updated upstream
-/**
-* @see \App\Http\Controllers\Settings\ProfileController::destroy
- * @see app/Http/Controllers/Settings/ProfileController.php:77
-=======
     /**
 * @see \App\Http\Controllers\Settings\ProfileController::update
- * @see app/Http/Controllers/Settings/ProfileController.php:33
+ * @see app/Http/Controllers/Settings/ProfileController.php:45
  * @route '/settings/profile'
  */
     const updateForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -163,7 +128,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\ProfileController::update
- * @see app/Http/Controllers/Settings/ProfileController.php:33
+ * @see app/Http/Controllers/Settings/ProfileController.php:45
  * @route '/settings/profile'
  */
         updateForm.patch = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -179,8 +144,7 @@ update.patch = (options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::destroy
- * @see app/Http/Controllers/Settings/ProfileController.php:58
->>>>>>> Stashed changes
+ * @see app/Http/Controllers/Settings/ProfileController.php:77
  * @route '/settings/profile'
  */
 export const destroy = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -195,11 +159,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::destroy
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:77
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:58
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 destroy.url = (options?: RouteQueryOptions) => {
@@ -208,23 +168,17 @@ destroy.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Settings\ProfileController::destroy
-<<<<<<< Updated upstream
  * @see app/Http/Controllers/Settings/ProfileController.php:77
-=======
- * @see app/Http/Controllers/Settings/ProfileController.php:58
->>>>>>> Stashed changes
  * @route '/settings/profile'
  */
 destroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
     url: destroy.url(options),
     method: 'delete',
 })
-<<<<<<< Updated upstream
-=======
 
     /**
 * @see \App\Http\Controllers\Settings\ProfileController::destroy
- * @see app/Http/Controllers/Settings/ProfileController.php:58
+ * @see app/Http/Controllers/Settings/ProfileController.php:77
  * @route '/settings/profile'
  */
     const destroyForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -239,7 +193,7 @@ destroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
 
             /**
 * @see \App\Http\Controllers\Settings\ProfileController::destroy
- * @see app/Http/Controllers/Settings/ProfileController.php:58
+ * @see app/Http/Controllers/Settings/ProfileController.php:77
  * @route '/settings/profile'
  */
         destroyForm.delete = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -253,7 +207,6 @@ destroy.delete = (options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
         })
     
     destroy.form = destroyForm
->>>>>>> Stashed changes
 const ProfileController = { edit, update, destroy }
 
 export default ProfileController

@@ -1,11 +1,7 @@
 import { Link } from '@inertiajs/react';
-<<<<<<< Updated upstream
-import { BrandLogo } from '@/components/brand-logo';
-=======
 import { CalendarCheck2, ShieldCheck, Users } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
 import { brand } from '@/lib/brand';
->>>>>>> Stashed changes
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -33,30 +29,6 @@ export default function AuthSimpleLayout({
     description,
 }: AuthLayoutProps) {
     return (
-<<<<<<< Updated upstream
-        <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/40 p-6 md:p-10">
-            <div className="w-full max-w-sm">
-                <div className="flex flex-col items-center gap-2 pb-8">
-                    <Link
-                        href={home()}
-                        className="flex flex-col items-center gap-3 font-medium"
-                    >
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl border bg-card p-2 shadow-sm">
-                            <BrandLogo imageClassName="size-full" />
-                        </div>
-                        <span className="sr-only">{title}</span>
-                    </Link>
-                </div>
-
-                <div className="flex flex-col gap-6 rounded-2xl border bg-card p-8 shadow-sm">
-                    <div className="space-y-1.5 text-center">
-                        <h1 className="text-xl font-semibold tracking-tight">
-                            {title}
-                        </h1>
-                        <p className="text-center text-sm text-muted-foreground">
-                            {description}
-                        </p>
-=======
         <div className="relative flex min-h-svh flex-col bg-slate-50 lg:grid lg:grid-cols-2 dark:bg-brand-navy-dark">
             <section className="relative hidden flex-col overflow-hidden bg-brand-navy p-10 text-white lg:flex xl:p-14">
                 <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy-light to-brand-court/80" />
@@ -133,7 +105,6 @@ export default function AuthSimpleLayout({
                         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm sm:p-8">
                             {children}
                         </div>
->>>>>>> Stashed changes
                     </div>
                 </div>
             </section>

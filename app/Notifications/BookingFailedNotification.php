@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -13,6 +14,7 @@ class BookingFailedNotification extends Notification implements ShouldQueue
     use Queueable;
 
     public function __construct(
+        public readonly User $customer,
         public readonly int $resourceId,
         public readonly Carbon $startsAt,
         public readonly Carbon $endsAt,
@@ -48,6 +50,9 @@ class BookingFailedNotification extends Notification implements ShouldQueue
             'starts_at' => $this->startsAt->toIso8601String(),
             'ends_at' => $this->endsAt->toIso8601String(),
             'reason' => $this->reason,
+            'customer_name' => $this->customer->name,
+            'customer_phone' => $this->customer->phone,
+            'customer_email' => $this->customer->email,
         ];
     }
 }

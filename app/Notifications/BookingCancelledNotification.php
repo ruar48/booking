@@ -51,6 +51,9 @@ class BookingCancelledNotification extends Notification implements ShouldQueue
             'resource_id' => $this->booking->resource_id,
             'starts_at' => $this->booking->starts_at->toIso8601String(),
             'cancellation_reason' => $this->booking->cancellation_reason,
+            'customer_name' => $this->booking->user?->name,
+            'customer_phone' => $this->booking->user?->phone,
+            'customer_email' => $this->booking->user?->email,
         ];
     }
 }

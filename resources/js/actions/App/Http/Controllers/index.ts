@@ -4,6 +4,7 @@ import ResourceBookingController from './ResourceBookingController'
 import OpenPlayJoinController from './OpenPlayJoinController'
 import OpenPlayController from './OpenPlayController'
 import RentalMemberController from './RentalMemberController'
+import NotificationController from './NotificationController'
 import DashboardController from './DashboardController'
 import PaymentController from './PaymentController'
 import PlayerController from './PlayerController'
@@ -31,6 +32,7 @@ ResourceBookingController: Object.assign(ResourceBookingController, ResourceBook
 OpenPlayJoinController: Object.assign(OpenPlayJoinController, OpenPlayJoinController),
 OpenPlayController: Object.assign(OpenPlayController, OpenPlayController),
 RentalMemberController: Object.assign(RentalMemberController, RentalMemberController),
+NotificationController: Object.assign(NotificationController, NotificationController),
 DashboardController: Object.assign(DashboardController, DashboardController),
 PaymentController: Object.assign(PaymentController, PaymentController),
 PlayerController: Object.assign(PlayerController, PlayerController),
