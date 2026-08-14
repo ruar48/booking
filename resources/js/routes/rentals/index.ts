@@ -218,6 +218,35 @@ report.definition = {
  * @see app/Http/Controllers/RentalTransactionController.php:45
  * @route '/rentals/report'
  */
+<<<<<<< Updated upstream
+=======
+        storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: store.url(options),
+            method: 'post',
+        })
+    
+    store.form = storeForm
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+export const report = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: report.url(options),
+    method: 'get',
+})
+
+report.definition = {
+    methods: ["get","head"],
+    url: '/rentals/report',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+>>>>>>> Stashed changes
 report.url = (options?: RouteQueryOptions) => {
     return report.definition.url + queryParams(options)
 }
@@ -240,6 +269,45 @@ report.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: report.url(options),
     method: 'head',
 })
+<<<<<<< Updated upstream
+=======
+
+    /**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+    const reportForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: report.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+        reportForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: report.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\RentalTransactionController::report
+ * @see app/Http/Controllers/RentalTransactionController.php:45
+ * @route '/rentals/report'
+ */
+        reportForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: report.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    report.form = reportForm
+>>>>>>> Stashed changes
 const rentals = {
     browse: Object.assign(browse, browse),
 mine: Object.assign(mine, mine),

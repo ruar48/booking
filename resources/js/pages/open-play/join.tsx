@@ -11,7 +11,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { edit as editProfile } from '@/routes/profile';
+<<<<<<< Updated upstream
 import { browse as openPlayBrowse, checkout as openPlayCheckout } from '@/routes/open-play';
+=======
+>>>>>>> Stashed changes
 import { store as joinStore } from '@/routes/open-play/join';
 import type { OpenPlaySession, Player } from '@/types/booking';
 
@@ -22,7 +25,10 @@ type Props = {
     paymentPending: boolean;
     isFull: boolean;
     needsProfile: boolean;
+<<<<<<< Updated upstream
     myRegistrationId: number | null;
+=======
+>>>>>>> Stashed changes
 };
 
 function formatSkillLevel(level?: string): string {
@@ -33,6 +39,7 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
+<<<<<<< Updated upstream
 function formatBracketFormat(format?: string | null): string | null {
     switch (format) {
         case 'single_elimination':
@@ -55,6 +62,9 @@ export default function OpenPlayJoin({
     needsProfile,
     myRegistrationId,
 }: Props) {
+=======
+export default function OpenPlayJoin({ session, registrationsCount, isRegistered, isFull, needsProfile }: Props) {
+>>>>>>> Stashed changes
     const isDoublesSession = session.team_size === 'doubles';
     const requiresPayment = session.price_per_player != null && Number(session.price_per_player) > 0;
 
@@ -241,6 +251,7 @@ export default function OpenPlayJoin({
                                 You&apos;re registered for this session — see you on the court!
                             </span>
                         </div>
+<<<<<<< Updated upstream
                     ) : paymentPending ? (
                         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
                             <div className="flex items-center gap-3">
@@ -253,6 +264,8 @@ export default function OpenPlayJoin({
                                 <Link href={openPlayCheckout(session)}>Resume payment</Link>
                             </Button>
                         </div>
+=======
+>>>>>>> Stashed changes
                     ) : needsProfile ? (
                         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">
                             <div className="flex items-center gap-3">

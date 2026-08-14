@@ -118,6 +118,49 @@ class OpenPlayRegistrationService
     }
 
     /**
+     * Register every active player not already registered, up to the
+     * session's max_players cap (if any). Doubles sessions get their
+     * solo entries paired up afterward via pairRandomly().
+     *
+     * @return int Number of players newly registered.
+     */
+    public function registerAll(OpenPlaySession $event, int $createdBy): int
+    {
+        $alreadyRegisteredIds = $event->registrations()
+            ->get(['player_id', 'partner_player_id'])
+            ->flatMap(fn (OpenPlayRegistration $registration) => [
+                $registration->player_id,
+                $registration->partner_player_id,
+            ])
+            ->filter()
+            ->all();
+
+        $slotsRemaining = $event->max_players !== null
+            ? max(0, $event->max_players - $event->registrations()->count())
+            : null;
+
+        $candidates = Player::query()
+            ->where('is_active', true)
+            ->whereNotIn('id', $alreadyRegisteredIds)
+            ->when($slotsRemaining !== null, fn ($query) => $query->limit($slotsRemaining))
+            ->get();
+
+        $registered = 0;
+
+        foreach ($candidates as $player) {
+            if ($this->register($event, $player, null, $createdBy) === null) {
+                $registered++;
+            }
+        }
+
+        if ($event->team_size === TeamSize::Doubles) {
+            $this->pairRandomly($event);
+        }
+
+        return $registered;
+    }
+
+    /**
      * Randomly pair up any players still waiting for a partner.
      *
      * @return int Number of pairs formed.
