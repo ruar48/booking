@@ -1,15 +1,7 @@
-import { queryParams, type RouteQueryOptions, type RouteDefinition } from './../../../wayfinder'
+import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition } from './../../../wayfinder'
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
-<<<<<<< Updated upstream
- * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> Stashed changes
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
 export const search = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -24,15 +16,7 @@ search.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
-<<<<<<< Updated upstream
- * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> Stashed changes
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
 search.url = (options?: RouteQueryOptions) => {
@@ -41,15 +25,7 @@ search.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
-<<<<<<< Updated upstream
- * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> Stashed changes
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
 search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -58,31 +34,17 @@ search.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
-<<<<<<< Updated upstream
- * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> Stashed changes
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
 search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     url: search.url(options),
     method: 'head',
 })
-<<<<<<< Updated upstream
-=======
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
     const searchForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -92,11 +54,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
         searchForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -105,11 +63,7 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\ResourceBookingController::search
-<<<<<<< HEAD
  * @see app/Http/Controllers/ResourceBookingController.php:174
-=======
- * @see app/Http/Controllers/ResourceBookingController.php:135
->>>>>>> 607da1784b926d2e8bad5158935321557db75b66
  * @route '/bookings/customers/search'
  */
         searchForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -123,7 +77,6 @@ search.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     search.form = searchForm
->>>>>>> Stashed changes
 const customers = {
     search: Object.assign(search, search),
 }

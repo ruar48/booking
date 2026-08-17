@@ -53,7 +53,6 @@ type Props = {
     canManage?: boolean;
     filters?: BookingFilters;
     resources?: Pick<Resource, 'id' | 'name'>[];
-<<<<<<< Updated upstream
     stats?: BookingStats | null;
     nextBooking?: ResourceBooking | null;
 };
@@ -78,25 +77,17 @@ function scheduleLabel(booking: ResourceBooking) {
     return `${dayLabel} • ${format(start, 'h:mm a')} – ${format(end, 'h:mm a')}`;
 }
 
-=======
-};
-
->>>>>>> Stashed changes
 export default function BookingsIndex({
     bookings,
     canManage = false,
     filters = {},
     resources = [],
-<<<<<<< Updated upstream
     stats = null,
     nextBooking = null,
 }: Props) {
     const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(null);
     const [cancelReason, setCancelReason] = useState('');
 
-=======
-}: Props) {
->>>>>>> Stashed changes
     const applyFilters = useCallback(
         (next: Partial<BookingFilters>) => {
             router.get(
@@ -133,7 +124,6 @@ export default function BookingsIndex({
         );
     };
 
-<<<<<<< Updated upstream
     const canCancelBooking = useCallback(
         (booking: ResourceBooking) =>
             canManage
@@ -161,8 +151,6 @@ export default function BookingsIndex({
         );
     };
 
-=======
->>>>>>> Stashed changes
     const columns: ColumnDef<ResourceBooking>[] = [
         {
             accessorKey: 'resource',
@@ -353,7 +341,6 @@ export default function BookingsIndex({
                     searchPlaceholder="Search by booked by..."
                     searchValue={filters.search}
                     onSearch={(value) => applyFilters({ search: value || undefined })}
-<<<<<<< Updated upstream
                     rowClassName={(row) => ROW_TINT[row.status]}
                     renderCard={
                         canManage
@@ -366,8 +353,6 @@ export default function BookingsIndex({
                                   />
                               )
                     }
-=======
->>>>>>> Stashed changes
                     filters={
                         <div className="flex flex-wrap items-center gap-2">
                             <Select
