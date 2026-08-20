@@ -123,6 +123,25 @@ class OpenPlayController extends Controller
         ]);
     }
 
+    public function bracketFull(OpenPlaySession $open_play): Response
+    {
+        $this->authorize('update', $open_play);
+
+        $open_play->load([
+            'registrations.player.user:id,name',
+            'registrations.partner.user:id,name',
+            'matches' => fn ($query) => $query->orderBy('round')->orderBy('bracket_position'),
+            'matches.entry1.player.user:id,name',
+            'matches.entry1.partner.user:id,name',
+            'matches.entry2.player.user:id,name',
+            'matches.entry2.partner.user:id,name',
+        ]);
+
+        return Inertia::render('open-play/bracket-full', [
+            'session' => $open_play,
+        ]);
+    }
+
     public function search(Request $request): JsonResponse
     {
         $request->validate(['q' => ['required', 'string', 'min:2']]);
