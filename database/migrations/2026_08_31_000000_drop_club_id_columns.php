@@ -11,9 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // resources was renamed from courts; MySQL does not rename the
+        // underlying foreign key constraint, so it is still named
+        // courts_club_id_foreign rather than resources_club_id_foreign.
+        Schema::table('resources', function (Blueprint $table) {
+            $table->dropForeign('courts_club_id_foreign');
+            $table->dropColumn('club_id');
+        });
+
         // Simple club_id FK columns (no other constraints touching club_id).
         $simpleTables = [
-            'resources',
             'products',
             'sales',
             'players',
@@ -37,26 +44,30 @@ return new class extends Migration
         // Since there is now only a single "club", group+key alone is the
         // meaningful uniqueness constraint going forward.
         Schema::table('settings', function (Blueprint $table) {
-            $table->dropUnique(['club_id', 'group', 'key']);
             $table->dropForeign(['club_id']);
+            $table->dropUnique(['club_id', 'group', 'key']);
             $table->dropColumn('club_id');
             $table->unique(['group', 'key']);
         });
 
-        // rankings: composite unique index included club_id.
+        // rankings: composite unique index included club_id. player_id is the
+        // leftmost column of that index, so its own foreign key also relies
+        // on it and must be dropped before the index, then recreated.
         // With a single club, a player now has one ranking record, so
         // player_id alone becomes unique.
         Schema::table('rankings', function (Blueprint $table) {
-            $table->dropUnique(['player_id', 'club_id']);
             $table->dropForeign(['club_id']);
+            $table->dropForeign(['player_id']);
+            $table->dropUnique(['player_id', 'club_id']);
             $table->dropColumn('club_id');
             $table->unique('player_id');
+            $table->foreign('player_id')->references('id')->on('players')->cascadeOnDelete();
         });
 
         // recurring_schedule_locks: named composite unique index included club_id.
         Schema::table('recurring_schedule_locks', function (Blueprint $table) {
-            $table->dropUnique('recurring_lock_unique');
             $table->dropForeign(['club_id']);
+            $table->dropUnique('recurring_lock_unique');
             $table->dropColumn('club_id');
             $table->unique(['resource_id', 'day_of_week', 'starts_at', 'ends_at'], 'recurring_lock_unique');
         });
@@ -64,8 +75,8 @@ return new class extends Migration
         // date_overrides: composite unique index included club_id.
         // With a single club, a date can only have one override.
         Schema::table('date_overrides', function (Blueprint $table) {
-            $table->dropUnique(['club_id', 'date']);
             $table->dropForeign(['club_id']);
+            $table->dropUnique(['club_id', 'date']);
             $table->dropColumn('club_id');
             $table->unique('date');
         });

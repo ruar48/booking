@@ -45,11 +45,13 @@ import { formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { calendar, create, show, index as bookingsIndex } from '@/routes/bookings';
 import { closeDate, reopenDate } from '@/routes/bookings/calendar';
-import type { DateOverride, ResourceBooking } from '@/types/booking';
+import { edit as editOpenPlay } from '@/routes/open-play';
+import type { DateOverride, OpenPlaySession, ResourceBooking } from '@/types/booking';
 
 type Props = {
     bookings: ResourceBooking[];
     dateOverrides: DateOverride[];
+    openPlaySessions: OpenPlaySession[];
     filters: {
         start?: string;
         end?: string;
@@ -68,7 +70,12 @@ const statusDotClasses: Record<string, string> = {
     completed: 'bg-blue-500',
 };
 
-export default function BookingsCalendar({ bookings, dateOverrides, filters }: Props) {
+export default function BookingsCalendar({
+    bookings,
+    dateOverrides,
+    openPlaySessions,
+    filters,
+}: Props) {
     const anchorDate = filters.start ? parseISO(filters.start) : new Date();
     const [monthCursor, setMonthCursor] = useState(startOfMonth(anchorDate));
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -89,6 +96,23 @@ export default function BookingsCalendar({ bookings, dateOverrides, filters }: P
 
         return map;
     }, [bookings]);
+
+    const openPlayByDate = useMemo(() => {
+        const map = new Map<string, OpenPlaySession[]>();
+
+        for (const session of openPlaySessions) {
+            const key = session.starts_at.split('T')[0];
+            const list = map.get(key) ?? [];
+            list.push(session);
+            map.set(key, list);
+        }
+
+        for (const list of map.values()) {
+            list.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+        }
+
+        return map;
+    }, [openPlaySessions]);
 
     const overridesByDate = useMemo(() => {
         const map = new Map<string, DateOverride>();
@@ -189,6 +213,7 @@ export default function BookingsCalendar({ bookings, dateOverrides, filters }: P
                             {days.map((day) => {
                                 const key = format(day, 'yyyy-MM-dd');
                                 const dayBookings = grouped.get(key) ?? [];
+                                const dayOpenPlay = openPlayByDate.get(key) ?? [];
                                 const inMonth = isSameMonth(day, monthCursor);
                                 const visible = dayBookings.slice(0, 3);
                                 const overflow = dayBookings.length - visible.length;
@@ -231,14 +256,21 @@ export default function BookingsCalendar({ bookings, dateOverrides, filters }: P
                                             >
                                                 {format(day, 'd')}
                                             </span>
-                                            {dayBookings.length > 0 && (
-                                                <Badge
-                                                    variant="secondary"
-                                                    className="h-4 px-1.5 text-[10px]"
-                                                >
-                                                    {dayBookings.length}
-                                                </Badge>
-                                            )}
+                                            <div className="flex items-center gap-1">
+                                                {dayOpenPlay.length > 0 && (
+                                                    <Badge className="h-4 bg-violet-100 px-1.5 text-[10px] text-violet-700 hover:bg-violet-100">
+                                                        {dayOpenPlay.length}
+                                                    </Badge>
+                                                )}
+                                                {dayBookings.length > 0 && (
+                                                    <Badge
+                                                        variant="secondary"
+                                                        className="h-4 px-1.5 text-[10px]"
+                                                    >
+                                                        {dayBookings.length}
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <Badge
@@ -257,6 +289,26 @@ export default function BookingsCalendar({ bookings, dateOverrides, filters }: P
                                             className="flex flex-1 flex-col gap-0.5"
                                             onClick={(e) => e.stopPropagation()}
                                         >
+                                            {dayOpenPlay.map((session) => (
+                                                <Popover key={`op-${session.id}`}>
+                                                    <PopoverTrigger asChild>
+                                                        <button
+                                                            type="button"
+                                                            className="flex items-center gap-1 truncate rounded px-1 py-0.5 text-left text-[11px] hover:bg-accent"
+                                                        >
+                                                            <span className="size-1.5 shrink-0 rounded-full bg-violet-500" />
+                                                            <span className="truncate font-medium text-violet-700">
+                                                                {formatTime(session.starts_at)}{' '}
+                                                                Open Play
+                                                            </span>
+                                                        </button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-72">
+                                                        <OpenPlayDetail session={session} />
+                                                    </PopoverContent>
+                                                </Popover>
+                                            ))}
+
                                             {visible.map((booking) => (
                                                 <Popover key={booking.id}>
                                                     <PopoverTrigger asChild>
@@ -496,6 +548,36 @@ function BookingDetail({
                 className="text-primary inline-block text-xs font-medium hover:underline"
             >
                 View details →
+            </Link>
+        </div>
+    );
+}
+
+function OpenPlayDetail({ session }: { session: OpenPlaySession }) {
+    const courtNames = (session.resources ?? []).map((resource) => resource.name);
+
+    return (
+        <div className="space-y-1">
+            <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium">{session.title}</p>
+                <Badge className="bg-violet-100 text-violet-700 hover:bg-violet-100">
+                    Open Play
+                </Badge>
+            </div>
+            <p className="text-muted-foreground text-xs">
+                {formatTime(session.starts_at)}
+                {session.ends_at ? ` – ${formatTime(session.ends_at)}` : ''}
+            </p>
+            <p className="text-muted-foreground text-xs">
+                {courtNames.length > 0
+                    ? `Courts: ${courtNames.join(', ')}`
+                    : session.location || 'No courts reserved — does not block regular bookings'}
+            </p>
+            <Link
+                href={editOpenPlay(session.id)}
+                className="text-primary inline-block text-xs font-medium hover:underline"
+            >
+                Manage session →
             </Link>
         </div>
     );

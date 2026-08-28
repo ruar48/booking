@@ -54,7 +54,7 @@ export default function OpenPlayShow({ session }: Props) {
         <>
             <Head title={`Open play — ${session.title}`} />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+                <div className="flex w-full flex-col gap-4">
                     <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div className="space-y-2">

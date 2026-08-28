@@ -24,6 +24,7 @@ const NOTIFICATION_EVENT_LABELS: Record<string, string> = {
     booking_failed: 'Booking failed',
     booking_approved: 'Booking approved',
     booking_cancelled: 'Booking cancelled',
+    payment_successful: 'Payment received',
 };
 
 type JsonPrimitive = string | number | boolean | null;

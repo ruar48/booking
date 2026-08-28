@@ -10,6 +10,7 @@ use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
+use App\Services\ResourceBookingService;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,6 +18,7 @@ class HomeController extends Controller
 {
     public function __construct(
         private readonly AnnouncementRepositoryInterface $announcementRepository,
+        private readonly ResourceBookingService $resourceBookingService,
     ) {}
 
     public function index(): Response
@@ -40,7 +42,8 @@ class HomeController extends Controller
             ->where('starts_at', '>=', now()->startOfDay())
             ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
             ->with('resource:id,name')
-            ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
+            ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
+            ->concat($this->resourceBookingService->getOpenPlayBookedSlots());
 
         $dateOverrides = DateOverride::query()
             ->where('date', '>=', now()->toDateString())

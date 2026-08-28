@@ -11,6 +11,7 @@ use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
 use App\Exceptions\BookingConflictException;
 use App\Models\DateOverride;
+use App\Models\OpenPlaySession;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\User;
@@ -111,6 +112,13 @@ class ResourceBookingService
         return $booking;
     }
 
+    public function complete(ResourceBooking $booking): ResourceBooking
+    {
+        return $this->bookingRepository->update($booking, [
+            'status' => BookingStatus::Completed,
+        ]);
+    }
+
     /**
      * Cancel a booking together with every sibling from the same bulk
      * submission (see ResourceBooking::groupBookings()), so a customer
@@ -167,6 +175,29 @@ class ResourceBookingService
         return $this->bookingRepository->getForCalendar($start, $end);
     }
 
+    /**
+     * Synthetic booked-slot entries for courts reserved by an Open Play
+     * session, so booking screens grey them out like a regular booking.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    public function getOpenPlayBookedSlots(?Carbon $since = null): Collection
+    {
+        $since ??= now()->startOfDay();
+
+        return OpenPlaySession::query()
+            ->where('ends_at', '>=', $since)
+            ->with('resources:id,name')
+            ->get(['id', 'starts_at', 'ends_at'])
+            ->flatMap(fn (OpenPlaySession $session) => $session->resources->map(fn (Resource $resource) => [
+                'id' => "open-play-{$session->id}-{$resource->id}",
+                'resource_id' => $resource->id,
+                'starts_at' => $session->starts_at,
+                'ends_at' => $session->ends_at,
+                'resource' => ['id' => $resource->id, 'name' => $resource->name],
+            ]));
+    }
+
     private function assertBookable(
         int $resourceId,
         Carbon $startsAt,
@@ -208,6 +239,16 @@ class ResourceBookingService
 
         if ($conflicts->isNotEmpty()) {
             throw new BookingConflictException;
+        }
+
+        $hasOpenPlayConflict = OpenPlaySession::query()
+            ->whereHas('resources', fn ($query) => $query->where('resources.id', $resourceId))
+            ->where('starts_at', '<', $endsAt)
+            ->where('ends_at', '>', $startsAt)
+            ->exists();
+
+        if ($hasOpenPlayConflict) {
+            throw new BookingConflictException('This court is reserved for an Open Play session during this time.');
         }
     }
 }

@@ -13,6 +13,7 @@ use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
 use App\Models\DateOverride;
+use App\Models\OpenPlaySession;
 use App\Models\Policy;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
@@ -381,9 +382,18 @@ class ResourceBookingController extends Controller
             ->whereBetween('date', [$rangeStart->toDateString(), $rangeEnd->toDateString()])
             ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']);
 
+        $openPlaySessions = OpenPlaySession::query()
+            ->where('starts_at', '<', $rangeEnd)
+            ->where(function ($query) use ($rangeStart) {
+                $query->whereNull('ends_at')->orWhere('ends_at', '>', $rangeStart);
+            })
+            ->with('resources:id,name')
+            ->get(['id', 'title', 'starts_at', 'ends_at', 'location']);
+
         return Inertia::render('bookings/calendar', [
             'bookings' => $this->resourceBookingRepository->getForCalendar($rangeStart, $rangeEnd),
             'dateOverrides' => $dateOverrides,
+            'openPlaySessions' => $openPlaySessions,
             'filters' => $request->only(['start', 'end']),
         ]);
     }
@@ -492,7 +502,8 @@ class ResourceBookingController extends Controller
             ->where('starts_at', '>=', now()->startOfDay())
             ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
             ->with('resource:id,name')
-            ->get(['id', 'resource_id', 'starts_at', 'ends_at']);
+            ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
+            ->concat($this->resourceBookingService->getOpenPlayBookedSlots());
 
         $dateOverrides = DateOverride::query()
             ->where('date', '>=', now()->toDateString())

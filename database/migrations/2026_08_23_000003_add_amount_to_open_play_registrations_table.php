@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('open_play_registrations', function (Blueprint $table) {
-            $table->decimal('amount', 10, 2)->default(0)->after('payment_status');
+            $table->decimal('amount', 10, 2)->default(0);
         });
     }
 

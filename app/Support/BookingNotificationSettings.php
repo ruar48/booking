@@ -11,6 +11,7 @@ class BookingNotificationSettings
         'booking_failed',
         'booking_approved',
         'booking_cancelled',
+        'payment_successful',
     ];
 
     /**

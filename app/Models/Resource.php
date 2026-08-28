@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
@@ -73,5 +74,10 @@ class Resource extends Model
     public function trainingSessions(): HasMany
     {
         return $this->hasMany(TrainingSession::class, 'court_id');
+    }
+
+    public function openPlaySessions(): BelongsToMany
+    {
+        return $this->belongsToMany(OpenPlaySession::class, 'open_play_session_resource');
     }
 }

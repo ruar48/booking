@@ -127,7 +127,21 @@ class EventServiceProvider extends ServiceProvider
         });
 
         Event::listen(PaymentSuccessful::class, function (PaymentSuccessful $event): void {
-            $event->payment->user->notify(new PaymentSuccessfulNotification($event->payment));
+            $config = BookingNotificationSettings::config('payment_successful');
+
+            if (! $config['enabled']) {
+                return;
+            }
+
+            if ($config['notifyCustomer']) {
+                $event->payment->user->notify(new PaymentSuccessfulNotification($event->payment));
+            }
+
+            if ($config['notifyOwners']) {
+                self::ownerUsers()->each(
+                    fn ($owner) => $owner->notify(new PaymentSuccessfulNotification($event->payment)),
+                );
+            }
         });
 
         Event::listen(AnnouncementPublished::class, function (AnnouncementPublished $event): void {

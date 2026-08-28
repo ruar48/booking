@@ -7,6 +7,7 @@ import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,10 +19,11 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { destroy, index as openPlayIndex, update } from '@/routes/open-play';
-import type { OpenPlaySession } from '@/types/booking';
+import type { OpenPlaySession, Resource } from '@/types/booking';
 
 type Props = {
     session: OpenPlaySession;
+    resources: Resource[];
 };
 
 function toDatetimeLocal(value?: string | null): string {
@@ -32,7 +34,7 @@ function toDatetimeLocal(value?: string | null): string {
     return value.slice(0, 16);
 }
 
-export default function OpenPlayEdit({ session }: Props) {
+export default function OpenPlayEdit({ session, resources }: Props) {
     const [deleteOpen, setDeleteOpen] = useState(false);
 
     const { data, setData, put, processing, errors } = useForm({
@@ -48,11 +50,21 @@ export default function OpenPlayEdit({ session }: Props) {
         team_size: session.team_size ?? 'singles',
         bracket_format: session.bracket_format ?? 'round_robin',
         bracket_generation: session.bracket_generation ?? 'automatic',
+        resource_ids: (session.resources ?? []).map((resource) => resource.id),
     });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         put(update(session).url);
+    };
+
+    const toggleResource = (resourceId: number, checked: boolean) => {
+        setData(
+            'resource_ids',
+            checked
+                ? [...data.resource_ids, resourceId]
+                : data.resource_ids.filter((id) => id !== resourceId),
+        );
     };
 
     return (
@@ -134,13 +146,42 @@ export default function OpenPlayEdit({ session }: Props) {
                                 <InputError message={errors.registration_closes_at} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="location">Courts</Label>
+                                <Label htmlFor="location">Courts (display label)</Label>
                                 <Input
                                     id="location"
                                     value={data.location}
                                     onChange={(e) => setData('location', e.target.value)}
                                 />
                                 <InputError message={errors.location} />
+                            </div>
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label>Reserve courts</Label>
+                                <p className="text-muted-foreground text-xs">
+                                    Selected courts are automatically closed for regular
+                                    bookings from the start time to the end time above.
+                                </p>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {resources.map((resource) => (
+                                        <label
+                                            key={resource.id}
+                                            className="flex items-center gap-2 text-sm"
+                                        >
+                                            <Checkbox
+                                                checked={data.resource_ids.includes(
+                                                    resource.id,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    toggleResource(
+                                                        resource.id,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                            {resource.name}
+                                        </label>
+                                    ))}
+                                </div>
+                                <InputError message={errors.resource_ids} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Skill level</Label>

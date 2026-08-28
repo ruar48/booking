@@ -6,6 +6,7 @@ use App\Http\Requests\StoreOpenPlayRequest;
 use App\Http\Requests\UpdateOpenPlayRequest;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
+use App\Models\Resource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -63,12 +64,19 @@ class OpenPlayController extends Controller
     {
         $this->authorize('create', OpenPlaySession::class);
 
-        return Inertia::render('open-play/create');
+        return Inertia::render('open-play/create', [
+            'resources' => Resource::query()->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function store(StoreOpenPlayRequest $request): RedirectResponse
     {
-        $session = OpenPlaySession::query()->create($request->validated());
+        $data = $request->validated();
+        $resourceIds = $data['resource_ids'] ?? [];
+        unset($data['resource_ids']);
+
+        $session = OpenPlaySession::query()->create($data);
+        $session->resources()->sync($resourceIds);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Open play session created.')]);
 
@@ -79,14 +87,22 @@ class OpenPlayController extends Controller
     {
         $this->authorize('update', $open_play);
 
+        $open_play->load('resources:id,name');
+
         return Inertia::render('open-play/edit', [
             'session' => $open_play,
+            'resources' => Resource::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
     public function update(UpdateOpenPlayRequest $request, OpenPlaySession $open_play): RedirectResponse
     {
-        $open_play->update($request->validated());
+        $data = $request->validated();
+        $resourceIds = $data['resource_ids'] ?? [];
+        unset($data['resource_ids']);
+
+        $open_play->update($data);
+        $open_play->resources()->sync($resourceIds);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Open play session updated.')]);
 

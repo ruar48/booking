@@ -143,17 +143,17 @@ function generateTimeSlots(open: string, close: string): string[] {
     return slots;
 }
 
-function slotIsBooked(
+function findBookedSlot(
     courtId: number,
     date: string,
     slot: string,
     bookedSlots: BookedSlot[],
-): boolean {
+): BookedSlot | undefined {
     const slotStart = new Date(`${date}T${slot}:00`);
     const slotEnd = new Date(slotStart);
     slotEnd.setHours(slotEnd.getHours() + 1);
 
-    return bookedSlots.some((booking) => {
+    return bookedSlots.find((booking) => {
         if (booking.resource_id !== courtId) {
             return false;
         }
@@ -163,6 +163,10 @@ function slotIsBooked(
 
         return slotStart < bookingEnd && slotEnd > bookingStart;
     });
+}
+
+function isOpenPlaySlot(bookedSlot: BookedSlot | undefined): boolean {
+    return typeof bookedSlot?.id === 'string' && bookedSlot.id.startsWith('open-play-');
 }
 
 function slotIsPast(date: string, slot: string): boolean {
@@ -259,7 +263,7 @@ export function CourtScheduleGrid({
             return;
         }
 
-        if (slotIsBooked(court.id, selectedDate, slot, bookedSlots)) {
+        if (findBookedSlot(court.id, selectedDate, slot, bookedSlots)) {
             return;
         }
 
@@ -497,6 +501,10 @@ export function CourtScheduleGrid({
                     Booked
                 </span>
                 <span className="flex items-center gap-2">
+                    <span className="size-4 rounded border border-violet-200 bg-violet-100" />
+                    Open Play
+                </span>
+                <span className="flex items-center gap-2">
                     <span className="size-4 rounded border border-amber-200 bg-amber-50" />
                     Unavailable
                 </span>
@@ -590,12 +598,14 @@ export function CourtScheduleGrid({
                                     </td>
                                     {visibleCourts.map((court) => {
                                         const unavailable = court.status !== 'available';
-                                        const booked = slotIsBooked(
+                                        const bookedSlot = findBookedSlot(
                                             court.id,
                                             selectedDate,
                                             slot,
                                             bookedSlots,
                                         );
+                                        const booked = !!bookedSlot;
+                                        const openPlay = isOpenPlaySlot(bookedSlot);
                                         const past = slotIsPast(selectedDate, slot);
                                         const selected = selectedKeys.has(
                                             selectionKey(court.id, slot),
@@ -611,10 +621,20 @@ export function CourtScheduleGrid({
                                                     onClick={() =>
                                                         toggleSlot(court, slot)
                                                     }
+                                                    title={
+                                                        openPlay
+                                                            ? 'Reserved for an Open Play session'
+                                                            : undefined
+                                                    }
                                                     className={cn(
                                                         'w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
                                                         disabled && 'cursor-not-allowed',
-                                                        booked && 'bg-slate-200 text-slate-500',
+                                                        booked &&
+                                                            openPlay &&
+                                                            'bg-violet-100 text-violet-700',
+                                                        booked &&
+                                                            !openPlay &&
+                                                            'bg-slate-200 text-slate-500',
                                                         !booked &&
                                                             unavailable &&
                                                             'border border-amber-200 bg-amber-50 text-amber-600',
@@ -631,7 +651,9 @@ export function CourtScheduleGrid({
                                                     )}
                                                 >
                                                     {booked
-                                                        ? 'Booked'
+                                                        ? openPlay
+                                                            ? 'Open Play'
+                                                            : 'Booked'
                                                         : unavailable
                                                           ? 'Unavailable'
                                                           : past

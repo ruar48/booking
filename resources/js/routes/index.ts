@@ -212,7 +212,7 @@ register.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     register.form = registerForm
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
 export const home = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ home.definition = {
 
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
 home.url = (options?: RouteQueryOptions) => {
@@ -236,7 +236,7 @@ home.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
 home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -245,7 +245,7 @@ home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
 home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -255,7 +255,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
     const homeForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -265,7 +265,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
         homeForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -274,7 +274,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:22
+ * @see app/Http/Controllers/HomeController.php:24
  * @route '/'
  */
         homeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

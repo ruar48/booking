@@ -36,6 +36,8 @@ class StoreOpenPlayRequest extends FormRequest
             'bracket_format' => ['required', new Enum(TournamentFormat::class)],
             'bracket_generation' => ['required', new Enum(BracketGenerationMode::class)],
             'team_size' => ['required', new Enum(TeamSize::class)],
+            'resource_ids' => ['nullable', 'array'],
+            'resource_ids.*' => ['integer', Rule::exists('resources', 'id')],
         ];
     }
 }

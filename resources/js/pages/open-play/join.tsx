@@ -110,7 +110,7 @@ export default function OpenPlayJoin({
         <>
             <Head title={`Join ${session.title}`} />
             <div className="flex flex-1 flex-col gap-4 p-4">
-                <div className="mx-auto flex w-full max-w-lg flex-col gap-4">
+                <div className="flex w-full flex-col gap-4">
                     <div className="from-brand-navy relative overflow-hidden rounded-xl bg-gradient-to-br to-slate-800 p-6 text-white shadow-sm">
                         <Badge className="w-fit border-0 bg-white/15 text-white uppercase backdrop-blur-sm hover:bg-white/15">
                             Open play

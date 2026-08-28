@@ -5,6 +5,7 @@ import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { create, index as openPlayIndex, store } from '@/routes/open-play';
+import type { Resource } from '@/types/booking';
 
 function defaultStartsAt(): string {
     const date = new Date();
@@ -31,7 +33,11 @@ function defaultEndsAt(): string {
     return date.toISOString().slice(0, 16);
 }
 
-export default function OpenPlayCreate() {
+type Props = {
+    resources: Resource[];
+};
+
+export default function OpenPlayCreate({ resources }: Props) {
     const { data, setData, post, processing, errors } = useForm({
         title: '',
         description: '',
@@ -45,11 +51,21 @@ export default function OpenPlayCreate() {
         team_size: 'singles',
         bracket_format: 'round_robin',
         bracket_generation: 'automatic',
+        resource_ids: [] as number[],
     });
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
         post(store().url);
+    };
+
+    const toggleResource = (resourceId: number, checked: boolean) => {
+        setData(
+            'resource_ids',
+            checked
+                ? [...data.resource_ids, resourceId]
+                : data.resource_ids.filter((id) => id !== resourceId),
+        );
     };
 
     return (
@@ -124,13 +140,42 @@ export default function OpenPlayCreate() {
                                 <InputError message={errors.registration_closes_at} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="location">Courts</Label>
+                                <Label htmlFor="location">Courts (display label)</Label>
                                 <Input
                                     id="location"
                                     value={data.location}
                                     onChange={(e) => setData('location', e.target.value)}
                                 />
                                 <InputError message={errors.location} />
+                            </div>
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label>Reserve courts</Label>
+                                <p className="text-muted-foreground text-xs">
+                                    Selected courts are automatically closed for regular
+                                    bookings from the start time to the end time above.
+                                </p>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {resources.map((resource) => (
+                                        <label
+                                            key={resource.id}
+                                            className="flex items-center gap-2 text-sm"
+                                        >
+                                            <Checkbox
+                                                checked={data.resource_ids.includes(
+                                                    resource.id,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    toggleResource(
+                                                        resource.id,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                            {resource.name}
+                                        </label>
+                                    ))}
+                                </div>
+                                <InputError message={errors.resource_ids} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Skill level</Label>

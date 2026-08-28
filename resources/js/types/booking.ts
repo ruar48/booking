@@ -40,6 +40,7 @@ export type OpenPlaySession = {
     registrations_count?: number;
     registrations?: OpenPlayRegistration[];
     matches?: OpenPlayMatch[];
+    resources?: Pick<Resource, 'id' | 'name'>[];
 };
 
 export type OpenPlayRegistration = {
@@ -73,7 +74,7 @@ export type OpenPlayMatch = {
 };
 
 export type BookedSlot = {
-    id: number;
+    id: number | string;
     resource_id: number;
     starts_at: string;
     ends_at: string;
@@ -104,7 +105,7 @@ export type Player = {
     emergency_contact_phone?: string | null;
     bio?: string | null;
     is_active: boolean;
-    user?: { id: number; name: string; email: string };
+    user?: { id: number; name: string; email: string; avatar?: string | null };
     rankings?: Ranking[];
     achievements?: PlayerAchievement[];
     coaches?: Coach[];
