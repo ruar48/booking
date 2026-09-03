@@ -541,7 +541,7 @@ function PaymentPanel({
             <CardContent className="space-y-3 px-4">
                 <div className="flex flex-col items-center gap-2">
                     {showExpired ? (
-                        <div className="text-muted-foreground flex size-44 flex-col items-center justify-center gap-2 rounded-lg border text-center text-sm">
+                        <div className="text-muted-foreground flex aspect-square w-full max-w-72 flex-col items-center justify-center gap-2 rounded-lg border text-center text-sm">
                             <span>QR code expired</span>
                             <Button size="sm" onClick={onGenerateNew} disabled={generating}>
                                 Generate new QR
@@ -551,10 +551,10 @@ function PaymentPanel({
                         <img
                             src={qrPayment.qrCodeUrl}
                             alt="QR Ph payment code"
-                            className="size-44 rounded-lg border p-2"
+                            className="aspect-square w-full max-w-72 rounded-lg border p-2"
                         />
                     ) : (
-                        <div className="text-muted-foreground flex size-44 items-center justify-center rounded-lg border text-sm">
+                        <div className="text-muted-foreground flex aspect-square w-full max-w-72 items-center justify-center rounded-lg border text-sm">
                             {generating ? 'Generating QR…' : 'Preparing payment…'}
                         </div>
                     )}

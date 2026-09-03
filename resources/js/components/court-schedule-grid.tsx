@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     addDays,
     addMonths,
@@ -23,6 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
+import { join as joinOpenPlay } from '@/routes/open-play';
 import type { BookedSlot, DateOverride, Resource } from '@/types/booking';
 
 export type WalkInCustomerPayload =
@@ -167,6 +168,20 @@ function findBookedSlot(
 
 function isOpenPlaySlot(bookedSlot: BookedSlot | undefined): boolean {
     return typeof bookedSlot?.id === 'string' && bookedSlot.id.startsWith('open-play-');
+}
+
+/**
+ * Open Play slot ids are formatted as "open-play-{sessionId}-{resourceId}"
+ * (see ResourceBookingService::getOpenPlayBookedSlots) — pull the session id
+ * back out so the cell can link to that session.
+ */
+function openPlaySessionId(bookedSlot: BookedSlot | undefined): number | null {
+    if (typeof bookedSlot?.id !== 'string') {
+        return null;
+    }
+
+    const match = bookedSlot.id.match(/^open-play-(\d+)-\d+$/);
+    return match ? Number(match[1]) : null;
 }
 
 function slotIsPast(date: string, slot: string): boolean {
@@ -606,62 +621,72 @@ export function CourtScheduleGrid({
                                         );
                                         const booked = !!bookedSlot;
                                         const openPlay = isOpenPlaySlot(bookedSlot);
+                                        const sessionId = openPlaySessionId(bookedSlot);
                                         const past = slotIsPast(selectedDate, slot);
                                         const selected = selectedKeys.has(
                                             selectionKey(court.id, slot),
                                         );
                                         const disabled =
-                                            unavailable || booked || past;
+                                            unavailable || (booked && !openPlay) || past;
+                                        const cellLabel = booked
+                                            ? openPlay
+                                                ? 'Open Play'
+                                                : 'Booked'
+                                            : unavailable
+                                              ? 'Unavailable'
+                                              : past
+                                                ? 'Passed'
+                                                : selected
+                                                  ? 'Selected'
+                                                  : 'Open';
+                                        const cellClassName = cn(
+                                            'block w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
+                                            disabled && 'cursor-not-allowed',
+                                            booked &&
+                                                openPlay &&
+                                                'bg-violet-100 text-violet-700 hover:bg-violet-200',
+                                            booked &&
+                                                !openPlay &&
+                                                'bg-slate-200 text-slate-500',
+                                            !booked &&
+                                                unavailable &&
+                                                'border border-amber-200 bg-amber-50 text-amber-600',
+                                            !booked &&
+                                                !unavailable &&
+                                                past &&
+                                                'border border-rose-200 bg-rose-50 text-rose-500',
+                                            !disabled &&
+                                                !openPlay &&
+                                                selected &&
+                                                'bg-brand-lime/35 text-brand-navy ring-1 ring-brand-lime',
+                                            !disabled &&
+                                                !openPlay &&
+                                                !selected &&
+                                                'bg-emerald-50 text-emerald-700 hover:bg-brand-lime/20',
+                                        );
 
                                         return (
                                             <td key={court.id} className="p-1">
-                                                <button
-                                                    type="button"
-                                                    disabled={disabled}
-                                                    onClick={() =>
-                                                        toggleSlot(court, slot)
-                                                    }
-                                                    title={
-                                                        openPlay
-                                                            ? 'Reserved for an Open Play session'
-                                                            : undefined
-                                                    }
-                                                    className={cn(
-                                                        'w-full rounded px-2 py-2.5 text-center text-xs font-semibold transition-colors sm:text-sm',
-                                                        disabled && 'cursor-not-allowed',
-                                                        booked &&
-                                                            openPlay &&
-                                                            'bg-violet-100 text-violet-700',
-                                                        booked &&
-                                                            !openPlay &&
-                                                            'bg-slate-200 text-slate-500',
-                                                        !booked &&
-                                                            unavailable &&
-                                                            'border border-amber-200 bg-amber-50 text-amber-600',
-                                                        !booked &&
-                                                            !unavailable &&
-                                                            past &&
-                                                            'border border-rose-200 bg-rose-50 text-rose-500',
-                                                        !disabled &&
-                                                            selected &&
-                                                            'bg-brand-lime/35 text-brand-navy ring-1 ring-brand-lime',
-                                                        !disabled &&
-                                                            !selected &&
-                                                            'bg-emerald-50 text-emerald-700 hover:bg-brand-lime/20',
-                                                    )}
-                                                >
-                                                    {booked
-                                                        ? openPlay
-                                                            ? 'Open Play'
-                                                            : 'Booked'
-                                                        : unavailable
-                                                          ? 'Unavailable'
-                                                          : past
-                                                            ? 'Passed'
-                                                            : selected
-                                                              ? 'Selected'
-                                                              : 'Open'}
-                                                </button>
+                                                {openPlay && sessionId ? (
+                                                    <Link
+                                                        href={joinOpenPlay(sessionId)}
+                                                        title="Join this Open Play session"
+                                                        className={cellClassName}
+                                                    >
+                                                        {cellLabel}
+                                                    </Link>
+                                                ) : (
+                                                    <button
+                                                        type="button"
+                                                        disabled={disabled}
+                                                        onClick={() =>
+                                                            toggleSlot(court, slot)
+                                                        }
+                                                        className={cellClassName}
+                                                    >
+                                                        {cellLabel}
+                                                    </button>
+                                                )}
                                             </td>
                                         );
                                     })}

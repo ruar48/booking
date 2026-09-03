@@ -379,7 +379,7 @@ export function BracketTree({
 
     return (
         <div className="overflow-x-auto pb-2">
-            <div className="flex w-full justify-center gap-6">
+            <div className="flex w-full justify-start gap-6">
                 {roundNumbers.map((round, roundIndex) => (
                     <div key={round} className="flex w-64 shrink-0 flex-col">
                         <h5 className="text-muted-foreground mb-3 text-center text-xs font-semibold uppercase">
@@ -428,7 +428,7 @@ export function LosersBracketTree({
 
     return (
         <div className="overflow-x-auto pb-2">
-            <div className="flex w-full justify-center gap-6">
+            <div className="flex w-full justify-start gap-6">
                 {roundNumbers.map((round, roundIndex) => {
                     const nextRound = roundNumbers[roundIndex + 1];
                     const hasNext = nextRound !== undefined;
@@ -502,7 +502,7 @@ export function DoubleEliminationBracket({
             {final.length > 0 && (
                 <div>
                     <h4 className="mb-3 text-sm font-semibold">Finals</h4>
-                    <div className="flex w-full justify-center gap-6">
+                    <div className="flex w-full justify-start gap-6 overflow-x-auto pb-2">
                         {final.map((match) => (
                             <div key={match.id} className="flex w-64 shrink-0 flex-col gap-3">
                                 <h5 className="text-muted-foreground text-center text-xs font-semibold uppercase">
