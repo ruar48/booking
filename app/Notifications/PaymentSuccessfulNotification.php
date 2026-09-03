@@ -6,15 +6,11 @@ use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PaymentSuccessfulNotification extends Notification implements ShouldQueue
+class PaymentSuccessfulNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Payment $payment,
     ) {}

@@ -4,13 +4,9 @@ namespace App\Jobs;
 
 use App\Models\ResourceBooking;
 use App\Notifications\BookingReminderNotification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
 
-class SendBookingReminderJob implements ShouldQueue
+class SendBookingReminderJob
 {
-    use Queueable;
-
     public function __construct(
         public readonly ResourceBooking $booking,
     ) {}

@@ -36,15 +36,17 @@ class EventServiceProvider extends ServiceProvider
                 return;
             }
 
-            if ($config['notifyCustomer']) {
-                $event->booking->user->notify(new BookingCreatedNotification($event->booking));
-            }
+            dispatch(function () use ($event, $config): void {
+                if ($config['notifyCustomer']) {
+                    $event->booking->user->notify(new BookingCreatedNotification($event->booking));
+                }
 
-            if ($config['notifyOwners']) {
-                self::ownerUsers()->each(
-                    fn ($owner) => $owner->notify(new BookingCreatedNotification($event->booking)),
-                );
-            }
+                if ($config['notifyOwners']) {
+                    self::ownerUsers()->each(
+                        fn ($owner) => $owner->notify(new BookingCreatedNotification($event->booking)),
+                    );
+                }
+            })->afterResponse();
         });
 
         Event::listen(BookingFailed::class, function (BookingFailed $event): void {
@@ -54,27 +56,29 @@ class EventServiceProvider extends ServiceProvider
                 return;
             }
 
-            if ($config['notifyCustomer']) {
-                $event->user->notify(new BookingFailedNotification(
-                    $event->user,
-                    $event->resourceId,
-                    $event->startsAt,
-                    $event->endsAt,
-                    $event->reason,
-                ));
-            }
-
-            if ($config['notifyOwners']) {
-                self::ownerUsers()->each(
-                    fn ($owner) => $owner->notify(new BookingFailedNotification(
+            dispatch(function () use ($event, $config): void {
+                if ($config['notifyCustomer']) {
+                    $event->user->notify(new BookingFailedNotification(
                         $event->user,
                         $event->resourceId,
                         $event->startsAt,
                         $event->endsAt,
                         $event->reason,
-                    )),
-                );
-            }
+                    ));
+                }
+
+                if ($config['notifyOwners']) {
+                    self::ownerUsers()->each(
+                        fn ($owner) => $owner->notify(new BookingFailedNotification(
+                            $event->user,
+                            $event->resourceId,
+                            $event->startsAt,
+                            $event->endsAt,
+                            $event->reason,
+                        )),
+                    );
+                }
+            })->afterResponse();
         });
 
         Event::listen(BookingApproved::class, function (BookingApproved $event): void {
@@ -84,15 +88,17 @@ class EventServiceProvider extends ServiceProvider
                 return;
             }
 
-            if ($config['notifyCustomer']) {
-                $event->booking->user->notify(new BookingApprovedNotification($event->booking));
-            }
+            dispatch(function () use ($event, $config): void {
+                if ($config['notifyCustomer']) {
+                    $event->booking->user->notify(new BookingApprovedNotification($event->booking));
+                }
 
-            if ($config['notifyOwners']) {
-                self::ownerUsers()->each(
-                    fn ($owner) => $owner->notify(new BookingApprovedNotification($event->booking)),
-                );
-            }
+                if ($config['notifyOwners']) {
+                    self::ownerUsers()->each(
+                        fn ($owner) => $owner->notify(new BookingApprovedNotification($event->booking)),
+                    );
+                }
+            })->afterResponse();
         });
 
         Event::listen(BookingCancelled::class, function (BookingCancelled $event): void {
@@ -102,28 +108,34 @@ class EventServiceProvider extends ServiceProvider
                 return;
             }
 
-            if ($config['notifyCustomer']) {
-                $event->booking->user->notify(new BookingCancelledNotification($event->booking));
-            }
+            dispatch(function () use ($event, $config): void {
+                if ($config['notifyCustomer']) {
+                    $event->booking->user->notify(new BookingCancelledNotification($event->booking));
+                }
 
-            if ($config['notifyOwners']) {
-                self::ownerUsers()->each(
-                    fn ($owner) => $owner->notify(new BookingCancelledNotification($event->booking)),
-                );
-            }
+                if ($config['notifyOwners']) {
+                    self::ownerUsers()->each(
+                        fn ($owner) => $owner->notify(new BookingCancelledNotification($event->booking)),
+                    );
+                }
+            })->afterResponse();
         });
 
         Event::listen(MatchReminder::class, function (MatchReminder $event): void {
-            $event->match->player1?->user?->notify(new MatchReminderNotification($event->match));
-            $event->match->player2?->user?->notify(new MatchReminderNotification($event->match));
+            dispatch(function () use ($event): void {
+                $event->match->player1?->user?->notify(new MatchReminderNotification($event->match));
+                $event->match->player2?->user?->notify(new MatchReminderNotification($event->match));
+            })->afterResponse();
         });
 
         Event::listen(TournamentReminder::class, function (TournamentReminder $event): void {
-            $event->tournament->registrations->each(
-                fn ($registration) => $registration->player?->user?->notify(
-                    new TournamentReminderNotification($event->tournament),
-                ),
-            );
+            dispatch(function () use ($event): void {
+                $event->tournament->registrations->each(
+                    fn ($registration) => $registration->player?->user?->notify(
+                        new TournamentReminderNotification($event->tournament),
+                    ),
+                );
+            })->afterResponse();
         });
 
         Event::listen(PaymentSuccessful::class, function (PaymentSuccessful $event): void {
@@ -133,21 +145,25 @@ class EventServiceProvider extends ServiceProvider
                 return;
             }
 
-            if ($config['notifyCustomer']) {
-                $event->payment->user->notify(new PaymentSuccessfulNotification($event->payment));
-            }
+            dispatch(function () use ($event, $config): void {
+                if ($config['notifyCustomer']) {
+                    $event->payment->user->notify(new PaymentSuccessfulNotification($event->payment));
+                }
 
-            if ($config['notifyOwners']) {
-                self::ownerUsers()->each(
-                    fn ($owner) => $owner->notify(new PaymentSuccessfulNotification($event->payment)),
-                );
-            }
+                if ($config['notifyOwners']) {
+                    self::ownerUsers()->each(
+                        fn ($owner) => $owner->notify(new PaymentSuccessfulNotification($event->payment)),
+                    );
+                }
+            })->afterResponse();
         });
 
         Event::listen(AnnouncementPublished::class, function (AnnouncementPublished $event): void {
-            User::role('player')->each(
-                fn ($user) => $user->notify(new AnnouncementPublishedNotification($event->announcement)),
-            );
+            dispatch(function () use ($event): void {
+                User::role('player')->each(
+                    fn ($user) => $user->notify(new AnnouncementPublishedNotification($event->announcement)),
+                );
+            })->afterResponse();
         });
     }
 

@@ -4,16 +4,12 @@ namespace App\Notifications;
 
 use App\Enums\AnnouncementType;
 use App\Models\Announcement;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 
-class AnnouncementPublishedNotification extends Notification implements ShouldQueue
+class AnnouncementPublishedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Announcement $announcement,
     ) {}

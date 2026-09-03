@@ -3,16 +3,12 @@
 namespace App\Notifications;
 
 use App\Models\User;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 
-class BookingFailedNotification extends Notification implements ShouldQueue
+class BookingFailedNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly User $customer,
         public readonly int $resourceId,

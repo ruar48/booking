@@ -3,15 +3,11 @@
 namespace App\Notifications;
 
 use App\Models\Tournament;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TournamentReminderNotification extends Notification implements ShouldQueue
+class TournamentReminderNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public readonly Tournament $tournament,
     ) {}
