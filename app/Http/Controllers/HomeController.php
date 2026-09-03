@@ -11,6 +11,7 @@ use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Services\ResourceBookingService;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,7 +35,7 @@ class HomeController extends Controller
 
         $openPlaySessions = OpenPlaySession::query()
             ->where('starts_at', '>=', now())
-            ->withCount('registrations')
+            ->withSum('registrations as registrations_count', DB::raw('CASE WHEN partner_player_id IS NULL THEN 1 ELSE 2 END'))
             ->orderBy('starts_at')
             ->get();
 

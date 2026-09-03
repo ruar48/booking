@@ -23,6 +23,11 @@ export function OpenPlayRoster({
         return <p className="text-muted-foreground text-sm">{emptyMessage}</p>;
     }
 
+    const registeredPlayersCount = registrations.reduce(
+        (total, registration) => total + (registration.partner_player_id !== null ? 2 : 1),
+        0,
+    );
+
     return (
         <div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-5 sm:grid-cols-3 md:grid-cols-4">
@@ -49,10 +54,10 @@ export function OpenPlayRoster({
                     );
                 })}
             </div>
-            {maxPlayers != null && registrations.length < maxPlayers && (
+            {maxPlayers != null && registeredPlayersCount < maxPlayers && (
                 <p className="text-muted-foreground pt-4 text-xs">
-                    {maxPlayers - registrations.length} spot{maxPlayers - registrations.length === 1 ? '' : 's'}{' '}
-                    left
+                    {maxPlayers - registeredPlayersCount} spot
+                    {maxPlayers - registeredPlayersCount === 1 ? '' : 's'} left
                 </p>
             )}
         </div>

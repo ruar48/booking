@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BracketGenerationMode;
+use App\Enums\PaymentStatus;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use Database\Factories\OpenPlaySessionFactory;
@@ -93,5 +94,19 @@ class OpenPlaySession extends Model
     public function resources(): BelongsToMany
     {
         return $this->belongsToMany(Resource::class, 'open_play_session_resource');
+    }
+
+    /**
+     * Number of players holding a paid roster slot. A doubles registration
+     * with a partner attached seats two players in one row, so rows can't
+     * be counted directly — each row counts as 1 or 2 depending on whether
+     * partner_player_id is set.
+     */
+    public function registeredPlayersCount(): int
+    {
+        return (int) $this->registrations()
+            ->where('payment_status', PaymentStatus::Paid)
+            ->selectRaw('COALESCE(SUM(CASE WHEN partner_player_id IS NULL THEN 1 ELSE 2 END), 0) as total')
+            ->value('total');
     }
 }

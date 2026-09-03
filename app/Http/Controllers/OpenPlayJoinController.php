@@ -30,7 +30,6 @@ class OpenPlayJoinController extends Controller
         $playerIds = $user->players()->pluck('id');
 
         $sessions = OpenPlaySession::query()
-            ->withCount(['registrations as registrations_count' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid)])
             ->with([
                 'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
                 'registrations.player.user:id,name',
@@ -38,14 +37,20 @@ class OpenPlayJoinController extends Controller
             ])
             ->orderByDesc('starts_at')
             ->get()
-            ->map(fn (OpenPlaySession $session) => [
-                ...$session->toArray(),
-                'is_registered' => $session->registrations
-                    ->contains(fn (OpenPlayRegistration $registration) => $playerIds->contains($registration->player_id)
-                        || $playerIds->contains($registration->partner_player_id)),
-                'is_full' => $session->max_players !== null
-                    && $session->registrations_count >= $session->max_players,
-            ]);
+            ->map(function (OpenPlaySession $session) use ($playerIds) {
+                $registrationsCount = $session->registrations
+                    ->sum(fn (OpenPlayRegistration $registration) => $registration->partner_player_id !== null ? 2 : 1);
+
+                return [
+                    ...$session->toArray(),
+                    'registrations_count' => $registrationsCount,
+                    'is_registered' => $session->registrations
+                        ->contains(fn (OpenPlayRegistration $registration) => $playerIds->contains($registration->player_id)
+                            || $playerIds->contains($registration->partner_player_id)),
+                    'is_full' => $session->max_players !== null
+                        && $registrationsCount >= $session->max_players,
+                ];
+            });
 
         return Inertia::render('open-play/browse', [
             'sessions' => $sessions,
@@ -132,7 +137,7 @@ class OpenPlayJoinController extends Controller
                 ->first()
             : null;
 
-        $registrationsCount = $open_play->registrations()->where('payment_status', PaymentStatus::Paid)->count();
+        $registrationsCount = $open_play->registeredPlayersCount();
 
         $open_play->load([
             'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
@@ -172,17 +177,18 @@ class OpenPlayJoinController extends Controller
             return back();
         }
 
-        $registrationsCount = $open_play->registrations()->where('payment_status', PaymentStatus::Paid)->count();
+        $validated = $request->validate([
+            'partner_player_id' => ['nullable', 'integer', 'exists:players,id'],
+        ]);
 
-        if ($open_play->max_players !== null && $registrationsCount >= $open_play->max_players) {
+        $registrationsCount = $open_play->registeredPlayersCount();
+        $partySize = isset($validated['partner_player_id']) ? 2 : 1;
+
+        if ($open_play->max_players !== null && $registrationsCount + $partySize > $open_play->max_players) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This session is full.')]);
 
             return back();
         }
-
-        $validated = $request->validate([
-            'partner_player_id' => ['nullable', 'integer', 'exists:players,id'],
-        ]);
 
         $player = Player::query()->firstOrCreate([
             'user_id' => $request->user()->id,

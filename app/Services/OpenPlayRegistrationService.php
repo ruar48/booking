@@ -54,6 +54,9 @@ class OpenPlayRegistrationService
                 'partner_player_id' => $partner->id,
                 'created_by' => $createdBy,
                 ...$attributes,
+                // This one registration row seats both the player and their
+                // partner, so the fee must cover both slots.
+                'amount' => $requiresPayment ? $event->price_per_player * 2 : 0,
             ]);
         }
 

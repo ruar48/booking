@@ -10,6 +10,7 @@ use App\Models\Resource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -33,7 +34,7 @@ class OpenPlayController extends Controller
             ->when($bracketFormat !== null, fn ($query) => $query->where('bracket_format', $bracketFormat))
             ->when($dateFrom !== null, fn ($query) => $query->whereDate('starts_at', '>=', $dateFrom))
             ->when($dateTo !== null, fn ($query) => $query->whereDate('starts_at', '<=', $dateTo))
-            ->withCount('registrations')
+            ->withSum('registrations as registrations_count', DB::raw('CASE WHEN partner_player_id IS NULL THEN 1 ELSE 2 END'))
             ->when(
                 $sort === 'latest',
                 fn ($query) => $query->orderByDesc('starts_at'),
