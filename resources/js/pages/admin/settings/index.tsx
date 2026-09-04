@@ -1,16 +1,23 @@
 import { Head, useForm } from '@inertiajs/react';
+import { Bell, SlidersHorizontal, Timer } from 'lucide-react';
 import type { FormEvent } from 'react';
 
+import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { index as adminSettingsIndex, update, updateNotifications, updatePaymentWindow } from '@/routes/admin/settings';
+import { cn } from '@/lib/utils';
+import {
+    index as adminSettingsIndex,
+    update,
+    updateNotifications,
+    updatePaymentWindow,
+} from '@/routes/admin/settings';
 import type { Setting } from '@/types/booking';
 
 type NotificationSetting = {
@@ -47,7 +54,9 @@ function isPlainObject(value: unknown): value is Record<string, JsonValue> {
 }
 
 function isStringArray(value: unknown): value is string[] {
-    return Array.isArray(value) && value.every((item) => typeof item === 'string');
+    return (
+        Array.isArray(value) && value.every((item) => typeof item === 'string')
+    );
 }
 
 function toEditableValue(value: unknown): JsonValue {
@@ -72,16 +81,26 @@ function SettingValueEditor({
             <div className="grid gap-4 sm:grid-cols-2">
                 {Object.entries(value).map(([key, val]) => {
                     const fieldId = `${idPrefix}-${key}`;
-                    const wide = isPlainObject(val) || isStringArray(val) || (typeof val === 'string' && val.length > 80);
+                    const wide =
+                        isPlainObject(val) ||
+                        isStringArray(val) ||
+                        (typeof val === 'string' && val.length > 80);
 
                     return (
-                        <div key={key} className={wide ? 'grid gap-2 sm:col-span-2' : 'grid gap-2'}>
+                        <div
+                            key={key}
+                            className={
+                                wide ? 'grid gap-2 sm:col-span-2' : 'grid gap-2'
+                            }
+                        >
                             <Label htmlFor={fieldId}>{humanize(key)}</Label>
                             {isPlainObject(val) ? (
                                 <div className="rounded-lg border p-3">
                                     <SettingValueEditor
                                         value={val}
-                                        onChange={(next) => onChange({ ...value, [key]: next })}
+                                        onChange={(next) =>
+                                            onChange({ ...value, [key]: next })
+                                        }
                                         idPrefix={fieldId}
                                     />
                                 </div>
@@ -100,19 +119,42 @@ function SettingValueEditor({
                                         })
                                     }
                                 />
-                            ) : key === 'description' || (typeof val === 'string' && val.length > 80) ? (
+                            ) : key === 'description' ||
+                              (typeof val === 'string' && val.length > 80) ? (
                                 <Textarea
                                     id={fieldId}
-                                    value={val === null || val === undefined ? '' : String(val)}
-                                    onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+                                    value={
+                                        val === null || val === undefined
+                                            ? ''
+                                            : String(val)
+                                    }
+                                    onChange={(e) =>
+                                        onChange({
+                                            ...value,
+                                            [key]: e.target.value,
+                                        })
+                                    }
                                     rows={4}
                                 />
                             ) : (
                                 <Input
                                     id={fieldId}
-                                    type={key === 'open' || key === 'close' ? 'time' : 'text'}
-                                    value={val === null || val === undefined ? '' : String(val)}
-                                    onChange={(e) => onChange({ ...value, [key]: e.target.value })}
+                                    type={
+                                        key === 'open' || key === 'close'
+                                            ? 'time'
+                                            : 'text'
+                                    }
+                                    value={
+                                        val === null || val === undefined
+                                            ? ''
+                                            : String(val)
+                                    }
+                                    onChange={(e) =>
+                                        onChange({
+                                            ...value,
+                                            [key]: e.target.value,
+                                        })
+                                    }
                                 />
                             )}
                         </div>
@@ -131,7 +173,11 @@ function SettingValueEditor({
     );
 }
 
-export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, notificationSettings }: Props) {
+export default function AdminSettingsIndex({
+    settings,
+    unpaidCancelMinutes,
+    notificationSettings,
+}: Props) {
     const flatSettings = Object.entries(settings).flatMap(([group, items]) =>
         items.map((setting) => ({
             group,
@@ -149,12 +195,15 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
     });
 
     const paymentWindowForm = useForm({
-        minutes: unpaidCancelMinutes !== null ? String(unpaidCancelMinutes) : '',
+        minutes:
+            unpaidCancelMinutes !== null ? String(unpaidCancelMinutes) : '',
     });
 
-    const notificationsForm = useForm<{ notifications: NotificationSetting[] }>({
-        notifications: notificationSettings,
-    });
+    const notificationsForm = useForm<{ notifications: NotificationSetting[] }>(
+        {
+            notifications: notificationSettings,
+        },
+    );
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -166,25 +215,40 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
         paymentWindowForm.transform((data) => ({
             minutes: data.minutes ? Number(data.minutes) : null,
         }));
-        paymentWindowForm.put(updatePaymentWindow().url, { preserveScroll: true });
+        paymentWindowForm.put(updatePaymentWindow().url, {
+            preserveScroll: true,
+        });
     };
 
     const submitNotifications = (event: FormEvent) => {
         event.preventDefault();
-        notificationsForm.put(updateNotifications().url, { preserveScroll: true });
+        notificationsForm.put(updateNotifications().url, {
+            preserveScroll: true,
+        });
     };
 
-    const updateNotificationSetting = (key: string, changes: Partial<NotificationSetting>) => {
+    const updateNotificationSetting = (
+        key: string,
+        changes: Partial<NotificationSetting>,
+    ) => {
         notificationsForm.setData(
             'notifications',
             notificationsForm.data.notifications.map((notification) =>
-                notification.key === key ? { ...notification, ...changes } : notification,
+                notification.key === key
+                    ? { ...notification, ...changes }
+                    : notification,
             ),
         );
     };
 
-    const toggleNotificationRecipient = (key: string, recipient: string, checked: boolean) => {
-        const notification = notificationsForm.data.notifications.find((n) => n.key === key);
+    const toggleNotificationRecipient = (
+        key: string,
+        recipient: string,
+        checked: boolean,
+    ) => {
+        const notification = notificationsForm.data.notifications.find(
+            (n) => n.key === key,
+        );
 
         if (!notification) {
             return;
@@ -212,18 +276,126 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
                     description="Manage your pickleball court booking preferences"
                 />
 
-                <form onSubmit={submitPaymentWindow} className="mx-auto w-full max-w-3xl">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Payment window</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                            <p className="text-muted-foreground text-sm">
-                                Automatically cancel a booking if payment isn't
-                                received within this many minutes of creation.
-                                Leave blank to allow unlimited time to pay.
-                            </p>
-                            <div className="grid max-w-xs gap-1">
+                <div className="grid gap-6 xl:grid-cols-3">
+                    {/* Notifications is by far the tallest section, so it leads
+                        the main column and the short payment window sits beside
+                        it rather than above a mostly-empty row. */}
+                    <form
+                        onSubmit={submitNotifications}
+                        className="space-y-4 xl:col-span-2"
+                    >
+                        <FormSection
+                            icon={Bell}
+                            tone="violet"
+                            title="Booking notifications"
+                            description="Choose which booking emails are sent, and who receives them. Admins are notified as the venue's owners."
+                            contentClassName="grid gap-3 px-5 pb-5 sm:grid-cols-1"
+                        >
+                            {notificationsForm.data.notifications.map(
+                                (notification) => (
+                                    <div
+                                        key={notification.key}
+                                        className={cn(
+                                            'grid gap-3 rounded-lg border p-4 transition-colors',
+                                            notification.enabled
+                                                ? 'bg-card'
+                                                : 'bg-muted/40',
+                                        )}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <Label
+                                                htmlFor={`notif-${notification.key}-enabled`}
+                                                className="text-sm font-medium"
+                                            >
+                                                {NOTIFICATION_EVENT_LABELS[
+                                                    notification.key
+                                                ] ?? notification.key}
+                                            </Label>
+                                            <Switch
+                                                id={`notif-${notification.key}-enabled`}
+                                                checked={notification.enabled}
+                                                onCheckedChange={(checked) =>
+                                                    updateNotificationSetting(
+                                                        notification.key,
+                                                        { enabled: checked },
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div
+                                            className={cn(
+                                                'flex flex-wrap gap-x-5 gap-y-2 transition-opacity',
+                                                notification.enabled
+                                                    ? 'opacity-100'
+                                                    : 'opacity-50',
+                                            )}
+                                        >
+                                            <label className="flex items-center gap-2 text-sm">
+                                                <Checkbox
+                                                    checked={notification.recipients.includes(
+                                                        'customer',
+                                                    )}
+                                                    disabled={
+                                                        !notification.enabled
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        toggleNotificationRecipient(
+                                                            notification.key,
+                                                            'customer',
+                                                            checked === true,
+                                                        )
+                                                    }
+                                                />
+                                                Notify customer
+                                            </label>
+                                            <label className="flex items-center gap-2 text-sm">
+                                                <Checkbox
+                                                    checked={notification.recipients.includes(
+                                                        'owners',
+                                                    )}
+                                                    disabled={
+                                                        !notification.enabled
+                                                    }
+                                                    onCheckedChange={(
+                                                        checked,
+                                                    ) =>
+                                                        toggleNotificationRecipient(
+                                                            notification.key,
+                                                            'owners',
+                                                            checked === true,
+                                                        )
+                                                    }
+                                                />
+                                                Notify admins (owners)
+                                            </label>
+                                        </div>
+                                    </div>
+                                ),
+                            )}
+                        </FormSection>
+                        <div className="flex justify-end">
+                            <Button
+                                type="submit"
+                                disabled={notificationsForm.processing}
+                            >
+                                {notificationsForm.processing
+                                    ? 'Saving…'
+                                    : 'Save notifications'}
+                            </Button>
+                        </div>
+                    </form>
+
+                    <form onSubmit={submitPaymentWindow} className="space-y-4">
+                        <FormSection
+                            icon={Timer}
+                            tone="amber"
+                            title="Payment window"
+                            description="Automatically cancel a booking if payment isn't received within this many minutes. Leave blank to allow unlimited time to pay."
+                            contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                        >
+                            <div className="grid gap-2">
                                 <Label htmlFor="unpaid-cancel-minutes">
                                     Minutes before auto-cancel
                                 </Label>
@@ -240,89 +412,40 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
                                         )
                                     }
                                 />
-                                <InputError message={paymentWindowForm.errors.minutes} />
+                                <InputError
+                                    message={paymentWindowForm.errors.minutes}
+                                />
                             </div>
-                        </CardContent>
-                    </Card>
-                    <div className="mt-4 flex justify-end">
-                        <Button type="submit" disabled={paymentWindowForm.processing}>
-                            Save payment window
-                        </Button>
-                    </div>
-                </form>
+                        </FormSection>
+                        <div className="flex justify-end">
+                            <Button
+                                type="submit"
+                                disabled={paymentWindowForm.processing}
+                            >
+                                {paymentWindowForm.processing
+                                    ? 'Saving…'
+                                    : 'Save payment window'}
+                            </Button>
+                        </div>
+                    </form>
+                </div>
 
-                <form onSubmit={submitNotifications} className="mx-auto w-full max-w-3xl">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Booking notifications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <p className="text-muted-foreground text-sm">
-                                Choose which booking emails are sent, and who receives them.
-                                Admins are notified as the venue's owners.
-                            </p>
-                            {notificationsForm.data.notifications.map((notification) => (
-                                <div key={notification.key} className="grid gap-3 rounded-lg border p-4">
-                                    <div className="flex items-center justify-between">
-                                        <Label htmlFor={`notif-${notification.key}-enabled`}>
-                                            {NOTIFICATION_EVENT_LABELS[notification.key] ?? notification.key}
-                                        </Label>
-                                        <Switch
-                                            id={`notif-${notification.key}-enabled`}
-                                            checked={notification.enabled}
-                                            onCheckedChange={(checked) =>
-                                                updateNotificationSetting(notification.key, { enabled: checked })
-                                            }
-                                        />
-                                    </div>
-                                    <div className="flex flex-wrap gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                id={`notif-${notification.key}-customer`}
-                                                checked={notification.recipients.includes('customer')}
-                                                disabled={!notification.enabled}
-                                                onCheckedChange={(checked) =>
-                                                    toggleNotificationRecipient(notification.key, 'customer', checked === true)
-                                                }
-                                            />
-                                            <Label htmlFor={`notif-${notification.key}-customer`} className="font-normal">
-                                                Notify customer
-                                            </Label>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Checkbox
-                                                id={`notif-${notification.key}-owners`}
-                                                checked={notification.recipients.includes('owners')}
-                                                disabled={!notification.enabled}
-                                                onCheckedChange={(checked) =>
-                                                    toggleNotificationRecipient(notification.key, 'owners', checked === true)
-                                                }
-                                            />
-                                            <Label htmlFor={`notif-${notification.key}-owners`} className="font-normal">
-                                                Notify admins (owners)
-                                            </Label>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                    <div className="mt-4 flex justify-end">
-                        <Button type="submit" disabled={notificationsForm.processing}>
-                            Save notification settings
-                        </Button>
-                    </div>
-                </form>
-
-                <form onSubmit={submit} className="mx-auto w-full max-w-3xl space-y-6">
+                <form onSubmit={submit} className="space-y-4">
                     {Object.entries(settings).map(([group, items]) => (
-                        <Card key={group}>
-                            <CardHeader>
-                                <CardTitle className="capitalize">
-                                    {group.replace(/_/g, ' ')}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="grid gap-6">
+                        <FormSection
+                            key={group}
+                            icon={SlidersHorizontal}
+                            tone="blue"
+                            title={
+                                group
+                                    .replace(/_/g, ' ')
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                group.replace(/_/g, ' ').slice(1)
+                            }
+                            contentClassName="grid gap-6 px-5 pb-5 sm:grid-cols-1"
+                        >
+                            <>
                                 {items.map((setting) => {
                                     const index = data.settings.findIndex(
                                         (s) =>
@@ -336,8 +459,13 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
                                     );
 
                                     return (
-                                        <div key={setting.id} className="grid gap-2">
-                                            <Label htmlFor={`${group}-${setting.key}`}>
+                                        <div
+                                            key={setting.id}
+                                            className="grid gap-2"
+                                        >
+                                            <Label
+                                                htmlFor={`${group}-${setting.key}`}
+                                            >
                                                 {humanize(setting.key)}
                                             </Label>
                                             <SettingValueEditor
@@ -345,41 +473,47 @@ export default function AdminSettingsIndex({ settings, unpaidCancelMinutes, noti
                                                 idPrefix={`${group}-${setting.key}`}
                                                 onChange={(next) => {
                                                     if (index >= 0) {
-                                                        updateSetting(index, next);
+                                                        updateSetting(
+                                                            index,
+                                                            next,
+                                                        );
                                                     }
                                                 }}
                                             />
                                         </div>
                                     );
                                 })}
-                            </CardContent>
-                        </Card>
+                            </>
+                        </FormSection>
                     ))}
 
                     {!Object.keys(settings).length ? (
-                        <Card>
-                            <CardContent className="grid gap-4 pt-6">
-                                <div className="grid gap-2">
-                                    <Label>Site name</Label>
-                                    <Input
-                                        value={String(data.settings[0]?.value ?? '')}
-                                        onChange={(e) =>
-                                            updateSetting(0, e.target.value)
-                                        }
-                                    />
-                                </div>
-                                <p className="text-muted-foreground text-sm">
-                                    No settings configured yet. Save to create defaults.
-                                </p>
-                            </CardContent>
-                        </Card>
+                        <FormSection
+                            icon={SlidersHorizontal}
+                            tone="blue"
+                            title="General"
+                            description="No settings configured yet. Save to create defaults."
+                            contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                        >
+                            <div className="grid gap-2">
+                                <Label>Site name</Label>
+                                <Input
+                                    value={String(
+                                        data.settings[0]?.value ?? '',
+                                    )}
+                                    onChange={(e) =>
+                                        updateSetting(0, e.target.value)
+                                    }
+                                />
+                            </div>
+                        </FormSection>
                     ) : null}
 
                     <InputError message={errors.settings as string} />
 
                     <div className="flex justify-end">
                         <Button type="submit" disabled={processing}>
-                            Save settings
+                            {processing ? 'Saving…' : 'Save settings'}
                         </Button>
                     </div>
                 </form>

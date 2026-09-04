@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\Repositories\ResourceRepositoryInterface;
+use App\Enums\ResourceStatus;
+use App\Enums\Sport;
 use App\Enums\SurfaceType;
 use App\Http\Requests\StoreResourceRequest;
 use App\Http\Requests\UpdateResourceRequest;
@@ -23,6 +25,15 @@ class ResourceController extends Controller
 
         return Inertia::render('resources/index', [
             'resources' => $this->resourceRepository->paginate(),
+            // Counted across every resource, not just the current page, so the
+            // totals don't change as the admin pages through the table.
+            'stats' => [
+                'total' => Resource::query()->count(),
+                'pickleball' => Resource::query()->where('sport', Sport::Pickleball)->count(),
+                'billiards' => Resource::query()->where('sport', Sport::Billiards)->count(),
+                'available' => Resource::query()->where('status', ResourceStatus::Available)->count(),
+                'min_rate' => (float) (Resource::query()->min('hourly_rate') ?? 0),
+            ],
         ]);
     }
 
