@@ -34,6 +34,8 @@ type DataTableProps<TData, TValue> = {
     emptyTitle?: string;
     emptyDescription?: string;
     loading?: boolean;
+    /** Noun for the pagination summary, e.g. "booking" → "of 7 bookings". */
+    paginationUnit?: string;
     filters?: ReactNode;
     rowClassName?: (row: TData) => string | undefined;
     renderCard?: (row: TData) => ReactNode;
@@ -50,6 +52,7 @@ export function DataTable<TData, TValue>({
     emptyTitle = 'No results found',
     emptyDescription = 'Try adjusting your search or filters.',
     loading = false,
+    paginationUnit,
     filters,
     rowClassName,
     renderCard,
@@ -70,7 +73,7 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {onSearch || filters ? (
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="bg-card flex flex-wrap items-center gap-2 rounded-xl border p-3">
                     {onSearch ? (
                         <div className="relative max-w-sm flex-1 min-w-[200px]">
                             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -118,7 +121,7 @@ export function DataTable<TData, TValue>({
 
             <div
                 className={cn(
-                    'rounded-xl border',
+                    'bg-card overflow-hidden rounded-xl border',
                     renderCard ? 'hidden sm:block' : undefined,
                 )}
             >
@@ -192,7 +195,9 @@ export function DataTable<TData, TValue>({
                 </Table>
             </div>
 
-            {pagination ? <PaginationLinks pagination={pagination} /> : null}
+            {pagination ? (
+                <PaginationLinks pagination={pagination} unit={paginationUnit} />
+            ) : null}
         </div>
     );
 }

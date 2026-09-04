@@ -64,15 +64,17 @@ class ResourceBookingPolicy
 
     public function reschedule(User $user, ResourceBooking $resourceBooking): bool
     {
+        // A booking in a terminal state can't be moved by anyone, admins
+        // included — there is no live slot left to move.
+        if (! in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true)) {
+            return false;
+        }
+
         if ($this->isClubAdmin($user)) {
             return true;
         }
 
         if (! $this->ownsRecord($user, $resourceBooking->user_id)) {
-            return false;
-        }
-
-        if (! in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true)) {
             return false;
         }
 

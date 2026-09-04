@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Contracts\Repositories\ResourceBookingRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -129,7 +130,70 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
                 ->count(),
             'total' => $base()->count(),
             'unpaid' => (float) $base()->where('payment_status', 'unpaid')->sum('amount'),
+            'unpaid_count' => $base()->where('payment_status', 'unpaid')->count(),
             'paid' => (float) $base()->where('payment_status', 'paid')->sum('amount'),
+            'paid_count' => $base()->where('payment_status', 'paid')->count(),
+            'trends' => $this->statTrendsForUser($user),
+        ];
+    }
+
+    /**
+     * Per-month history behind the member stat cards' sparklines, oldest
+     * bucket first. Aggregated in PHP rather than with a SQL date function so
+     * the same code works on SQLite (tests) and MySQL alike.
+     *
+     * @return array{upcoming: list<int>, total: list<int>, unpaid: list<float>, paid: list<float>}
+     */
+    protected function statTrendsForUser(User $user, int $months = 6): array
+    {
+        $start = now()->startOfMonth()->subMonths($months - 1);
+
+        /** @var array<string, array{count: int, unpaid: float, paid: float}> $buckets */
+        $buckets = [];
+
+        for ($i = 0; $i < $months; $i++) {
+            $buckets[$start->clone()->addMonths($i)->format('Y-m')] = [
+                'count' => 0,
+                'unpaid' => 0.0,
+                'paid' => 0.0,
+            ];
+        }
+
+        $bookings = ResourceBooking::query()
+            ->where('user_id', $user->id)
+            ->where('starts_at', '>=', $start)
+            ->get(['starts_at', 'amount', 'payment_status']);
+
+        foreach ($bookings as $booking) {
+            $key = $booking->starts_at->format('Y-m');
+
+            // Bookings scheduled past the window still come back from the
+            // query above; they belong to no bucket.
+            if (! isset($buckets[$key])) {
+                continue;
+            }
+
+            $buckets[$key]['count']++;
+
+            if ($booking->payment_status === PaymentStatus::Unpaid) {
+                $buckets[$key]['unpaid'] += (float) $booking->amount;
+            } elseif ($booking->payment_status === PaymentStatus::Paid) {
+                $buckets[$key]['paid'] += (float) $booking->amount;
+            }
+        }
+
+        $counts = array_values(array_map(fn (array $bucket) => $bucket['count'], $buckets));
+
+        // "Total bookings" reads as growth over time, so its sparkline is the
+        // running total rather than the per-month count.
+        $running = 0;
+        $cumulative = array_map(fn (int $count) => $running += $count, $counts);
+
+        return [
+            'upcoming' => $counts,
+            'total' => $cumulative,
+            'unpaid' => array_values(array_map(fn (array $bucket) => round($bucket['unpaid'], 2), $buckets)),
+            'paid' => array_values(array_map(fn (array $bucket) => round($bucket['paid'], 2), $buckets)),
         ];
     }
 

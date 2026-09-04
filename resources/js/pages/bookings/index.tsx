@@ -5,6 +5,7 @@ import {
     Calendar,
     CalendarCheck,
     CalendarClock,
+    Clock,
     Eye,
     Plus,
     Wallet,
@@ -12,11 +13,11 @@ import {
     X,
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
+import { StatCard } from '@/components/stat-card';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,7 +31,6 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import { cn } from '@/lib/utils';
 import {
     calendar as bookingsCalendar,
     cancel,
@@ -38,7 +38,13 @@ import {
     index as bookingsIndex,
     show,
 } from '@/routes/bookings';
-import type { BookingStats, Resource, ResourceBooking, Paginated } from '@/types/booking';
+import { edit as editReschedule } from '@/routes/bookings/reschedule';
+import type {
+    BookingStats,
+    Paginated,
+    Resource,
+    ResourceBooking,
+} from '@/types/booking';
 
 type BookingFilters = {
     search?: string;
@@ -57,14 +63,6 @@ type Props = {
     nextBooking?: ResourceBooking | null;
 };
 
-const ROW_TINT: Record<string, string> = {
-    pending: 'bg-amber-500/[0.04] hover:bg-amber-500/[0.07]',
-    approved: 'bg-blue-500/[0.04] hover:bg-blue-500/[0.07]',
-    completed: 'bg-emerald-500/[0.04] hover:bg-emerald-500/[0.07]',
-    cancelled: 'bg-muted/40',
-    rejected: 'bg-red-500/[0.04] hover:bg-red-500/[0.07]',
-};
-
 function scheduleLabel(booking: ResourceBooking) {
     const start = parseISO(booking.starts_at);
     const end = parseISO(booking.ends_at);
@@ -77,6 +75,14 @@ function scheduleLabel(booking: ResourceBooking) {
     return `${dayLabel} • ${format(start, 'h:mm a')} – ${format(end, 'h:mm a')}`;
 }
 
+function pluralize(count: number | undefined, noun: string): string | undefined {
+    if (count == null) {
+        return undefined;
+    }
+
+    return `${count} ${noun}${count === 1 ? '' : 's'}`;
+}
+
 export default function BookingsIndex({
     bookings,
     canManage = false,
@@ -85,17 +91,16 @@ export default function BookingsIndex({
     stats = null,
     nextBooking = null,
 }: Props) {
-    const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(null);
+    const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(
+        null,
+    );
     const [cancelReason, setCancelReason] = useState('');
 
     const applyFilters = useCallback(
         (next: Partial<BookingFilters>) => {
             router.get(
                 bookingsIndex().url,
-                {
-                    ...filters,
-                    ...next,
-                },
+                { ...filters, ...next },
                 { preserveState: true, replace: true },
             );
         },
@@ -105,7 +110,9 @@ export default function BookingsIndex({
     const today = () => {
         const now = new Date();
         const offset = now.getTimezoneOffset();
-        return new Date(now.getTime() - offset * 60000).toISOString().slice(0, 10);
+        return new Date(now.getTime() - offset * 60000)
+            .toISOString()
+            .slice(0, 10);
     };
 
     const hasActiveFilters = Boolean(
@@ -117,25 +124,20 @@ export default function BookingsIndex({
     );
 
     const clearFilters = () => {
-        router.get(
-            bookingsIndex().url,
-            {},
-            { preserveState: true, replace: true },
-        );
+        router.get(bookingsIndex().url, {}, { preserveState: true, replace: true });
     };
 
+    // Only admins cancel; members move a booking instead, and whether they
+    // still can is decided per booking by the policy (see can_reschedule).
     const canCancelBooking = useCallback(
         (booking: ResourceBooking) =>
-            canManage
-                ? !['cancelled', 'completed', 'rejected'].includes(booking.status)
-                : ['pending', 'approved'].includes(booking.status),
+            canManage &&
+            !['cancelled', 'completed', 'rejected'].includes(booking.status),
         [canManage],
     );
 
     const confirmCancel = () => {
-        if (!cancelTarget) {
-            return;
-        }
+        if (!cancelTarget) return;
 
         router.patch(
             cancel(cancelTarget).url,
@@ -170,8 +172,9 @@ export default function BookingsIndex({
                           <span className="flex items-center gap-2">
                               {row.original.user?.name ?? '—'}
                               {row.original.created_by &&
-                                  row.original.created_by !== row.original.user_id && (
-                                      <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                                  row.original.created_by !==
+                                      row.original.user_id && (
+                                      <span className="border-border bg-muted text-muted-foreground rounded border px-1.5 py-0.5 text-[10px] font-medium tracking-wide uppercase">
                                           Walk-in
                                       </span>
                                   )}
@@ -202,26 +205,49 @@ export default function BookingsIndex({
         {
             accessorKey: 'amount',
             header: 'Amount',
-            cell: ({ row }) =>
-                row.original.amount != null
-                    ? formatCurrency(row.original.amount)
-                    : '—',
+            cell: ({ row }) => (
+                <span className="tabular-nums">
+                    {row.original.amount != null
+                        ? formatCurrency(row.original.amount)
+                        : '—'}
+                </span>
+            ),
         },
         {
             id: 'actions',
             header: '',
             cell: ({ row }) => (
-                <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" asChild>
+                <div className="flex justify-end gap-1.5">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        asChild
+                        className="text-muted-foreground hover:text-foreground size-8"
+                        title="View details"
+                    >
                         <Link href={show(row.original)}>
                             <Eye className="size-4" />
                         </Link>
                     </Button>
+                    {row.original.can_reschedule && (
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            asChild
+                            className="text-primary hover:text-primary hover:bg-primary/5 border-primary/25 size-8"
+                            title="Reschedule"
+                        >
+                            <Link href={editReschedule(row.original)}>
+                                <CalendarClock className="size-4" />
+                            </Link>
+                        </Button>
+                    )}
                     {canCancelBooking(row.original) && (
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
-                            className="text-destructive hover:text-destructive"
+                            className="text-destructive hover:text-destructive size-8 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
+                            title="Cancel booking"
                             onClick={() => setCancelTarget(row.original)}
                         >
                             <X className="size-4" />
@@ -268,70 +294,44 @@ export default function BookingsIndex({
                         <StatCard
                             label="Upcoming"
                             value={stats.upcoming}
+                            caption="Bookings"
                             icon={CalendarClock}
-                            iconClassName="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                            tone="blue"
+                            sparkline={stats.trends?.upcoming}
                         />
                         <StatCard
                             label="Total bookings"
                             value={stats.total}
+                            caption="All time"
                             icon={CalendarCheck}
-                            iconClassName="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                            tone="violet"
+                            sparkline={stats.trends?.total}
                         />
                         <StatCard
                             label="Unpaid"
                             value={formatCurrency(stats.unpaid)}
+                            caption={pluralize(stats.unpaid_count, 'booking')}
                             icon={Wallet}
-                            iconClassName="bg-red-500/10 text-red-600 dark:text-red-400"
+                            tone="red"
+                            sparkline={stats.trends?.unpaid}
                         />
                         <StatCard
                             label="Total paid"
                             value={formatCurrency(stats.paid)}
+                            caption="Paid bookings"
                             icon={WalletCards}
-                            iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                            tone="emerald"
+                            sparkline={stats.trends?.paid}
                         />
                     </div>
                 )}
 
                 {!canManage && nextBooking && (
-                    <Card className="border-primary/30 bg-primary/[0.03] dark:bg-primary/[0.06]">
-                        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="flex items-start gap-4">
-                                <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-full">
-                                    <CalendarClock className="size-5" />
-                                </div>
-                                <div className="space-y-1.5">
-                                    <p className="text-primary text-xs font-semibold tracking-wide uppercase">
-                                        Next booking
-                                    </p>
-                                    <p className="text-lg leading-none font-semibold">
-                                        {nextBooking.resource?.name ?? 'Court'}
-                                    </p>
-                                    <p className="text-muted-foreground text-sm">
-                                        {scheduleLabel(nextBooking)}
-                                    </p>
-                                    <div className="flex flex-wrap gap-2 pt-1">
-                                        <StatusBadge status={nextBooking.status} />
-                                        <StatusBadge
-                                            status={nextBooking.payment_status ?? 'unpaid'}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="flex shrink-0 gap-2">
-                                <Button variant="outline" asChild>
-                                    <Link href={show(nextBooking)}>View details</Link>
-                                </Button>
-                                {canCancelBooking(nextBooking) && (
-                                    <Button
-                                        variant="destructive"
-                                        onClick={() => setCancelTarget(nextBooking)}
-                                    >
-                                        Cancel
-                                    </Button>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <NextBookingCard
+                        booking={nextBooking}
+                        canCancel={canCancelBooking(nextBooking)}
+                        onCancel={() => setCancelTarget(nextBooking)}
+                    />
                 )}
 
                 <DataTable
@@ -339,9 +339,11 @@ export default function BookingsIndex({
                     data={bookings.data}
                     pagination={bookings}
                     searchPlaceholder="Search by booked by..."
+                    paginationUnit="booking"
                     searchValue={filters.search}
-                    onSearch={(value) => applyFilters({ search: value || undefined })}
-                    rowClassName={(row) => ROW_TINT[row.status]}
+                    onSearch={(value) =>
+                        applyFilters({ search: value || undefined })
+                    }
                     renderCard={
                         canManage
                             ? undefined
@@ -430,7 +432,9 @@ export default function BookingsIndex({
                                 type="date"
                                 value={filters.date ?? ''}
                                 onChange={(event) =>
-                                    applyFilters({ date: event.target.value || undefined })
+                                    applyFilters({
+                                        date: event.target.value || undefined,
+                                    })
                                 }
                                 className="w-[150px]"
                             />
@@ -442,7 +446,11 @@ export default function BookingsIndex({
                                 Today
                             </Button>
                             {hasActiveFilters && (
-                                <Button variant="ghost" size="sm" onClick={clearFilters}>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={clearFilters}
+                                >
                                     <X className="size-4" />
                                     Clear
                                 </Button>
@@ -480,29 +488,86 @@ export default function BookingsIndex({
     );
 }
 
-function StatCard({
-    label,
-    value,
-    icon: Icon,
-    iconClassName,
+function NextBookingCard({
+    booking,
+    canCancel,
+    onCancel,
 }: {
-    label: string;
-    value: string | number;
-    icon: LucideIcon;
-    iconClassName: string;
+    booking: ResourceBooking;
+    canCancel: boolean;
+    onCancel: () => void;
 }) {
     return (
-        <Card className="gap-0 py-4">
-            <CardContent className="flex items-center justify-between px-4">
-                <div>
-                    <p className="text-muted-foreground text-xs font-medium">{label}</p>
-                    <p className="mt-1 text-2xl font-bold tabular-nums">{value}</p>
+        <Card className="relative overflow-hidden">
+            <CourtDecor />
+            <CardContent className="relative flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-full">
+                        <CalendarClock className="size-5" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <p className="text-primary text-xs font-semibold tracking-wide uppercase">
+                            Next booking
+                        </p>
+                        <p className="text-xl leading-none font-bold">
+                            {booking.resource?.name ?? 'Court'}
+                        </p>
+                        <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                            <Clock className="size-3.5" />
+                            {scheduleLabel(booking)}
+                        </p>
+                        <div className="flex flex-wrap gap-2 pt-1">
+                            <StatusBadge status={booking.status} />
+                            <StatusBadge
+                                status={booking.payment_status ?? 'unpaid'}
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div className={cn('rounded-md p-2', iconClassName)}>
-                    <Icon className="size-4" />
+                <div className="flex shrink-0 flex-wrap gap-2">
+                    <Button variant="outline" asChild>
+                        <Link href={show(booking)}>View details</Link>
+                    </Button>
+                    {booking.can_reschedule && (
+                        <Button variant="outline" asChild>
+                            <Link href={editReschedule(booking)}>
+                                Reschedule
+                            </Link>
+                        </Button>
+                    )}
+                    {canCancel && (
+                        <Button variant="destructive" onClick={onCancel}>
+                            Cancel
+                        </Button>
+                    )}
                 </div>
             </CardContent>
         </Card>
+    );
+}
+
+/**
+ * Faint paddle-and-net line art bleeding off the right edge of the next-booking
+ * card. Purely decorative, so it stays out of the accessibility tree.
+ */
+function CourtDecor() {
+    return (
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 240 140"
+            fill="none"
+            className="text-primary/[0.13] pointer-events-none absolute -top-2 right-0 hidden h-[130%] w-60 lg:block"
+        >
+            <g stroke="currentColor" strokeWidth="2">
+                <ellipse cx="88" cy="52" rx="26" ry="33" transform="rotate(-24 88 52)" />
+                <path d="M97 84 L106 108" strokeLinecap="round" />
+                <ellipse cx="146" cy="58" rx="26" ry="33" transform="rotate(20 146 58)" />
+                <path d="M136 90 L128 113" strokeLinecap="round" />
+                <path d="M186 40 H236 M186 40 V96 M236 40 V96 M186 96 H236" />
+                <path d="M196 40 V96 M206 40 V96 M216 40 V96 M226 40 V96" strokeWidth="1" />
+                <path d="M186 54 H236 M186 68 H236 M186 82 H236" strokeWidth="1" />
+            </g>
+        </svg>
     );
 }
 
@@ -520,13 +585,17 @@ function BookingCard({
             <CardContent className="space-y-3 px-4">
                 <div className="flex items-start justify-between gap-2">
                     <div>
-                        <p className="font-medium">{booking.resource?.name ?? '—'}</p>
+                        <p className="font-medium">
+                            {booking.resource?.name ?? '—'}
+                        </p>
                         <p className="text-muted-foreground text-sm">
                             {scheduleLabel(booking)}
                         </p>
                     </div>
                     <span className="font-semibold tabular-nums">
-                        {booking.amount != null ? formatCurrency(booking.amount) : '—'}
+                        {booking.amount != null
+                            ? formatCurrency(booking.amount)
+                            : '—'}
                     </span>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -540,6 +609,19 @@ function BookingCard({
                             View
                         </Link>
                     </Button>
+                    {booking.can_reschedule && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1"
+                            asChild
+                        >
+                            <Link href={editReschedule(booking)}>
+                                <CalendarClock className="size-4" />
+                                Reschedule
+                            </Link>
+                        </Button>
+                    )}
                     {canCancel && (
                         <Button
                             variant="destructive"

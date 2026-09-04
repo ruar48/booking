@@ -135,6 +135,8 @@ export type ResourceBooking = {
     id: number;
     booking_group_id?: string | null;
     rescheduled_from_id?: number | null;
+    /** Policy result computed per row by the controller for list/detail views. */
+    can_reschedule?: boolean;
     resource_id: number;
     user_id: number;
     starts_at: string;
@@ -158,7 +160,16 @@ export type BookingStats = {
     upcoming: number;
     total: number;
     unpaid: number;
+    unpaid_count?: number;
     paid: number;
+    paid_count?: number;
+    /** Six months of history per metric, oldest first, for the sparklines. */
+    trends?: {
+        upcoming: number[];
+        total: number[];
+        unpaid: number[];
+        paid: number[];
+    };
 };
 
 export type Tournament = {

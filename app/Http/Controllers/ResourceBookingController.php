@@ -50,16 +50,32 @@ class ResourceBookingController extends Controller
         $filters = $request->only(['search', 'status', 'payment_status', 'resource_id', 'date']);
         $canManage = $user->isVenueAdmin();
 
+        $bookings = $this->resourceBookingRepository->paginateForUser($user, $filters);
+
+        // Members cancel nothing and reschedule instead (see
+        // ResourceBookingPolicy), and the cutoff is per-booking, so each row
+        // carries its own answer rather than the list guessing from status.
+        $bookings->through(fn (ResourceBooking $booking) => $this->withRescheduleFlag($booking, $user));
+
+        $nextBooking = $canManage
+            ? null
+            : $this->resourceBookingRepository->nextBookingForUser($user);
+
         return Inertia::render('bookings/index', [
-            'bookings' => $this->resourceBookingRepository->paginateForUser($user, $filters),
+            'bookings' => $bookings,
             'canManage' => $canManage,
             'filters' => $filters,
             'resources' => $canManage
                 ? Resource::query()->orderBy('name')->get(['id', 'name'])
                 : [],
             'stats' => $canManage ? null : $this->resourceBookingRepository->statsForUser($user),
-            'nextBooking' => $canManage ? null : $this->resourceBookingRepository->nextBookingForUser($user),
+            'nextBooking' => $nextBooking ? $this->withRescheduleFlag($nextBooking, $user) : null,
         ]);
+    }
+
+    protected function withRescheduleFlag(ResourceBooking $booking, User $user): ResourceBooking
+    {
+        return $booking->setAttribute('can_reschedule', $user->can('reschedule', $booking));
     }
 
     public function create(): Response
