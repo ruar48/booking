@@ -37,15 +37,9 @@ class EventServiceProvider extends ServiceProvider
             }
 
             dispatch(function () use ($event, $config): void {
-                if ($config['notifyCustomer']) {
-                    $event->booking->user->notify(new BookingCreatedNotification($event->booking));
-                }
-
-                if ($config['notifyOwners']) {
-                    self::ownerUsers()->each(
-                        fn ($owner) => $owner->notify(new BookingCreatedNotification($event->booking)),
-                    );
-                }
+                self::recipients($event->booking->user, $config)->each(
+                    fn (User $user) => $user->notify(new BookingCreatedNotification($event->booking)),
+                );
             })->afterResponse();
         });
 
@@ -57,27 +51,15 @@ class EventServiceProvider extends ServiceProvider
             }
 
             dispatch(function () use ($event, $config): void {
-                if ($config['notifyCustomer']) {
-                    $event->user->notify(new BookingFailedNotification(
+                self::recipients($event->user, $config)->each(
+                    fn (User $user) => $user->notify(new BookingFailedNotification(
                         $event->user,
                         $event->resourceId,
                         $event->startsAt,
                         $event->endsAt,
                         $event->reason,
-                    ));
-                }
-
-                if ($config['notifyOwners']) {
-                    self::ownerUsers()->each(
-                        fn ($owner) => $owner->notify(new BookingFailedNotification(
-                            $event->user,
-                            $event->resourceId,
-                            $event->startsAt,
-                            $event->endsAt,
-                            $event->reason,
-                        )),
-                    );
-                }
+                    )),
+                );
             })->afterResponse();
         });
 
@@ -89,15 +71,9 @@ class EventServiceProvider extends ServiceProvider
             }
 
             dispatch(function () use ($event, $config): void {
-                if ($config['notifyCustomer']) {
-                    $event->booking->user->notify(new BookingApprovedNotification($event->booking));
-                }
-
-                if ($config['notifyOwners']) {
-                    self::ownerUsers()->each(
-                        fn ($owner) => $owner->notify(new BookingApprovedNotification($event->booking)),
-                    );
-                }
+                self::recipients($event->booking->user, $config)->each(
+                    fn (User $user) => $user->notify(new BookingApprovedNotification($event->booking)),
+                );
             })->afterResponse();
         });
 
@@ -109,15 +85,9 @@ class EventServiceProvider extends ServiceProvider
             }
 
             dispatch(function () use ($event, $config): void {
-                if ($config['notifyCustomer']) {
-                    $event->booking->user->notify(new BookingCancelledNotification($event->booking));
-                }
-
-                if ($config['notifyOwners']) {
-                    self::ownerUsers()->each(
-                        fn ($owner) => $owner->notify(new BookingCancelledNotification($event->booking)),
-                    );
-                }
+                self::recipients($event->booking->user, $config)->each(
+                    fn (User $user) => $user->notify(new BookingCancelledNotification($event->booking)),
+                );
             })->afterResponse();
         });
 
@@ -146,15 +116,9 @@ class EventServiceProvider extends ServiceProvider
             }
 
             dispatch(function () use ($event, $config): void {
-                if ($config['notifyCustomer']) {
-                    $event->payment->user->notify(new PaymentSuccessfulNotification($event->payment));
-                }
-
-                if ($config['notifyOwners']) {
-                    self::ownerUsers()->each(
-                        fn ($owner) => $owner->notify(new PaymentSuccessfulNotification($event->payment)),
-                    );
-                }
+                self::recipients($event->payment->user, $config)->each(
+                    fn (User $user) => $user->notify(new PaymentSuccessfulNotification($event->payment)),
+                );
             })->afterResponse();
         });
 
@@ -167,6 +131,34 @@ class EventServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Everyone who should receive a customer+owners notification, deduplicated.
+     *
+     * Staff booking or paying for themselves are both the customer and an
+     * owner, so notifying the two groups independently sent them the same
+     * notification and the same email twice.
+     *
+     * @param  array{notifyCustomer: bool, notifyOwners: bool}  $config
+     * @return Collection<int, User>
+     */
+    private static function recipients(?User $customer, array $config): Collection
+    {
+        $recipients = new Collection;
+
+        if ($config['notifyCustomer'] && $customer !== null) {
+            $recipients->push($customer);
+        }
+
+        if ($config['notifyOwners']) {
+            $recipients = $recipients->concat(self::ownerUsers());
+        }
+
+        return $recipients->unique('id')->values();
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
     private static function ownerUsers(): Collection
     {
         return User::role([Role::SuperAdmin->value, Role::ClubAdmin->value])->get();
