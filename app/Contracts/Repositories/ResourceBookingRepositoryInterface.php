@@ -3,6 +3,7 @@
 namespace App\Contracts\Repositories;
 
 use App\Models\ResourceBooking;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -11,7 +12,7 @@ interface ResourceBookingRepositoryInterface
 {
     public function paginate(int $perPage = 15): LengthAwarePaginator;
 
-    public function paginateForUser(\App\Models\User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator;
+    public function paginateForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
     public function find(int $id): ?ResourceBooking;
 
@@ -36,7 +37,7 @@ interface ResourceBookingRepositoryInterface
     /**
      * @return array{upcoming: int, total: int, unpaid: float, paid: float}
      */
-    public function statsForUser(\App\Models\User $user): array;
+    public function statsForUser(User $user): array;
 
-    public function nextBookingForUser(\App\Models\User $user): ?ResourceBooking;
+    public function nextBookingForUser(User $user): ?ResourceBooking;
 }

@@ -1,5 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
-import { Bell, SlidersHorizontal, Timer } from 'lucide-react';
+import {
+    Bell,
+    MapPin,
+    Phone,
+    SlidersHorizontal,
+    Store,
+    Timer,
+} from 'lucide-react';
 import type { FormEvent } from 'react';
 
 import { FormSection } from '@/components/form-section';
@@ -261,6 +268,55 @@ export default function AdminSettingsIndex({
         updateNotificationSetting(key, { recipients });
     };
 
+    // The venue profile is a known shape, so it gets a purpose-built form
+    // rather than the generic editor's raw key order. Unrendered keys (gallery)
+    // ride along untouched so saving cannot drop them.
+    const venueProfileIndex = data.settings.findIndex(
+        (setting) => setting.group === 'venue' && setting.key === 'profile',
+    );
+
+    const venueProfile = (): Record<string, JsonValue> => {
+        const value =
+            venueProfileIndex >= 0
+                ? data.settings[venueProfileIndex].value
+                : null;
+
+        return isPlainObject(value) ? value : {};
+    };
+
+    const venueField = (key: string): string => {
+        const value = venueProfile()[key];
+
+        return value === null || value === undefined ? '' : String(value);
+    };
+
+    const setVenueField = (key: string, value: string) => {
+        if (venueProfileIndex >= 0) {
+            updateSetting(venueProfileIndex, {
+                ...venueProfile(),
+                [key]: value,
+            });
+        }
+    };
+
+    const venueList = (key: string): string => {
+        const value = venueProfile()[key];
+
+        return isStringArray(value) ? value.join(', ') : '';
+    };
+
+    const setVenueList = (key: string, value: string) => {
+        if (venueProfileIndex >= 0) {
+            updateSetting(venueProfileIndex, {
+                ...venueProfile(),
+                [key]: value
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean),
+            });
+        }
+    };
+
     const updateSetting = (index: number, value: JsonValue) => {
         const next = [...data.settings];
         next[index] = { ...next[index], value };
@@ -431,61 +487,219 @@ export default function AdminSettingsIndex({
                 </div>
 
                 <form onSubmit={submit} className="space-y-4">
-                    {Object.entries(settings).map(([group, items]) => (
-                        <FormSection
-                            key={group}
-                            icon={SlidersHorizontal}
-                            tone="blue"
-                            title={
-                                group
-                                    .replace(/_/g, ' ')
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                group.replace(/_/g, ' ').slice(1)
-                            }
-                            contentClassName="grid gap-6 px-5 pb-5 sm:grid-cols-1"
-                        >
-                            <>
-                                {items.map((setting) => {
-                                    const index = data.settings.findIndex(
-                                        (s) =>
-                                            s.group === group &&
-                                            s.key === setting.key,
-                                    );
-                                    const value = toEditableValue(
-                                        index >= 0
-                                            ? data.settings[index].value
-                                            : setting.value,
-                                    );
+                    {venueProfileIndex >= 0 ? (
+                        <div className="grid gap-6 xl:grid-cols-3">
+                            <div className="space-y-6 xl:col-span-2">
+                                <FormSection
+                                    icon={Store}
+                                    tone="emerald"
+                                    title="About the venue"
+                                    description="Shown on your public page and in the support assistant."
+                                >
+                                    <div className="grid gap-2 sm:col-span-2">
+                                        <Label htmlFor="venue-description">
+                                            Description
+                                        </Label>
+                                        <Textarea
+                                            id="venue-description"
+                                            rows={4}
+                                            value={venueField('description')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'description',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2 sm:col-span-2">
+                                        <Label htmlFor="venue-amenities">
+                                            Amenities
+                                        </Label>
+                                        <Input
+                                            id="venue-amenities"
+                                            value={venueList('amenities')}
+                                            placeholder="Parking, Comfort rooms, Water station"
+                                            onChange={(e) =>
+                                                setVenueList(
+                                                    'amenities',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                        <p className="text-xs text-muted-foreground">
+                                            Separate each one with a comma.
+                                        </p>
+                                    </div>
+                                </FormSection>
 
-                                    return (
-                                        <div
-                                            key={setting.id}
-                                            className="grid gap-2"
-                                        >
-                                            <Label
-                                                htmlFor={`${group}-${setting.key}`}
-                                            >
-                                                {humanize(setting.key)}
-                                            </Label>
-                                            <SettingValueEditor
-                                                value={value}
-                                                idPrefix={`${group}-${setting.key}`}
-                                                onChange={(next) => {
-                                                    if (index >= 0) {
-                                                        updateSetting(
-                                                            index,
-                                                            next,
-                                                        );
-                                                    }
-                                                }}
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </>
-                        </FormSection>
-                    ))}
+                                <FormSection
+                                    icon={MapPin}
+                                    tone="blue"
+                                    title="Address"
+                                    description="Where members find you."
+                                >
+                                    <div className="grid gap-2 sm:col-span-2">
+                                        <Label htmlFor="venue-address">
+                                            Street address
+                                        </Label>
+                                        <Input
+                                            id="venue-address"
+                                            value={venueField('address_line_1')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'address_line_1',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="venue-city">City</Label>
+                                        <Input
+                                            id="venue-city"
+                                            value={venueField('city')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'city',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="venue-state">
+                                            Province / State
+                                        </Label>
+                                        <Input
+                                            id="venue-state"
+                                            value={venueField('state')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'state',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="venue-postal">
+                                            Postal code
+                                        </Label>
+                                        <Input
+                                            id="venue-postal"
+                                            value={venueField('postal_code')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'postal_code',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="venue-country">
+                                            Country
+                                        </Label>
+                                        <Input
+                                            id="venue-country"
+                                            value={venueField('country')}
+                                            onChange={(e) =>
+                                                setVenueField(
+                                                    'country',
+                                                    e.target.value,
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                </FormSection>
+                            </div>
+
+                            <FormSection
+                                icon={Phone}
+                                tone="violet"
+                                title="Contact"
+                                description="Used on the public page and by the support widget."
+                                contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                            >
+                                <div className="grid gap-2">
+                                    <Label htmlFor="venue-email">Email</Label>
+                                    <Input
+                                        id="venue-email"
+                                        type="email"
+                                        value={venueField('email')}
+                                        onChange={(e) =>
+                                            setVenueField(
+                                                'email',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="venue-phone">Phone</Label>
+                                    <Input
+                                        id="venue-phone"
+                                        type="tel"
+                                        value={venueField('phone')}
+                                        onChange={(e) =>
+                                            setVenueField(
+                                                'phone',
+                                                e.target.value,
+                                            )
+                                        }
+                                    />
+                                </div>
+                            </FormSection>
+                        </div>
+                    ) : null}
+
+                    {/* Anything that isn't the known venue profile still gets
+                        the generic editor, so a new setting group is editable
+                        the moment it appears. */}
+                    {Object.entries(settings).map(([group, items]) =>
+                        items
+                            .filter(
+                                (setting) =>
+                                    !(
+                                        group === 'venue' &&
+                                        setting.key === 'profile'
+                                    ),
+                            )
+                            .map((setting) => {
+                                const index = data.settings.findIndex(
+                                    (s) =>
+                                        s.group === group &&
+                                        s.key === setting.key,
+                                );
+                                const value = toEditableValue(
+                                    index >= 0
+                                        ? data.settings[index].value
+                                        : setting.value,
+                                );
+
+                                return (
+                                    <FormSection
+                                        key={setting.id}
+                                        icon={SlidersHorizontal}
+                                        tone="blue"
+                                        title={humanize(setting.key)}
+                                        description={humanize(group)}
+                                        contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                                    >
+                                        <SettingValueEditor
+                                            value={value}
+                                            idPrefix={`${group}-${setting.key}`}
+                                            onChange={(next) => {
+                                                if (index >= 0) {
+                                                    updateSetting(index, next);
+                                                }
+                                            }}
+                                        />
+                                    </FormSection>
+                                );
+                            }),
+                    )}
 
                     {!Object.keys(settings).length ? (
                         <FormSection

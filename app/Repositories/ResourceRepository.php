@@ -22,6 +22,47 @@ class ResourceRepository implements ResourceRepositoryInterface
             ->paginate($perPage);
     }
 
+    /**
+     * Sortable columns, whitelisted so a request cannot order by an arbitrary
+     * column.
+     *
+     * @var list<string>
+     */
+    private const SORTABLE = ['name', 'sport', 'location_type', 'hourly_rate', 'status'];
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function paginateFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $sort = in_array($filters['sort'] ?? null, self::SORTABLE, true)
+            ? $filters['sort']
+            : null;
+
+        $direction = ($filters['direction'] ?? 'asc') === 'desc' ? 'desc' : 'asc';
+
+        return Resource::query()
+            ->when(
+                ! empty($filters['search']),
+                fn ($query) => $query->where('name', 'like', '%'.$filters['search'].'%'),
+            )
+            ->when(
+                ! empty($filters['sport']),
+                fn ($query) => $query->where('sport', $filters['sport']),
+            )
+            ->when(
+                ! empty($filters['status']),
+                fn ($query) => $query->where('status', $filters['status']),
+            )
+            ->when(
+                $sort !== null,
+                fn ($query) => $query->orderBy($sort, $direction),
+                fn ($query) => $query->orderBy('sport')->orderBy('resource_number'),
+            )
+            ->paginate($perPage)
+            ->withQueryString();
+    }
+
     public function find(int $id): ?Resource
     {
         return Resource::query()->find($id);

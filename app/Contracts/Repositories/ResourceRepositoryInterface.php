@@ -10,6 +10,11 @@ interface ResourceRepositoryInterface
 {
     public function paginate(int $perPage = 15): LengthAwarePaginator;
 
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function paginateFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator;
+
     public function find(int $id): ?Resource;
 
     public function create(array $data): Resource;

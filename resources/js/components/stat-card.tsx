@@ -6,7 +6,8 @@ import { useId } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-export type StatTone = 'brand' | 'blue' | 'violet' | 'emerald' | 'red' | 'amber';
+export type StatTone =
+    'brand' | 'blue' | 'violet' | 'emerald' | 'red' | 'amber';
 
 /**
  * Sparkline strokes have to be literal color values because they land on SVG
@@ -51,6 +52,11 @@ type StatCardProps = {
     value: string | number;
     icon: LucideIcon;
     tone?: StatTone;
+    /**
+     * 'inline' puts the icon beside the value instead of opposite the label —
+     * a denser tile for rows of five or more.
+     */
+    orientation?: 'stacked' | 'inline';
     /** Small line under the value, e.g. "All time" or "1 booking". */
     caption?: string;
     /** Oldest-to-newest series drawn into the card's bottom-right corner. */
@@ -68,6 +74,7 @@ export function StatCard({
     value,
     icon: Icon,
     tone = 'brand',
+    orientation = 'stacked',
     caption,
     sparkline,
     trend,
@@ -77,6 +84,32 @@ export function StatCard({
     const isPositive = trend ? trend.value >= 0 : true;
     const toneStyles = TONES[tone];
     const hasSparkline = Boolean(sparkline && sparkline.length > 1);
+
+    if (orientation === 'inline') {
+        return (
+            <Card className={cn('gap-0 py-4', className)}>
+                <CardContent className="flex items-center gap-3 px-4">
+                    <div
+                        className={cn(
+                            'flex size-10 shrink-0 items-center justify-center rounded-lg',
+                            toneStyles.chip,
+                            iconClassName,
+                        )}
+                    >
+                        <Icon className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                        <p className="truncate text-2xl leading-tight font-bold tabular-nums">
+                            {value}
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                            {caption ?? label}
+                        </p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card
@@ -100,7 +133,7 @@ export function StatCard({
 
             <CardContent className="relative px-4">
                 <div className="flex items-start justify-between gap-2">
-                    <p className="text-muted-foreground text-sm font-medium">
+                    <p className="text-sm font-medium text-muted-foreground">
                         {label}
                     </p>
                     <div
@@ -119,7 +152,7 @@ export function StatCard({
                 </p>
 
                 {caption ? (
-                    <p className="text-muted-foreground mt-1 text-xs">
+                    <p className="mt-1 text-xs text-muted-foreground">
                         {caption}
                     </p>
                 ) : null}
@@ -162,10 +195,17 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
 
     return (
         <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+            <AreaChart
+                data={points}
+                margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
+            >
                 <defs>
                     <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={color} stopOpacity={0.24} />
+                        <stop
+                            offset="0%"
+                            stopColor={color}
+                            stopOpacity={0.24}
+                        />
                         <stop offset="100%" stopColor={color} stopOpacity={0} />
                     </linearGradient>
                 </defs>

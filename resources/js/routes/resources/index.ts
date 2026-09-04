@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../wayfinder'
 /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\ResourceController::index
- * @see app/Http/Controllers/ResourceController.php:22
+ * @see app/Http/Controllers/ResourceController.php:23
  * @route '/resources'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -103,7 +103,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -112,7 +112,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -122,7 +122,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -132,7 +132,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -141,7 +141,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\ResourceController::create
- * @see app/Http/Controllers/ResourceController.php:40
+ * @see app/Http/Controllers/ResourceController.php:44
  * @route '/resources/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -157,7 +157,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\ResourceController::store
- * @see app/Http/Controllers/ResourceController.php:49
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -172,7 +172,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::store
- * @see app/Http/Controllers/ResourceController.php:49
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -181,7 +181,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceController::store
- * @see app/Http/Controllers/ResourceController.php:49
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -191,7 +191,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceController::store
- * @see app/Http/Controllers/ResourceController.php:49
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -201,7 +201,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceController::store
- * @see app/Http/Controllers/ResourceController.php:49
+ * @see app/Http/Controllers/ResourceController.php:53
  * @route '/resources'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -212,7 +212,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
 export const edit = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ edit.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
 edit.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -260,7 +260,7 @@ edit.url = (args: { resource: number | { id: number } } | [resource: number | { 
 
 /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
 edit.get = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -269,7 +269,7 @@ edit.get = (args: { resource: number | { id: number } } | [resource: number | { 
 })
 /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
 edit.head = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -279,7 +279,7 @@ edit.head = (args: { resource: number | { id: number } } | [resource: number | {
 
     /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
     const editForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -289,7 +289,7 @@ edit.head = (args: { resource: number | { id: number } } | [resource: number | {
 
             /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
         editForm.get = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -298,7 +298,7 @@ edit.head = (args: { resource: number | { id: number } } | [resource: number | {
         })
             /**
 * @see \App\Http\Controllers\ResourceController::edit
- * @see app/Http/Controllers/ResourceController.php:58
+ * @see app/Http/Controllers/ResourceController.php:62
  * @route '/resources/{resource}/edit'
  */
         editForm.head = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -314,7 +314,7 @@ edit.head = (args: { resource: number | { id: number } } | [resource: number | {
     edit.form = editForm
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
 export const update = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -329,7 +329,7 @@ update.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
 update.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -362,7 +362,7 @@ update.url = (args: { resource: number | { id: number } } | [resource: number | 
 
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
 update.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'put'> => ({
@@ -371,7 +371,7 @@ update.put = (args: { resource: number | { id: number } } | [resource: number | 
 })
 /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
 update.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -381,7 +381,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
 
     /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
     const updateForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -396,7 +396,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
 
             /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
         updateForm.put = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -410,7 +410,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
         })
             /**
 * @see \App\Http\Controllers\ResourceController::update
- * @see app/Http/Controllers/ResourceController.php:68
+ * @see app/Http/Controllers/ResourceController.php:72
  * @route '/resources/{resource}'
  */
         updateForm.patch = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -426,7 +426,7 @@ update.patch = (args: { resource: number | { id: number } } | [resource: number 
     update.form = updateForm
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:77
+ * @see app/Http/Controllers/ResourceController.php:81
  * @route '/resources/{resource}'
  */
 export const destroy = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -441,7 +441,7 @@ destroy.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:77
+ * @see app/Http/Controllers/ResourceController.php:81
  * @route '/resources/{resource}'
  */
 destroy.url = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -474,7 +474,7 @@ destroy.url = (args: { resource: number | { id: number } } | [resource: number |
 
 /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:77
+ * @see app/Http/Controllers/ResourceController.php:81
  * @route '/resources/{resource}'
  */
 destroy.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'delete'> => ({
@@ -484,7 +484,7 @@ destroy.delete = (args: { resource: number | { id: number } } | [resource: numbe
 
     /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:77
+ * @see app/Http/Controllers/ResourceController.php:81
  * @route '/resources/{resource}'
  */
     const destroyForm = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -499,7 +499,7 @@ destroy.delete = (args: { resource: number | { id: number } } | [resource: numbe
 
             /**
 * @see \App\Http\Controllers\ResourceController::destroy
- * @see app/Http/Controllers/ResourceController.php:77
+ * @see app/Http/Controllers/ResourceController.php:81
  * @route '/resources/{resource}'
  */
         destroyForm.delete = (args: { resource: number | { id: number } } | [resource: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

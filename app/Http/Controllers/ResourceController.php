@@ -10,6 +10,7 @@ use App\Http\Requests\StoreResourceRequest;
 use App\Http\Requests\UpdateResourceRequest;
 use App\Models\Resource;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,12 +20,15 @@ class ResourceController extends Controller
         private readonly ResourceRepositoryInterface $resourceRepository,
     ) {}
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
         $this->authorize('viewAny', Resource::class);
 
+        $filters = $request->only(['search', 'sport', 'status', 'sort', 'direction']);
+
         return Inertia::render('resources/index', [
-            'resources' => $this->resourceRepository->paginate(),
+            'resources' => $this->resourceRepository->paginateFiltered($filters),
+            'filters' => $filters,
             // Counted across every resource, not just the current page, so the
             // totals don't change as the admin pages through the table.
             'stats' => [
