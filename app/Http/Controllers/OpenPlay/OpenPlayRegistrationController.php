@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\OpenPlay;
 
 use App\Enums\PaymentStatus;
-use App\Models\OpenPlaySession;
+use App\Http\Controllers\Controller;
 use App\Models\OpenPlayRegistration;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Services\OpenPlayRegistrationService;
 use Illuminate\Http\RedirectResponse;

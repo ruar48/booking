@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\RentalController;
-use App\Http\Controllers\RentalItemController;
-use App\Http\Controllers\RentalTransactionController;
+use App\Http\Controllers\Rental\RentalController;
+use App\Http\Controllers\Rental\RentalItemController;
+use App\Http\Controllers\Rental\RentalTransactionController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('rental-items', RentalItemController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);

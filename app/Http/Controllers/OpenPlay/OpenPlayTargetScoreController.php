@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\OpenPlay;
 
+use App\Http\Controllers\Controller;
 use App\Models\OpenPlaySession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

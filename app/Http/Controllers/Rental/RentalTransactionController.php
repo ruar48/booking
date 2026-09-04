@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Rental;
 
 use App\Contracts\Repositories\RentalRepositoryInterface;
 use App\Exceptions\InsufficientRentalStockException;
 use App\Exceptions\InvalidRentalStateException;
-use App\Http\Requests\ReturnRentalRequest;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Rental\ReturnRentalRequest;
 use App\Models\RentalTransaction;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;

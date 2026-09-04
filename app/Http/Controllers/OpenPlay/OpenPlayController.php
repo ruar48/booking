@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\OpenPlay;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOpenPlayRequest;
 use App\Http\Requests\UpdateOpenPlayRequest;
 use App\Models\OpenPlaySession;

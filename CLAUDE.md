@@ -64,6 +64,31 @@ Specifically, a controller must **not**:
 If a controller needs a payload assembled from several sources, that assembly
 belongs in a Service; the controller passes the result to `Inertia::render`.
 
+## Folder grouping
+
+**Nest a domain folder once a layer holds 3+ files for that domain. Below
+that, stay flat.** The threshold is the whole rule — it prevents both a
+40-file flat dump and a tree of folders holding one class each.
+
+Currently grouped: `Controllers/{OpenPlay,Rental,Pos,Admin,Settings}`,
+`Requests/{Booking,Rental}`, `Services/Booking`, `Actions/{Booking,Fortify}`.
+Everything under the threshold (Announcement, Player, Product, Tournament…)
+stays flat until a third file arrives, and then moves as a unit.
+
+**Never nest these**, even though it looks inconsistent:
+
+- **Models** — Laravel auto-discovers policies (`App\Models\Foo` →
+  `App\Policies\FooPolicy`) and factories by convention. Nesting breaks
+  discovery and forces manual registration for no benefit.
+- **Enums** and **Policies** — reached by name via IDE jump, never browsed by
+  domain. Folders only add depth.
+
+When moving a controller into a sub-namespace, add
+`use App\Http\Controllers\Controller;` — the unqualified `extends Controller`
+silently stops resolving, and it fails at route registration, not at lint.
+After any move: `php artisan wayfinder:generate --with-form` (generated TS
+action paths mirror controller namespaces), then `route:list` and the suite.
+
 ## Project-specific notes
 
 - **This is an Inertia app, not a JSON API.** Pages receive props, so

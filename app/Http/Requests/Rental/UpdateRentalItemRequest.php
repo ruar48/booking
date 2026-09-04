@@ -1,19 +1,18 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Rental;
 
 use App\Concerns\RentalItemValidationRules;
-use App\Models\RentalItem;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreRentalItemRequest extends FormRequest
+class UpdateRentalItemRequest extends FormRequest
 {
     use RentalItemValidationRules;
 
     public function authorize(): bool
     {
-        return $this->user()->can('create', RentalItem::class);
+        return $this->user()->can('update', $this->route('rental_item'));
     }
 
     /**
@@ -21,6 +20,6 @@ class StoreRentalItemRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->rentalItemRules();
+        return $this->rentalItemRules($this->route('rental_item')->id);
     }
 }

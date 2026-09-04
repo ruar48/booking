@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\PosController;
+use App\Http\Controllers\Pos\PosController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\SaleController;
+use App\Http\Controllers\Pos\SaleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('pos', [PosController::class, 'checkout'])->name('pos.checkout');

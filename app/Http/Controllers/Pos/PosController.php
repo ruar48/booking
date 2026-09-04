@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pos;
 
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Repositories\SaleRepositoryInterface;
@@ -8,6 +8,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\ProductStatus;
 use App\Exceptions\InsufficientStockException;
 use App\Exceptions\InvalidSaleStateException;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\VoidSaleRequest;
 use App\Models\Product;

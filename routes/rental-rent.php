@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\RentalMemberController;
+use App\Http\Controllers\Rental\RentalMemberController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('rentals/browse', [RentalMemberController::class, 'browse'])->name('rentals.browse');

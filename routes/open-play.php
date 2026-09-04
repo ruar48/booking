@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\OpenPlayBracketController;
-use App\Http\Controllers\OpenPlayBracketMatchController;
-use App\Http\Controllers\OpenPlayController;
-use App\Http\Controllers\OpenPlayMatchController;
-use App\Http\Controllers\OpenPlayRegistrationController;
-use App\Http\Controllers\OpenPlayTargetScoreController;
+use App\Http\Controllers\OpenPlay\OpenPlayBracketController;
+use App\Http\Controllers\OpenPlay\OpenPlayBracketMatchController;
+use App\Http\Controllers\OpenPlay\OpenPlayController;
+use App\Http\Controllers\OpenPlay\OpenPlayMatchController;
+use App\Http\Controllers\OpenPlay\OpenPlayRegistrationController;
+use App\Http\Controllers\OpenPlay\OpenPlayTargetScoreController;
 use Illuminate\Support\Facades\Route;
 
 Route::resource('open-play', OpenPlayController::class)->except(['show']);

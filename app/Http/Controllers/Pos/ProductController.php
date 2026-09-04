@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Pos;
 
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Enums\StockMovementType;
 use App\Exceptions\InsufficientStockException;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;

@@ -1,8 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\OpenPlay;
 
 use App\Enums\MatchStatus;
+use App\Http\Controllers\Controller;
 use App\Models\OpenPlayMatch;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;

@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\OpenPlayController;
-use App\Http\Controllers\OpenPlayJoinController;
+use App\Http\Controllers\OpenPlay\OpenPlayController;
+use App\Http\Controllers\OpenPlay\OpenPlayJoinController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('open-play/browse', [OpenPlayJoinController::class, 'browse'])->name('open-play.browse');

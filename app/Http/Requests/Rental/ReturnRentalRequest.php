@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Rental;
 
 use App\Models\RentalTransactionItem;
 use Illuminate\Contracts\Validation\ValidationRule;

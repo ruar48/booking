@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Rental;
 
 use App\Contracts\Repositories\RentalRepositoryInterface;
 use App\Enums\RentalItemStatus;
 use App\Exceptions\InsufficientRentalStockException;
+use App\Http\Controllers\Controller;
 use App\Models\RentalItem;
 use App\Models\RentalTransaction;
 use Illuminate\Http\RedirectResponse;
