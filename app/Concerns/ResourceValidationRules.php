@@ -4,6 +4,7 @@ namespace App\Concerns;
 
 use App\Enums\ResourceStatus;
 use App\Enums\Sport;
+use App\Enums\SurfaceType;
 use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -30,7 +31,7 @@ trait ResourceValidationRules
                 'required_if:sport,'.Sport::Pickleball->value,
                 'nullable',
                 'string',
-                Rule::in(['hard', 'clay', 'grass', 'carpet', 'synthetic', 'felt']),
+                Rule::enum(SurfaceType::class),
             ],
             'location_type' => [
                 'required_if:sport,'.Sport::Pickleball->value,

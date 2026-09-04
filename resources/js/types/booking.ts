@@ -81,6 +81,12 @@ export type BookedSlot = {
     resource?: Pick<Resource, 'id' | 'name'>;
 };
 
+/** A backend-provided dropdown option, so the UI can't drift from validation. */
+export type SelectOption = {
+    value: string;
+    label: string;
+};
+
 export type WeatherIcon =
     | 'clear'
     | 'partly'

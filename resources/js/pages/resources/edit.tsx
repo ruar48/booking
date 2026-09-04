@@ -1,10 +1,17 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    CircleDollarSign,
+    Info,
+    Lightbulb,
+    MapPin,
+    SlidersHorizontal,
+} from 'lucide-react';
 import { FormEvent } from 'react';
 
+import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,14 +24,15 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { index as resourcesIndex, update } from '@/routes/resources';
-import type { Resource } from '@/types/booking';
+import type { Resource, SelectOption } from '@/types/booking';
 
 type Props = {
     resource: Resource;
+    surfaceTypes?: SelectOption[];
 };
 
-export default function ResourcesEdit({ resource }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+export default function ResourcesEdit({ resource, surfaceTypes = [] }: Props) {
+    const { data, setData, put, processing, errors, isDirty } = useForm({
         sport: resource.sport,
         name: resource.name,
         resource_number: resource.resource_number,
@@ -46,24 +54,33 @@ export default function ResourcesEdit({ resource }: Props) {
     return (
         <>
             <Head title={`Edit ${resource.name}`} />
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <form onSubmit={submit} className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title={`Edit ${resource.name}`}
                     description="Update rates, sport, and availability"
                 />
-                <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
-                    {Object.keys(errors).length > 0 && (
-                        <div className="rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
-                            <p className="font-medium">Please fix the following before saving:</p>
-                            <ul className="mt-1 list-inside list-disc">
-                                {Object.entries(errors).map(([field, message]) => (
-                                    <li key={field}>{message}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                    <Card>
-                        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+
+                {Object.keys(errors).length > 0 && (
+                    <div className="border-destructive/50 bg-destructive/10 text-destructive rounded-lg border p-3 text-sm">
+                        <p className="font-medium">
+                            Please fix the following before saving:
+                        </p>
+                        <ul className="mt-1 list-inside list-disc">
+                            {Object.entries(errors).map(([field, message]) => (
+                                <li key={field}>{message}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                <div className="grid gap-6 xl:grid-cols-3">
+                    <div className="space-y-6 xl:col-span-2">
+                        <FormSection
+                            icon={Info}
+                            tone="emerald"
+                            title="Court details"
+                            description="How this court is identified across the app."
+                        >
                             <div className="grid gap-2 sm:col-span-2">
                                 <Label htmlFor="name">Name</Label>
                                 <Input
@@ -82,122 +99,191 @@ export default function ResourcesEdit({ resource }: Props) {
                                         setData('sport', v as 'pickleball' | 'billiards')
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="pickleball">Pickleball</SelectItem>
-                                        <SelectItem value="billiards">Billiards</SelectItem>
+                                        <SelectItem value="pickleball">
+                                            Pickleball
+                                        </SelectItem>
+                                        <SelectItem value="billiards">
+                                            Billiards
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.sport} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="resource_number">Resource number</Label>
+                                <Label htmlFor="resource_number">
+                                    Resource number
+                                </Label>
                                 <Input
                                     id="resource_number"
                                     value={data.resource_number}
-                                    onChange={(e) => setData('resource_number', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('resource_number', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.resource_number} />
                             </div>
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label htmlFor="description">Description</Label>
+                                <Textarea
+                                    id="description"
+                                    value={data.description}
+                                    onChange={(e) =>
+                                        setData('description', e.target.value)
+                                    }
+                                    rows={3}
+                                />
+                                <InputError message={errors.description} />
+                            </div>
+                        </FormSection>
+
+                        {isPickleball && (
+                            <FormSection
+                                icon={MapPin}
+                                tone="blue"
+                                title="Playing surface"
+                                description="Shown to members when they browse courts."
+                            >
+                                <div className="grid gap-2">
+                                    <Label>Surface</Label>
+                                    <Select
+                                        value={data.surface_type ?? undefined}
+                                        onValueChange={(v) =>
+                                            setData('surface_type', v)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select a surface" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {surfaceTypes.map((option) => (
+                                                <SelectItem
+                                                    key={option.value}
+                                                    value={option.value}
+                                                >
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.surface_type} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Location</Label>
+                                    <Select
+                                        value={data.location_type ?? undefined}
+                                        onValueChange={(v) =>
+                                            setData('location_type', v)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Indoor or outdoor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="indoor">Indoor</SelectItem>
+                                            <SelectItem value="outdoor">
+                                                Outdoor
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <InputError message={errors.location_type} />
+                                </div>
+                                <label className="hover:bg-muted flex cursor-pointer items-center gap-2.5 rounded-lg border p-3 text-sm transition-colors sm:col-span-2">
+                                    <Checkbox
+                                        checked={data.has_lighting}
+                                        onCheckedChange={(checked) =>
+                                            setData('has_lighting', checked === true)
+                                        }
+                                    />
+                                    <Lightbulb className="size-4 text-amber-500" />
+                                    <span>
+                                        Has lighting
+                                        <span className="text-muted-foreground ml-1.5">
+                                            — playable after dark
+                                        </span>
+                                    </span>
+                                </label>
+                            </FormSection>
+                        )}
+                    </div>
+
+                    <div className="space-y-6">
+                        <FormSection
+                            icon={CircleDollarSign}
+                            tone="emerald"
+                            title="Rate"
+                            contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                        >
                             <div className="grid gap-2">
-                                <Label htmlFor="hourly_rate">Hourly rate</Label>
+                                <Label htmlFor="hourly_rate">
+                                    Hourly rate (₱)
+                                </Label>
                                 <Input
                                     id="hourly_rate"
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     value={data.hourly_rate}
                                     onChange={(e) =>
                                         setData('hourly_rate', Number(e.target.value))
                                     }
                                 />
+                                <InputError message={errors.hourly_rate} />
                             </div>
+                        </FormSection>
+
+                        <FormSection
+                            icon={SlidersHorizontal}
+                            tone="violet"
+                            title="Availability"
+                            description="Unavailable courts cannot be booked."
+                            contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                        >
                             <div className="grid gap-2">
                                 <Label>Status</Label>
                                 <Select
                                     value={data.status}
                                     onValueChange={(v) => setData('status', v)}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="available">Available</SelectItem>
-                                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                                        <SelectItem value="unavailable">Unavailable</SelectItem>
+                                        <SelectItem value="available">
+                                            Available
+                                        </SelectItem>
+                                        <SelectItem value="maintenance">
+                                            Maintenance
+                                        </SelectItem>
+                                        <SelectItem value="unavailable">
+                                            Unavailable
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
+                                <InputError message={errors.status} />
                             </div>
-                            {isPickleball && (
-                                <>
-                                    <div className="grid gap-2">
-                                        <Label>Surface</Label>
-                                        <Select
-                                            value={data.surface_type}
-                                            onValueChange={(v) => setData('surface_type', v)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="hard">Hard</SelectItem>
-                                                <SelectItem value="clay">Clay</SelectItem>
-                                                <SelectItem value="grass">Grass</SelectItem>
-                                                <SelectItem value="carpet">Carpet</SelectItem>
-                                                <SelectItem value="synthetic">Synthetic</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label>Location</Label>
-                                        <Select
-                                            value={data.location_type}
-                                            onValueChange={(v) => setData('location_type', v)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="indoor">Indoor</SelectItem>
-                                                <SelectItem value="outdoor">Outdoor</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                    <div className="flex items-center gap-2 sm:col-span-2">
-                                        <Checkbox
-                                            id="has_lighting"
-                                            checked={data.has_lighting}
-                                            onCheckedChange={(checked) =>
-                                                setData('has_lighting', checked === true)
-                                            }
-                                        />
-                                        <Label htmlFor="has_lighting">Has lighting</Label>
-                                    </div>
-                                </>
-                            )}
-                            <div className="grid gap-2 sm:col-span-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
-                                    rows={3}
-                                />
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <div className="flex justify-end gap-2">
-                        <Button variant="outline" asChild>
-                            <Link href={resourcesIndex()}>Back</Link>
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            Save changes
-                        </Button>
+                        </FormSection>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div className="bg-background/95 supports-[backdrop-filter]:bg-background/75 sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t px-4 py-3 backdrop-blur">
+                    {isDirty ? (
+                        <p className="text-muted-foreground mr-auto text-xs">
+                            You have unsaved changes.
+                        </p>
+                    ) : null}
+                    <Button variant="outline" asChild>
+                        <Link href={resourcesIndex()}>Back</Link>
+                    </Button>
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Saving…' : 'Save changes'}
+                    </Button>
+                </div>
+            </form>
         </>
     );
 }

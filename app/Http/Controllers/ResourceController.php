@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Contracts\Repositories\ResourceRepositoryInterface;
+use App\Enums\SurfaceType;
 use App\Http\Requests\StoreResourceRequest;
 use App\Http\Requests\UpdateResourceRequest;
 use App\Models\Resource;
@@ -29,7 +30,9 @@ class ResourceController extends Controller
     {
         $this->authorize('create', Resource::class);
 
-        return Inertia::render('resources/create');
+        return Inertia::render('resources/create', [
+            'surfaceTypes' => SurfaceType::options(),
+        ]);
     }
 
     public function store(StoreResourceRequest $request): RedirectResponse
@@ -47,6 +50,7 @@ class ResourceController extends Controller
 
         return Inertia::render('resources/edit', [
             'resource' => $resource,
+            'surfaceTypes' => SurfaceType::options(),
         ]);
     }
 
