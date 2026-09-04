@@ -6,8 +6,11 @@ import {
     EyeOff,
     Maximize2,
     Pencil,
+    Ticket,
     Trophy,
     UserPlus,
+    Users,
+    Wallet,
     X,
 } from 'lucide-react';
 import type { FormEvent} from 'react';
@@ -21,6 +24,7 @@ import {
     useMatchupEditor,
 } from '@/components/open-play-editable-bracket';
 import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
+import { StatCard } from '@/components/stat-card';
 import { PageHeader } from '@/components/page-header';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
@@ -498,52 +502,108 @@ export default function OpenPlayManage({ session }: Props) {
                     description={`${formatDate(session.starts_at)} · ${formatTime(session.starts_at)}${session.ends_at ? ` – ${formatTime(session.ends_at)}` : ''}`}
                 />
 
-                <div className="grid w-full gap-6">
-                    <OpenPlayJoinQrCard session={session} />
+                {/* At-a-glance numbers, so the detail below doesn't have to
+                    carry them in a run-on description line. */}
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <StatCard
+                        label="Entries"
+                        value={registrations.length}
+                        caption={
+                            session.max_players
+                                ? `of ${session.max_players} places`
+                                : 'registered'
+                        }
+                        icon={UserPlus}
+                        tone="blue"
+                    />
+                    <StatCard
+                        label="Paid"
+                        value={`${paidCount} / ${registrations.length}`}
+                        caption={
+                            registrations.length > 0 && paidCount === registrations.length
+                                ? 'All settled'
+                                : 'Awaiting payment'
+                        }
+                        icon={Wallet}
+                        tone={
+                            registrations.length > 0 && paidCount === registrations.length
+                                ? 'emerald'
+                                : 'amber'
+                        }
+                    />
+                    <StatCard
+                        label="Format"
+                        value={isDoublesSession ? '2v2' : '1v1'}
+                        caption={isDoublesSession ? 'Doubles — pairs' : 'Singles'}
+                        icon={Users}
+                        tone="violet"
+                    />
+                    <StatCard
+                        label="Entry fee"
+                        value={
+                            session.price_per_player
+                                ? formatCurrency(session.price_per_player)
+                                : 'Free'
+                        }
+                        caption="Per player"
+                        icon={Ticket}
+                        tone="brand"
+                    />
+                </div>
 
-                    <Card>
+                <div className="grid w-full gap-6 xl:grid-cols-3">
+                    <Card className="xl:col-span-2">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 <UserPlus className="size-5" />
                                 Registered players
                             </CardTitle>
                             <CardDescription>
-                                {registrations.length} {registrations.length === 1 ? 'entry' : 'entries'}{' '}
-                                registered ·{' '}
                                 {isDoublesSession
-                                    ? '2v2 doubles — register each team as a pair.'
-                                    : '1v1 singles.'}
-                                {!!session.price_per_player && (
-                                    <>
-                                        {' '}
-                                        · {formatCurrency(session.price_per_player)} entry fee ·{' '}
-                                        {paidCount} of {registrations.length} paid
-                                    </>
-                                )}
+                                    ? 'Register each team as a pair.'
+                                    : 'Register players individually.'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <form
                                 onSubmit={submitRegistration}
-                                className="grid gap-3 rounded-lg border border-slate-200 p-4"
+                                className="bg-muted/30 grid gap-3 rounded-lg border p-4"
                             >
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    <PlayerSearchInput
-                                        label="Player"
-                                        selected={primaryPlayer}
-                                        onSelect={setPrimaryPlayer}
-                                        onClear={() => setPrimaryPlayer(null)}
-                                        excludeIds={partnerPlayer ? [partnerPlayer.id] : []}
-                                    />
-                                    {needsPartnerSelection && (
+                                {/* Inputs and the submit share a row so the button
+                                    isn't stranded under a half-empty grid. */}
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div className="min-w-0 flex-1">
                                         <PlayerSearchInput
-                                            label="Partner"
-                                            selected={partnerPlayer}
-                                            onSelect={setPartnerPlayer}
-                                            onClear={() => setPartnerPlayer(null)}
-                                            excludeIds={primaryPlayer ? [primaryPlayer.id] : []}
+                                            label="Player"
+                                            selected={primaryPlayer}
+                                            onSelect={setPrimaryPlayer}
+                                            onClear={() => setPrimaryPlayer(null)}
+                                            excludeIds={partnerPlayer ? [partnerPlayer.id] : []}
                                         />
+                                    </div>
+                                    {needsPartnerSelection && (
+                                        <div className="min-w-0 flex-1">
+                                            <PlayerSearchInput
+                                                label="Partner"
+                                                selected={partnerPlayer}
+                                                onSelect={setPartnerPlayer}
+                                                onClear={() => setPartnerPlayer(null)}
+                                                excludeIds={primaryPlayer ? [primaryPlayer.id] : []}
+                                            />
+                                        </div>
                                     )}
+                                    <Button
+                                        type="submit"
+                                        className="shrink-0"
+                                        disabled={
+                                            !primaryPlayer ||
+                                            (needsPartnerSelection && !partnerPlayer) ||
+                                            registerProcessing
+                                        }
+                                    >
+                                        <UserPlus className="size-4" />
+                                        {registerProcessing ? 'Registering…' : 'Register'}
+                                    </Button>
                                 </div>
                                 {isDoublesSession && (
                                     <div className="grid gap-1">
@@ -573,21 +633,9 @@ export default function OpenPlayManage({ session }: Props) {
                                         {registerErrors.player_id ?? registerErrors.partner_player_id}
                                     </p>
                                 )}
-                                <div className="flex justify-end">
-                                    <Button
-                                        type="submit"
-                                        disabled={
-                                            !primaryPlayer ||
-                                            (needsPartnerSelection && !partnerPlayer) ||
-                                            registerProcessing
-                                        }
-                                    >
-                                        Register
-                                    </Button>
-                                </div>
                             </form>
 
-                            <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-3 text-sm">
+                            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-dashed p-3 text-sm">
                                 <span className="text-muted-foreground">
                                     Register every active member in one click.
                                 </span>
@@ -696,6 +744,11 @@ export default function OpenPlayManage({ session }: Props) {
                         </CardContent>
                     </Card>
 
+                    <OpenPlayJoinQrCard session={session} />
+                </div>
+
+                {/* Full width — brackets need every pixel they can get. */}
+                <div className="grid w-full gap-6">
                     <Card className="min-w-0">
                         <CardHeader className="flex flex-row items-start justify-between gap-4">
                             <div>
