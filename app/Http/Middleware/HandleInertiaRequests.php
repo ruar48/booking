@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 
@@ -58,18 +59,30 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Contact details behind the floating support widget, pulled from the
-     * venue profile an admin maintains in settings so the widget never shows
-     * a hardcoded address.
+     * Contact details behind the floating support widget, pulled from the venue
+     * profile an admin maintains in settings so the widget never shows a
+     * hardcoded address.
+     *
+     * Shared on every response, so it is cached rather than queried per request.
+     * It is also decorative: if the lookup fails the widget just loses its
+     * "email us" links, which must never be worth failing the whole page for.
      *
      * @return array{email: string|null, phone: string|null}
      */
     private function supportContact(): array
     {
-        $profile = Setting::query()
-            ->where('group', 'venue')
-            ->where('key', 'profile')
-            ->value('value') ?? [];
+        try {
+            $profile = Cache::remember(
+                'venue.support-contact',
+                now()->addMinutes(5),
+                fn () => Setting::query()
+                    ->where('group', 'venue')
+                    ->where('key', 'profile')
+                    ->value('value') ?? [],
+            );
+        } catch (\Throwable) {
+            return ['email' => null, 'phone' => null];
+        }
 
         return [
             'email' => $profile['email'] ?? null,

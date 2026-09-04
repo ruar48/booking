@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Role;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -7,10 +8,21 @@ test('guests are redirected to the login page', function () {
     $response->assertRedirect(route('login'));
 });
 
-test('authenticated users can visit the dashboard', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
+test('venue admins can visit the dashboard', function () {
+    $admin = User::factory()->create();
+    $admin->assignRole(Role::ClubAdmin->value);
 
-    $response = $this->get(route('dashboard'));
-    $response->assertOk();
+    $this->actingAs($admin);
+
+    $this->get(route('dashboard'))->assertOk();
+});
+
+test('members cannot visit the dashboard', function () {
+    // The dashboard is venue-staff only; members land on their bookings.
+    $member = User::factory()->create();
+    $member->assignRole(Role::Player->value);
+
+    $this->actingAs($member);
+
+    $this->get(route('dashboard'))->assertRedirect(route('bookings.index'));
 });

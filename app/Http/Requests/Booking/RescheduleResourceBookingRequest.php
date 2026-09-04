@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Booking;
 
 use App\Models\Resource;
 use Illuminate\Contracts\Validation\ValidationRule;

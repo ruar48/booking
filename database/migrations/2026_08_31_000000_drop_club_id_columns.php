@@ -14,8 +14,17 @@ return new class extends Migration
         // resources was renamed from courts; MySQL does not rename the
         // underlying foreign key constraint, so it is still named
         // courts_club_id_foreign rather than resources_club_id_foreign.
-        Schema::table('resources', function (Blueprint $table) {
-            $table->dropForeign('courts_club_id_foreign');
+        //
+        // That name-based drop is MySQL-only. SQLite (used by the test suite)
+        // never carried the stale name and cannot drop a foreign key by name at
+        // all, so it drops by column instead — which it does support.
+        $isSqlite = Schema::getConnection()->getDriverName() === 'sqlite';
+
+        Schema::table('resources', function (Blueprint $table) use ($isSqlite) {
+            $isSqlite
+                ? $table->dropForeign(['club_id'])
+                : $table->dropForeign('courts_club_id_foreign');
+
             $table->dropColumn('club_id');
         });
 

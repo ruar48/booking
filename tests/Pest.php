@@ -1,5 +1,6 @@
 <?php
 
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,11 @@ use Tests\TestCase;
 */
 
 pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
+    ->use(RefreshDatabase::class)
+    // Roles and permissions are infrastructure rather than fixtures: policies
+    // and isVenueAdmin() consult them on nearly every request, and
+    // RefreshDatabase truncates them between tests.
+    ->beforeEach(fn () => $this->seed(RolePermissionSeeder::class))
     ->in('Feature');
 
 /*

@@ -1,16 +1,20 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Booking;
 
+use App\Concerns\ResourceBookingValidationRules;
 use App\Models\ResourceBooking;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreBulkResourceBookingRequest extends FormRequest
+class StoreWalkInBookingRequest extends FormRequest
 {
+    use ResourceBookingValidationRules;
+
     public function authorize(): bool
     {
-        return $this->user()->can('create', ResourceBooking::class);
+        return $this->user()?->can('createForOther', ResourceBooking::class) ?? false;
     }
 
     /**
@@ -18,17 +22,12 @@ class StoreBulkResourceBookingRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'bookings' => ['required', 'array', 'min:1', 'max:24'],
-            'bookings.*.resource_id' => ['required', 'integer', 'exists:resources,id'],
-            'bookings.*.starts_at' => ['required', 'date', 'after:now'],
-            'bookings.*.ends_at' => ['required', 'date'],
-        ];
+        return $this->walkInBookingRules();
     }
 
-    public function withValidator($validator): void
+    public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator) {
+        $validator->after(function (Validator $validator) {
             foreach ($this->input('bookings', []) as $index => $booking) {
                 $startsAt = $booking['starts_at'] ?? null;
                 $endsAt = $booking['ends_at'] ?? null;

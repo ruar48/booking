@@ -4,7 +4,7 @@ import customers from './customers'
 import checkoutFb28ab from './checkout'
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeBulk
- * @see app/Http/Controllers/ResourceBookingController.php:116
+ * @see app/Http/Controllers/ResourceBookingController.php:104
  * @route '/bookings/bulk'
  */
 export const storeBulk = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -19,7 +19,7 @@ storeBulk.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeBulk
- * @see app/Http/Controllers/ResourceBookingController.php:116
+ * @see app/Http/Controllers/ResourceBookingController.php:104
  * @route '/bookings/bulk'
  */
 storeBulk.url = (options?: RouteQueryOptions) => {
@@ -28,7 +28,7 @@ storeBulk.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeBulk
- * @see app/Http/Controllers/ResourceBookingController.php:116
+ * @see app/Http/Controllers/ResourceBookingController.php:104
  * @route '/bookings/bulk'
  */
 storeBulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -38,7 +38,7 @@ storeBulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::storeBulk
- * @see app/Http/Controllers/ResourceBookingController.php:116
+ * @see app/Http/Controllers/ResourceBookingController.php:104
  * @route '/bookings/bulk'
  */
     const storeBulkForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -48,7 +48,7 @@ storeBulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::storeBulk
- * @see app/Http/Controllers/ResourceBookingController.php:116
+ * @see app/Http/Controllers/ResourceBookingController.php:104
  * @route '/bookings/bulk'
  */
         storeBulkForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -59,7 +59,7 @@ storeBulk.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     storeBulk.form = storeBulkForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
 export const calendar = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -74,7 +74,7 @@ calendar.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
 calendar.url = (options?: RouteQueryOptions) => {
@@ -83,7 +83,7 @@ calendar.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
 calendar.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -92,7 +92,7 @@ calendar.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
 calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -102,7 +102,7 @@ calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
     const calendarForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -112,7 +112,7 @@ calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
         calendarForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -121,7 +121,7 @@ calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\ResourceBookingController::calendar
- * @see app/Http/Controllers/ResourceBookingController.php:414
+ * @see app/Http/Controllers/ResourceBookingController.php:253
  * @route '/bookings/calendar'
  */
         calendarForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -137,7 +137,7 @@ calendar.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     calendar.form = calendarForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
- * @see app/Http/Controllers/ResourceBookingController.php:354
+ * @see app/Http/Controllers/ResourceBookingController.php:203
  * @route '/bookings/{booking}/mark-paid'
  */
 export const markPaid = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -152,7 +152,7 @@ markPaid.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
- * @see app/Http/Controllers/ResourceBookingController.php:354
+ * @see app/Http/Controllers/ResourceBookingController.php:203
  * @route '/bookings/{booking}/mark-paid'
  */
 markPaid.url = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -185,7 +185,7 @@ markPaid.url = (args: { booking: number | { id: number } } | [booking: number | 
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
- * @see app/Http/Controllers/ResourceBookingController.php:354
+ * @see app/Http/Controllers/ResourceBookingController.php:203
  * @route '/bookings/{booking}/mark-paid'
  */
 markPaid.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -195,7 +195,7 @@ markPaid.patch = (args: { booking: number | { id: number } } | [booking: number 
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
- * @see app/Http/Controllers/ResourceBookingController.php:354
+ * @see app/Http/Controllers/ResourceBookingController.php:203
  * @route '/bookings/{booking}/mark-paid'
  */
     const markPaidForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -210,7 +210,7 @@ markPaid.patch = (args: { booking: number | { id: number } } | [booking: number 
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::markPaid
- * @see app/Http/Controllers/ResourceBookingController.php:354
+ * @see app/Http/Controllers/ResourceBookingController.php:203
  * @route '/bookings/{booking}/mark-paid'
  */
         markPaidForm.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -226,7 +226,7 @@ markPaid.patch = (args: { booking: number | { id: number } } | [booking: number 
     markPaid.form = markPaidForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
- * @see app/Http/Controllers/ResourceBookingController.php:154
+ * @see app/Http/Controllers/ResourceBookingController.php:122
  * @route '/bookings/walk-in'
  */
 export const storeWalkIn = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -241,7 +241,7 @@ storeWalkIn.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
- * @see app/Http/Controllers/ResourceBookingController.php:154
+ * @see app/Http/Controllers/ResourceBookingController.php:122
  * @route '/bookings/walk-in'
  */
 storeWalkIn.url = (options?: RouteQueryOptions) => {
@@ -250,7 +250,7 @@ storeWalkIn.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
- * @see app/Http/Controllers/ResourceBookingController.php:154
+ * @see app/Http/Controllers/ResourceBookingController.php:122
  * @route '/bookings/walk-in'
  */
 storeWalkIn.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -260,7 +260,7 @@ storeWalkIn.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
- * @see app/Http/Controllers/ResourceBookingController.php:154
+ * @see app/Http/Controllers/ResourceBookingController.php:122
  * @route '/bookings/walk-in'
  */
     const storeWalkInForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -270,7 +270,7 @@ storeWalkIn.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::storeWalkIn
- * @see app/Http/Controllers/ResourceBookingController.php:154
+ * @see app/Http/Controllers/ResourceBookingController.php:122
  * @route '/bookings/walk-in'
  */
         storeWalkInForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -359,7 +359,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
 export const create = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -374,7 +374,7 @@ create.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
 create.url = (options?: RouteQueryOptions) => {
@@ -383,7 +383,7 @@ create.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
 create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -392,7 +392,7 @@ create.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
 create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -402,7 +402,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
     const createForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -412,7 +412,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
         createForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -421,7 +421,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\ResourceBookingController::create
- * @see app/Http/Controllers/ResourceBookingController.php:83
+ * @see app/Http/Controllers/ResourceBookingController.php:74
  * @route '/bookings/create'
  */
         createForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -437,7 +437,7 @@ create.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     create.form = createForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::store
- * @see app/Http/Controllers/ResourceBookingController.php:90
+ * @see app/Http/Controllers/ResourceBookingController.php:81
  * @route '/bookings'
  */
 export const store = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -452,7 +452,7 @@ store.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::store
- * @see app/Http/Controllers/ResourceBookingController.php:90
+ * @see app/Http/Controllers/ResourceBookingController.php:81
  * @route '/bookings'
  */
 store.url = (options?: RouteQueryOptions) => {
@@ -461,7 +461,7 @@ store.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::store
- * @see app/Http/Controllers/ResourceBookingController.php:90
+ * @see app/Http/Controllers/ResourceBookingController.php:81
  * @route '/bookings'
  */
 store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
@@ -471,7 +471,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::store
- * @see app/Http/Controllers/ResourceBookingController.php:90
+ * @see app/Http/Controllers/ResourceBookingController.php:81
  * @route '/bookings'
  */
     const storeForm = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -481,7 +481,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::store
- * @see app/Http/Controllers/ResourceBookingController.php:90
+ * @see app/Http/Controllers/ResourceBookingController.php:81
  * @route '/bookings'
  */
         storeForm.post = (options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -492,7 +492,7 @@ store.post = (options?: RouteQueryOptions): RouteDefinition<'post'> => ({
     store.form = storeForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
 export const show = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -507,7 +507,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
 show.url = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -540,7 +540,7 @@ show.url = (args: { booking: number | { id: number } } | [booking: number | { id
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
 show.get = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -549,7 +549,7 @@ show.get = (args: { booking: number | { id: number } } | [booking: number | { id
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
 show.head = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -559,7 +559,7 @@ show.head = (args: { booking: number | { id: number } } | [booking: number | { i
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
     const showForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -569,7 +569,7 @@ show.head = (args: { booking: number | { id: number } } | [booking: number | { i
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
         showForm.get = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -578,7 +578,7 @@ show.head = (args: { booking: number | { id: number } } | [booking: number | { i
         })
             /**
 * @see \App\Http\Controllers\ResourceBookingController::show
- * @see app/Http/Controllers/ResourceBookingController.php:211
+ * @see app/Http/Controllers/ResourceBookingController.php:156
  * @route '/bookings/{booking}'
  */
         showForm.head = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -594,7 +594,7 @@ show.head = (args: { booking: number | { id: number } } | [booking: number | { i
     show.form = showForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
- * @see app/Http/Controllers/ResourceBookingController.php:368
+ * @see app/Http/Controllers/ResourceBookingController.php:214
  * @route '/bookings/{booking}/cancel'
  */
 export const cancel = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -609,7 +609,7 @@ cancel.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
- * @see app/Http/Controllers/ResourceBookingController.php:368
+ * @see app/Http/Controllers/ResourceBookingController.php:214
  * @route '/bookings/{booking}/cancel'
  */
 cancel.url = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -642,7 +642,7 @@ cancel.url = (args: { booking: number | { id: number } } | [booking: number | { 
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
- * @see app/Http/Controllers/ResourceBookingController.php:368
+ * @see app/Http/Controllers/ResourceBookingController.php:214
  * @route '/bookings/{booking}/cancel'
  */
 cancel.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -652,7 +652,7 @@ cancel.patch = (args: { booking: number | { id: number } } | [booking: number | 
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
- * @see app/Http/Controllers/ResourceBookingController.php:368
+ * @see app/Http/Controllers/ResourceBookingController.php:214
  * @route '/bookings/{booking}/cancel'
  */
     const cancelForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -667,7 +667,7 @@ cancel.patch = (args: { booking: number | { id: number } } | [booking: number | 
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::cancel
- * @see app/Http/Controllers/ResourceBookingController.php:368
+ * @see app/Http/Controllers/ResourceBookingController.php:214
  * @route '/bookings/{booking}/cancel'
  */
         cancelForm.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -683,7 +683,7 @@ cancel.patch = (args: { booking: number | { id: number } } | [booking: number | 
     cancel.form = cancelForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::reschedule
- * @see app/Http/Controllers/ResourceBookingController.php:396
+ * @see app/Http/Controllers/ResourceBookingController.php:235
  * @route '/bookings/{booking}/reschedule'
  */
 export const reschedule = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -698,7 +698,7 @@ reschedule.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::reschedule
- * @see app/Http/Controllers/ResourceBookingController.php:396
+ * @see app/Http/Controllers/ResourceBookingController.php:235
  * @route '/bookings/{booking}/reschedule'
  */
 reschedule.url = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -731,7 +731,7 @@ reschedule.url = (args: { booking: number | { id: number } } | [booking: number 
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::reschedule
- * @see app/Http/Controllers/ResourceBookingController.php:396
+ * @see app/Http/Controllers/ResourceBookingController.php:235
  * @route '/bookings/{booking}/reschedule'
  */
 reschedule.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -741,7 +741,7 @@ reschedule.patch = (args: { booking: number | { id: number } } | [booking: numbe
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::reschedule
- * @see app/Http/Controllers/ResourceBookingController.php:396
+ * @see app/Http/Controllers/ResourceBookingController.php:235
  * @route '/bookings/{booking}/reschedule'
  */
     const rescheduleForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -756,7 +756,7 @@ reschedule.patch = (args: { booking: number | { id: number } } | [booking: numbe
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::reschedule
- * @see app/Http/Controllers/ResourceBookingController.php:396
+ * @see app/Http/Controllers/ResourceBookingController.php:235
  * @route '/bookings/{booking}/reschedule'
  */
         rescheduleForm.patch = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -772,7 +772,7 @@ reschedule.patch = (args: { booking: number | { id: number } } | [booking: numbe
     reschedule.form = rescheduleForm
 /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
 export const checkout = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -787,7 +787,7 @@ checkout.definition = {
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
 checkout.url = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -820,7 +820,7 @@ checkout.url = (args: { booking: number | { id: number } } | [booking: number | 
 
 /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
 checkout.get = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -829,7 +829,7 @@ checkout.get = (args: { booking: number | { id: number } } | [booking: number | 
 })
 /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
 checkout.head = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -839,7 +839,7 @@ checkout.head = (args: { booking: number | { id: number } } | [booking: number |
 
     /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
     const checkoutForm = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -849,7 +849,7 @@ checkout.head = (args: { booking: number | { id: number } } | [booking: number |
 
             /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
         checkoutForm.get = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -858,7 +858,7 @@ checkout.head = (args: { booking: number | { id: number } } | [booking: number |
         })
             /**
 * @see \App\Http\Controllers\ResourceBookingController::checkout
- * @see app/Http/Controllers/ResourceBookingController.php:218
+ * @see app/Http/Controllers/ResourceBookingController.php:163
  * @route '/bookings/{booking}/checkout'
  */
         checkoutForm.head = (args: { booking: number | { id: number } } | [booking: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
