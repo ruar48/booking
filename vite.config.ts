@@ -69,9 +69,12 @@ export default defineConfig({
                 navigateFallback: null,
                 globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
             },
+            // The dev service worker would be served by Vite (:5173) while the
+            // app is served by Laravel (:8000); a service worker must be
+            // same-origin, so it can never register in dev. app.tsx registers
+            // only in production to match.
             devOptions: {
-                enabled: true,
-                type: 'module',
+                enabled: false,
             },
         }),
     ],

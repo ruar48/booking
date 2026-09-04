@@ -43,4 +43,13 @@ createInertiaApp({
 initializeTheme();
 
 // Register the service worker so the app is installable and works offline.
-registerSW({ immediate: true });
+//
+// Production only. In dev the page is served by Laravel (:8000) while the dev
+// service worker is served by Vite (:5173), and a service worker must be
+// same-origin — so registering it there only ever 404s. A stale worker left
+// registered from an earlier build can also serve cached HTML, which makes
+// Inertia hydrate pre-rendered markup instead of mounting fresh and produces
+// hydration mismatches.
+if (import.meta.env.PROD) {
+    registerSW({ immediate: true });
+}
