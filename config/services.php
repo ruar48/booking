@@ -35,6 +35,11 @@ return [
         ],
     ],
 
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
+    ],
+
     'paymongo' => [
         'secret_key' => env('PAYMONGO_SECRET_KEY'),
         'public_key' => env('PAYMONGO_PUBLIC_KEY'),

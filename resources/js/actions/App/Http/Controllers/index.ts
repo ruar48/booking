@@ -1,5 +1,6 @@
 import HomeController from './HomeController'
 import PaymongoWebhookController from './PaymongoWebhookController'
+import SupportChatController from './SupportChatController'
 import ResourceBookingController from './ResourceBookingController'
 import OpenPlayJoinController from './OpenPlayJoinController'
 import OpenPlayController from './OpenPlayController'
@@ -28,6 +29,7 @@ import SessionController from './SessionController'
 const Controllers = {
     HomeController: Object.assign(HomeController, HomeController),
 PaymongoWebhookController: Object.assign(PaymongoWebhookController, PaymongoWebhookController),
+SupportChatController: Object.assign(SupportChatController, SupportChatController),
 ResourceBookingController: Object.assign(ResourceBookingController, ResourceBookingController),
 OpenPlayJoinController: Object.assign(OpenPlayJoinController, OpenPlayJoinController),
 OpenPlayController: Object.assign(OpenPlayController, OpenPlayController),

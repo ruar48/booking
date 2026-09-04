@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CourtScheduleGrid } from '@/components/court-schedule-grid';
 import { BrandLogo } from '@/components/brand-logo';
 import { InstallAppButton } from '@/components/install-app-button';
+import { SupportWidget } from '@/components/support-widget';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -811,6 +812,8 @@ export default function Welcome({
                     &copy; {new Date().getFullYear()} {businessName}
                 </footer>
             </div>
+
+            <SupportWidget avoidBottomNav={false} />
         </>
     );
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymongoWebhookController;
+use App\Http\Controllers\SupportChatController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
@@ -14,6 +15,12 @@ use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
+
+// Open to guests so the widget works on the public landing page; throttled
+// because every call costs money upstream.
+Route::post('support/chat', SupportChatController::class)
+    ->middleware('throttle:12,1')
+    ->name('support.chat');
 
 // Channel-auth endpoint for the Pusher connection, with logging on top of the
 // default Broadcast::auth() behaviour to make denied subscriptions debuggable.

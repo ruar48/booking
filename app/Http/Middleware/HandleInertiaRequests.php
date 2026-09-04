@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
@@ -52,6 +53,27 @@ class HandleInertiaRequests extends Middleware
                 ? $request->user()->unreadNotifications()->count()
                 : 0,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'support' => fn () => $this->supportContact(),
+        ];
+    }
+
+    /**
+     * Contact details behind the floating support widget, pulled from the
+     * venue profile an admin maintains in settings so the widget never shows
+     * a hardcoded address.
+     *
+     * @return array{email: string|null, phone: string|null}
+     */
+    private function supportContact(): array
+    {
+        $profile = Setting::query()
+            ->where('group', 'venue')
+            ->where('key', 'profile')
+            ->value('value') ?? [];
+
+        return [
+            'email' => $profile['email'] ?? null,
+            'phone' => $profile['phone'] ?? null,
         ];
     }
 

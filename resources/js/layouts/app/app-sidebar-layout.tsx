@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { BottomNav } from '@/components/bottom-nav';
 import { InertiaEffects } from '@/components/inertia-effects';
+import { SupportWidget } from '@/components/support-widget';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -26,6 +27,7 @@ export default function AppSidebarLayout({
                 {children}
             </AppContent>
             <BottomNav />
+            <SupportWidget />
             <InertiaEffects />
         </AppShell>
     );
