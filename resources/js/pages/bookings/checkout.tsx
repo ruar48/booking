@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
     AlertTriangle,
+    Check,
     CheckCircle2,
     MapPin,
     PartyPopper,
@@ -412,6 +413,7 @@ function MethodAndPolicyPanel({
     onContinue: () => void;
 }) {
     const requiresAgreement = policies.length > 0;
+    const [policiesOpen, setPoliciesOpen] = useState(false);
 
     return (
         <Card className="gap-3 py-4">
@@ -425,18 +427,49 @@ function MethodAndPolicyPanel({
                     <PaymentOption icon={Wallet} label="Maya" description="Coming soon" disabled />
                 </div>
 
-                {policies.map((policy) => (
-                    <PolicyCard key={policy.id} title={policy.title} body={policy.body} />
-                ))}
-
                 {requiresAgreement ? (
-                    <label className="flex items-start gap-2 px-1 text-xs">
-                        <Checkbox
-                            checked={agreed}
-                            onCheckedChange={(checked) => onAgreedChange(checked === true)}
+                    <>
+                        {/* One line instead of the full policy text: the wording
+                            opens a dialog, and checkout stays blocked until the
+                            box is ticked. */}
+                        <label className="hover:bg-muted/50 flex items-start gap-2.5 rounded-lg border p-3 text-sm transition-colors">
+                            <Checkbox
+                                className="mt-0.5"
+                                checked={agreed}
+                                onCheckedChange={(checked) =>
+                                    onAgreedChange(checked === true)
+                                }
+                            />
+                            <span className="leading-snug">
+                                I have read and agree to the{' '}
+                                <button
+                                    type="button"
+                                    onClick={(event) => {
+                                        // Inside a label, so stop the click from
+                                        // toggling the checkbox as well.
+                                        event.preventDefault();
+                                        event.stopPropagation();
+                                        setPoliciesOpen(true);
+                                    }}
+                                    className="text-primary decoration-primary/40 hover:decoration-primary font-medium underline underline-offset-2 transition-colors"
+                                >
+                                    Payment &amp; Refund Policy
+                                </button>
+                                .
+                            </span>
+                        </label>
+
+                        <PolicyDialog
+                            open={policiesOpen}
+                            onOpenChange={setPoliciesOpen}
+                            policies={policies}
+                            agreed={agreed}
+                            onAgree={() => {
+                                onAgreedChange(true);
+                                setPoliciesOpen(false);
+                            }}
                         />
-                        <span>I have read and agree to the policies above.</span>
-                    </label>
+                    </>
                 ) : null}
 
                 <div className="flex gap-2">
@@ -451,25 +484,73 @@ function MethodAndPolicyPanel({
                         {generating ? 'Generating QR…' : 'Continue to Payment'}
                     </Button>
                 </div>
+
+                {requiresAgreement && !agreed ? (
+                    <p className="text-muted-foreground text-center text-xs">
+                        Accept the policy to continue.
+                    </p>
+                ) : null}
             </CardContent>
         </Card>
     );
 }
 
-function PolicyCard({ title, body }: { title: string; body: string }) {
-    const lines = body.split('\n').map((line) => line.trim()).filter(Boolean);
-
+function PolicyDialog({
+    open,
+    onOpenChange,
+    policies,
+    agreed,
+    onAgree,
+}: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    policies: { id: number; title: string; body: string }[];
+    agreed: boolean;
+    onAgree: () => void;
+}) {
     return (
-        <Card className="bg-muted/40 py-0">
-            <CardContent className="space-y-1.5 p-3 text-sm">
-                <p className="text-xs font-semibold">{title}</p>
-                <ul className="text-muted-foreground list-inside list-disc space-y-0.5 text-[11px]">
-                    {lines.map((line, index) => (
-                        <li key={index}>{line}</li>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <ShieldCheck className="text-primary size-5" />
+                        Payment &amp; Refund Policy
+                    </DialogTitle>
+                    <DialogDescription>
+                        Please read these before continuing to payment.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    {policies.map((policy) => (
+                        <div key={policy.id} className="space-y-1.5">
+                            <p className="text-sm font-semibold">{policy.title}</p>
+                            <ul className="text-muted-foreground list-outside list-disc space-y-1 pl-4 text-sm">
+                                {policy.body
+                                    .split('\n')
+                                    .map((line) => line.trim())
+                                    .filter(Boolean)
+                                    .map((line, index) => (
+                                        <li key={index}>{line}</li>
+                                    ))}
+                            </ul>
+                        </div>
                     ))}
-                </ul>
-            </CardContent>
-        </Card>
+                </div>
+
+                <DialogFooter className="gap-2 sm:justify-end">
+                    <Button variant="outline" onClick={() => onOpenChange(false)}>
+                        Close
+                    </Button>
+                    {!agreed ? (
+                        <Button onClick={onAgree}>
+                            <Check className="size-4" />
+                            I agree
+                        </Button>
+                    ) : null}
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
 

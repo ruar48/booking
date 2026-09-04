@@ -28,12 +28,16 @@ export function useRealtimeNotifications(): void {
         const channel = echo.private(`App.Models.User.${userId}`);
 
         channel.notification((notification: NotificationPayload) => {
-            const message =
-                notification.message ??
-                notification.type?.replace(/_/g, ' ') ??
-                'New notification';
+            // Only surface a toast when the notification carries real copy.
+            // The previous fallback printed `notification.type`, which is the
+            // fully-qualified PHP class name — the bell badge and dropdown
+            // already present these properly, so a nameless one needs no toast.
+            if (notification.message) {
+                const message = notification.message;
 
-            toast.info(message.charAt(0).toUpperCase() + message.slice(1));
+                toast.info(message.charAt(0).toUpperCase() + message.slice(1));
+            }
+
             router.reload({ only: ['notificationsCount'] });
         });
 
