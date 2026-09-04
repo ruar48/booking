@@ -1,12 +1,13 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
+import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
 import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +38,7 @@ function toDatetimeLocal(value?: string | null): string {
 export default function OpenPlayEdit({ session, resources }: Props) {
     const [deleteOpen, setDeleteOpen] = useState(false);
 
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, put, processing, errors, isDirty } = useForm({
         title: session.title,
         description: session.description ?? '',
         starts_at: toDatetimeLocal(session.starts_at),
@@ -70,22 +71,30 @@ export default function OpenPlayEdit({ session, resources }: Props) {
     return (
         <>
             <Head title={`Edit ${session.title}`} />
-            <div className="flex flex-1 flex-col gap-6 p-4">
+            <form onSubmit={submit} className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title="Edit open play session"
                     description={session.title}
                     actions={
                         <Button
-                            variant="destructive"
+                            type="button"
+                            variant="outline"
+                            className="text-destructive hover:text-destructive border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
                             onClick={() => setDeleteOpen(true)}
                         >
+                            <Trash2 className="size-4" />
                             Delete
                         </Button>
                     }
                 />
-                <form onSubmit={submit} className="mx-auto w-full max-w-2xl space-y-6">
-                    <Card>
-                        <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
+
+                <div className="grid gap-6 xl:grid-cols-3">
+                    {/* Main column — what the session is and how it runs. */}
+                    <div className="space-y-6 xl:col-span-2">
+                        <FormSection
+                            title="Session details"
+                            description="How this session appears to members."
+                        >
                             <div className="grid gap-2 sm:col-span-2">
                                 <Label htmlFor="title">Title</Label>
                                 <Input
@@ -101,11 +110,19 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 <Textarea
                                     id="description"
                                     value={data.description}
-                                    onChange={(e) => setData('description', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('description', e.target.value)
+                                    }
                                     rows={3}
                                 />
                                 <InputError message={errors.description} />
                             </div>
+                        </FormSection>
+
+                        <FormSection
+                            title="Schedule"
+                            description="When the session runs, and the cutoff for joining."
+                        >
                             <div className="grid gap-2">
                                 <Label htmlFor="starts_at">Starts at</Label>
                                 <Input
@@ -128,61 +145,36 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 />
                                 <InputError message={errors.ends_at} />
                             </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="registration_closes_at">Registration closes at</Label>
+                            <div className="grid gap-2 sm:col-span-2">
+                                <Label htmlFor="registration_closes_at">
+                                    Registration closes at
+                                </Label>
                                 <Input
                                     id="registration_closes_at"
                                     type="datetime-local"
                                     value={data.registration_closes_at}
                                     onChange={(e) =>
-                                        setData('registration_closes_at', e.target.value)
+                                        setData(
+                                            'registration_closes_at',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                                 <p className="text-muted-foreground text-xs">
-                                    Optional. After this time, members can no longer join or
-                                    register — leave blank to allow registration until the
+                                    Optional. After this time members can no longer
+                                    join — leave blank to allow registration until the
                                     session starts.
                                 </p>
-                                <InputError message={errors.registration_closes_at} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="location">Courts (display label)</Label>
-                                <Input
-                                    id="location"
-                                    value={data.location}
-                                    onChange={(e) => setData('location', e.target.value)}
+                                <InputError
+                                    message={errors.registration_closes_at}
                                 />
-                                <InputError message={errors.location} />
                             </div>
-                            <div className="grid gap-2 sm:col-span-2">
-                                <Label>Reserve courts</Label>
-                                <p className="text-muted-foreground text-xs">
-                                    Selected courts are automatically closed for regular
-                                    bookings from the start time to the end time above.
-                                </p>
-                                <div className="grid gap-2 sm:grid-cols-2">
-                                    {resources.map((resource) => (
-                                        <label
-                                            key={resource.id}
-                                            className="flex items-center gap-2 text-sm"
-                                        >
-                                            <Checkbox
-                                                checked={data.resource_ids.includes(
-                                                    resource.id,
-                                                )}
-                                                onCheckedChange={(checked) =>
-                                                    toggleResource(
-                                                        resource.id,
-                                                        checked === true,
-                                                    )
-                                                }
-                                            />
-                                            {resource.name}
-                                        </label>
-                                    ))}
-                                </div>
-                                <InputError message={errors.resource_ids} />
-                            </div>
+                        </FormSection>
+
+                        <FormSection
+                            title="Format"
+                            description="How matches are organised once the session starts."
+                        >
                             <div className="grid gap-2">
                                 <Label>Skill level</Label>
                                 <Select
@@ -193,38 +185,17 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all_levels">All levels</SelectItem>
+                                        <SelectItem value="all_levels">
+                                            All levels
+                                        </SelectItem>
                                         <SelectItem value="beginner">Beginner</SelectItem>
-                                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                                        <SelectItem value="intermediate">
+                                            Intermediate
+                                        </SelectItem>
                                         <SelectItem value="advanced">Advanced</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.skill_level} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="price_per_player">Price per player</Label>
-                                <Input
-                                    id="price_per_player"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    value={data.price_per_player}
-                                    onChange={(e) =>
-                                        setData('price_per_player', e.target.value)
-                                    }
-                                />
-                                <InputError message={errors.price_per_player} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="max_players">Max players</Label>
-                                <Input
-                                    id="max_players"
-                                    type="number"
-                                    min="1"
-                                    value={data.max_players}
-                                    onChange={(e) => setData('max_players', e.target.value)}
-                                />
-                                <InputError message={errors.max_players} />
                             </div>
                             <div className="grid gap-2">
                                 <Label>Match type</Label>
@@ -238,8 +209,12 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="singles">1v1 (Singles)</SelectItem>
-                                        <SelectItem value="doubles">2v2 (Doubles)</SelectItem>
+                                        <SelectItem value="singles">
+                                            1v1 (Singles)
+                                        </SelectItem>
+                                        <SelectItem value="doubles">
+                                            2v2 (Doubles)
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.team_size} />
@@ -262,7 +237,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="round_robin">Round robin</SelectItem>
+                                        <SelectItem value="round_robin">
+                                            Round robin
+                                        </SelectItem>
                                         <SelectItem value="single_elimination">
                                             Single elimination
                                         </SelectItem>
@@ -299,22 +276,109 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 </Select>
                                 <InputError message={errors.bracket_generation} />
                             </div>
-                        </CardContent>
-                    </Card>
-                    <div className="flex justify-end gap-2">
-                        <Button variant="outline" asChild>
-                            <Link href={openPlayIndex()}>Cancel</Link>
-                        </Button>
-                        <Button type="submit" disabled={processing}>
-                            Save changes
-                        </Button>
+                        </FormSection>
                     </div>
-                </form>
 
-                <div className="mx-auto w-full max-w-2xl">
-                    <OpenPlayJoinQrCard session={session} />
+                    {/* Side column — capacity, courts, and the share QR. */}
+                    <div className="space-y-6">
+                        <FormSection
+                            title="Capacity & pricing"
+                            contentClassName="grid gap-4 p-5 sm:grid-cols-1"
+                        >
+                            <div className="grid gap-2">
+                                <Label htmlFor="price_per_player">
+                                    Price per player
+                                </Label>
+                                <Input
+                                    id="price_per_player"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={data.price_per_player}
+                                    onChange={(e) =>
+                                        setData('price_per_player', e.target.value)
+                                    }
+                                />
+                                <InputError message={errors.price_per_player} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="max_players">Max players</Label>
+                                <Input
+                                    id="max_players"
+                                    type="number"
+                                    min="1"
+                                    value={data.max_players}
+                                    onChange={(e) =>
+                                        setData('max_players', e.target.value)
+                                    }
+                                />
+                                <InputError message={errors.max_players} />
+                            </div>
+                        </FormSection>
+
+                        <FormSection
+                            title="Courts"
+                            description="Reserved courts are closed to regular bookings for the session's duration."
+                            contentClassName="grid gap-4 p-5 sm:grid-cols-1"
+                        >
+                            <div className="grid gap-2">
+                                <Label htmlFor="location">Display label</Label>
+                                <Input
+                                    id="location"
+                                    value={data.location}
+                                    onChange={(e) =>
+                                        setData('location', e.target.value)
+                                    }
+                                    placeholder="Courts 1, 2"
+                                />
+                                <InputError message={errors.location} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label>Reserve courts</Label>
+                                <div className="grid gap-1">
+                                    {resources.map((resource) => (
+                                        <label
+                                            key={resource.id}
+                                            className="hover:bg-muted flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
+                                        >
+                                            <Checkbox
+                                                checked={data.resource_ids.includes(
+                                                    resource.id,
+                                                )}
+                                                onCheckedChange={(checked) =>
+                                                    toggleResource(
+                                                        resource.id,
+                                                        checked === true,
+                                                    )
+                                                }
+                                            />
+                                            {resource.name}
+                                        </label>
+                                    ))}
+                                </div>
+                                <InputError message={errors.resource_ids} />
+                            </div>
+                        </FormSection>
+
+                        <OpenPlayJoinQrCard session={session} />
+                    </div>
                 </div>
-            </div>
+
+                {/* Sticky so Save stays reachable on a form this tall. */}
+                <div className="bg-background/95 sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+                    {isDirty ? (
+                        <p className="text-muted-foreground mr-auto text-xs">
+                            You have unsaved changes.
+                        </p>
+                    ) : null}
+                    <Button variant="outline" asChild>
+                        <Link href={openPlayIndex()}>Cancel</Link>
+                    </Button>
+                    <Button type="submit" disabled={processing}>
+                        {processing ? 'Saving…' : 'Save changes'}
+                    </Button>
+                </div>
+            </form>
 
             <ConfirmDialog
                 open={deleteOpen}
