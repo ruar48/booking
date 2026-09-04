@@ -73,9 +73,11 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {onSearch || filters ? (
-                <div className="bg-card flex flex-wrap items-center gap-2 rounded-xl border p-3">
+                <div className="bg-card flex flex-col gap-2 rounded-xl border p-3 sm:flex-row sm:flex-wrap sm:items-center">
                     {onSearch ? (
-                        <div className="relative max-w-sm flex-1 min-w-[200px]">
+                        // Full width on a phone; a bounded column once there is
+                        // room to sit beside the filters.
+                        <div className="relative w-full sm:max-w-sm sm:flex-1">
                             <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                             <Input
                                 placeholder={searchPlaceholder}

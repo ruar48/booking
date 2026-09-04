@@ -357,7 +357,9 @@ export default function BookingsIndex({
                               )
                     }
                     filters={
-                        <div className="flex flex-wrap items-center gap-2">
+                        // Two columns on a phone so the controls line up
+                        // instead of wrapping ragged; inline once there's room.
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
                             <Select
                                 value={filters.status ?? 'all'}
                                 onValueChange={(value) =>
@@ -366,7 +368,7 @@ export default function BookingsIndex({
                                     })
                                 }
                             >
-                                <SelectTrigger className="w-[150px]">
+                                <SelectTrigger className="w-full sm:w-[150px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -387,7 +389,7 @@ export default function BookingsIndex({
                                     })
                                 }
                             >
-                                <SelectTrigger className="w-[150px]">
+                                <SelectTrigger className="w-full sm:w-[150px]">
                                     <SelectValue placeholder="Payment" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -413,7 +415,7 @@ export default function BookingsIndex({
                                         })
                                     }
                                 >
-                                    <SelectTrigger className="w-[170px]">
+                                    <SelectTrigger className="w-full sm:w-[170px]">
                                         <SelectValue placeholder="Court" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -429,31 +431,36 @@ export default function BookingsIndex({
                                     </SelectContent>
                                 </Select>
                             )}
-                            <Input
-                                type="date"
-                                value={filters.date ?? ''}
-                                onChange={(event) =>
-                                    applyFilters({
-                                        date: event.target.value || undefined,
-                                    })
-                                }
-                                className="w-[150px]"
-                            />
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => applyFilters({ date: today() })}
-                            >
-                                Today
-                            </Button>
+                            {/* Date and its shortcut stay paired on one row,
+                                spanning both phone columns. min-w-0 keeps the
+                                native date picker's icon from being clipped. */}
+                            <div className="col-span-2 flex gap-2 sm:col-span-1 sm:contents">
+                                <Input
+                                    type="date"
+                                    value={filters.date ?? ''}
+                                    onChange={(event) =>
+                                        applyFilters({
+                                            date: event.target.value || undefined,
+                                        })
+                                    }
+                                    className="min-w-0 flex-1 sm:w-[150px] sm:flex-none"
+                                />
+                                <Button
+                                    variant="outline"
+                                    className="shrink-0"
+                                    onClick={() => applyFilters({ date: today() })}
+                                >
+                                    Today
+                                </Button>
+                            </div>
                             {hasActiveFilters && (
                                 <Button
                                     variant="ghost"
-                                    size="sm"
+                                    className="col-span-2 sm:col-span-1"
                                     onClick={clearFilters}
                                 >
                                     <X className="size-4" />
-                                    Clear
+                                    Clear filters
                                 </Button>
                             )}
                         </div>
