@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { cn } from '@/lib/utils';
 import { chat as supportChat } from '@/routes/support';
 
@@ -42,6 +43,7 @@ export function SupportWidget({
     avoidBottomNav?: boolean;
 } = {}) {
     const { support } = usePage().props;
+    const isVenueAdmin = useIsVenueAdmin();
     const [open, setOpen] = useState(false);
     const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
     const [draft, setDraft] = useState('');
@@ -77,6 +79,13 @@ export function SupportWidget({
             behavior: 'smooth',
         });
     }, [messages, sending]);
+
+    // The widget answers customer questions, so it is hidden from venue staff.
+    // This sits below every hook: returning earlier would change the hook count
+    // between a staff and a member render and break the rules of hooks.
+    if (isVenueAdmin) {
+        return null;
+    }
 
     const send = async (text: string) => {
         const content = text.trim();
