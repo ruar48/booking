@@ -1,4 +1,11 @@
 import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    CalendarClock,
+    CircleDollarSign,
+    FileText,
+    LayoutGrid,
+    Network,
+} from 'lucide-react';
 import { FormEvent } from 'react';
 
 import { FormSection } from '@/components/form-section';
@@ -80,6 +87,8 @@ export default function OpenPlayCreate({ resources }: Props) {
                 <div className="grid gap-6 xl:grid-cols-3">
                     <div className="space-y-6 xl:col-span-2">
                         <FormSection
+                            icon={FileText}
+                            tone="emerald"
                             title="Session details"
                             description="How this session appears to members."
                         >
@@ -88,7 +97,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                 <Input
                                     id="title"
                                     value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('title', e.target.value)
+                                    }
                                     placeholder="Friday Night Open Play"
                                     required
                                 />
@@ -109,6 +120,8 @@ export default function OpenPlayCreate({ resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={CalendarClock}
+                            tone="violet"
                             title="Schedule"
                             description="When the session runs, and the cutoff for joining."
                         >
@@ -118,7 +131,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                     id="starts_at"
                                     type="datetime-local"
                                     value={data.starts_at}
-                                    onChange={(e) => setData('starts_at', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('starts_at', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.starts_at} />
@@ -129,14 +144,19 @@ export default function OpenPlayCreate({ resources }: Props) {
                                     id="ends_at"
                                     type="datetime-local"
                                     value={data.ends_at}
-                                    onChange={(e) => setData('ends_at', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('ends_at', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.ends_at} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
                                 <Label htmlFor="registration_closes_at">
-                                    Registration closes at
+                                    Registration closes at{' '}
+                                    <span className="font-normal text-muted-foreground">
+                                        (optional)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="registration_closes_at"
@@ -149,9 +169,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                         )
                                     }
                                 />
-                                <p className="text-muted-foreground text-xs">
-                                    Optional. After this time members can no longer
-                                    join — leave blank to allow registration until the
+                                <p className="text-xs text-muted-foreground">
+                                    After this time members can no longer join —
+                                    leave blank to allow registration until the
                                     session starts.
                                 </p>
                                 <InputError
@@ -161,6 +181,8 @@ export default function OpenPlayCreate({ resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={Network}
+                            tone="amber"
                             title="Format"
                             description="How matches are organised once the session starts."
                         >
@@ -168,7 +190,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                 <Label>Skill level</Label>
                                 <Select
                                     value={data.skill_level}
-                                    onValueChange={(v) => setData('skill_level', v)}
+                                    onValueChange={(v) =>
+                                        setData('skill_level', v)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -177,11 +201,15 @@ export default function OpenPlayCreate({ resources }: Props) {
                                         <SelectItem value="all_levels">
                                             All levels
                                         </SelectItem>
-                                        <SelectItem value="beginner">Beginner</SelectItem>
+                                        <SelectItem value="beginner">
+                                            Beginner
+                                        </SelectItem>
                                         <SelectItem value="intermediate">
                                             Intermediate
                                         </SelectItem>
-                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                        <SelectItem value="advanced">
+                                            Advanced
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.skill_level} />
@@ -190,7 +218,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                 <Label>Match type</Label>
                                 <Select
                                     value={data.team_size}
-                                    onValueChange={(v) => setData('team_size', v)}
+                                    onValueChange={(v) =>
+                                        setData('team_size', v)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -210,7 +240,9 @@ export default function OpenPlayCreate({ resources }: Props) {
                                 <Label>Bracket format</Label>
                                 <Select
                                     value={data.bracket_format}
-                                    onValueChange={(v) => setData('bracket_format', v)}
+                                    onValueChange={(v) =>
+                                        setData('bracket_format', v)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -242,21 +274,29 @@ export default function OpenPlayCreate({ resources }: Props) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="automatic">
-                                            Automatic (seeded by registration order)
+                                            Automatic (seeded by registration
+                                            order)
                                         </SelectItem>
-                                        <SelectItem value="random">Random draw</SelectItem>
+                                        <SelectItem value="random">
+                                            Random draw
+                                        </SelectItem>
                                         <SelectItem value="manual">
-                                            Manual (I&apos;ll set up matchups myself)
+                                            Manual (I&apos;ll set up matchups
+                                            myself)
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <InputError message={errors.bracket_generation} />
+                                <InputError
+                                    message={errors.bracket_generation}
+                                />
                             </div>
                         </FormSection>
                     </div>
 
                     <div className="space-y-6">
                         <FormSection
+                            icon={CircleDollarSign}
+                            tone="emerald"
                             title="Capacity & pricing"
                             contentClassName="grid gap-4 p-5 sm:grid-cols-1"
                         >
@@ -271,7 +311,10 @@ export default function OpenPlayCreate({ resources }: Props) {
                                     min="0"
                                     value={data.price_per_player}
                                     onChange={(e) =>
-                                        setData('price_per_player', e.target.value)
+                                        setData(
+                                            'price_per_player',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                                 <InputError message={errors.price_per_player} />
@@ -292,6 +335,8 @@ export default function OpenPlayCreate({ resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={LayoutGrid}
+                            tone="blue"
                             title="Courts"
                             description="Reserved courts are closed to regular bookings for the session's duration."
                             contentClassName="grid gap-4 p-5 sm:grid-cols-1"
@@ -314,7 +359,7 @@ export default function OpenPlayCreate({ resources }: Props) {
                                     {resources.map((resource) => (
                                         <label
                                             key={resource.id}
-                                            className="hover:bg-muted flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
+                                            className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
                                         >
                                             <Checkbox
                                                 checked={data.resource_ids.includes(
@@ -337,7 +382,7 @@ export default function OpenPlayCreate({ resources }: Props) {
                     </div>
                 </div>
 
-                <div className="bg-background/95 supports-[backdrop-filter]:bg-background/75 sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t px-4 py-3 backdrop-blur">
+                <div className="sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
                     <Button variant="outline" asChild>
                         <Link href={openPlayIndex()}>Cancel</Link>
                     </Button>

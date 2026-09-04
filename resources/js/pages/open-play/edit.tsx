@@ -1,5 +1,12 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { Trash2 } from 'lucide-react';
+import {
+    CalendarClock,
+    CircleDollarSign,
+    FileText,
+    LayoutGrid,
+    Network,
+    Trash2,
+} from 'lucide-react';
 import { FormEvent, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -79,11 +86,11 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                         <Button
                             type="button"
                             variant="outline"
-                            className="text-destructive hover:text-destructive border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
+                            className="border-red-200 text-destructive hover:bg-red-50 hover:text-destructive dark:border-red-900/50 dark:hover:bg-red-950/30"
                             onClick={() => setDeleteOpen(true)}
                         >
                             <Trash2 className="size-4" />
-                            Delete
+                            Delete session
                         </Button>
                     }
                 />
@@ -92,6 +99,8 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                     {/* Main column — what the session is and how it runs. */}
                     <div className="space-y-6 xl:col-span-2">
                         <FormSection
+                            icon={FileText}
+                            tone="emerald"
                             title="Session details"
                             description="How this session appears to members."
                         >
@@ -100,7 +109,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 <Input
                                     id="title"
                                     value={data.title}
-                                    onChange={(e) => setData('title', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('title', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.title} />
@@ -120,6 +131,8 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={CalendarClock}
+                            tone="violet"
                             title="Schedule"
                             description="When the session runs, and the cutoff for joining."
                         >
@@ -129,7 +142,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     id="starts_at"
                                     type="datetime-local"
                                     value={data.starts_at}
-                                    onChange={(e) => setData('starts_at', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('starts_at', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.starts_at} />
@@ -140,14 +155,19 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     id="ends_at"
                                     type="datetime-local"
                                     value={data.ends_at}
-                                    onChange={(e) => setData('ends_at', e.target.value)}
+                                    onChange={(e) =>
+                                        setData('ends_at', e.target.value)
+                                    }
                                     required
                                 />
                                 <InputError message={errors.ends_at} />
                             </div>
                             <div className="grid gap-2 sm:col-span-2">
                                 <Label htmlFor="registration_closes_at">
-                                    Registration closes at
+                                    Registration closes at{' '}
+                                    <span className="font-normal text-muted-foreground">
+                                        (optional)
+                                    </span>
                                 </Label>
                                 <Input
                                     id="registration_closes_at"
@@ -160,9 +180,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                         )
                                     }
                                 />
-                                <p className="text-muted-foreground text-xs">
-                                    Optional. After this time members can no longer
-                                    join — leave blank to allow registration until the
+                                <p className="text-xs text-muted-foreground">
+                                    After this time members can no longer join —
+                                    leave blank to allow registration until the
                                     session starts.
                                 </p>
                                 <InputError
@@ -172,6 +192,8 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={Network}
+                            tone="amber"
                             title="Format"
                             description="How matches are organised once the session starts."
                         >
@@ -179,7 +201,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 <Label>Skill level</Label>
                                 <Select
                                     value={data.skill_level}
-                                    onValueChange={(v) => setData('skill_level', v)}
+                                    onValueChange={(v) =>
+                                        setData('skill_level', v)
+                                    }
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
@@ -188,11 +212,15 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                         <SelectItem value="all_levels">
                                             All levels
                                         </SelectItem>
-                                        <SelectItem value="beginner">Beginner</SelectItem>
+                                        <SelectItem value="beginner">
+                                            Beginner
+                                        </SelectItem>
                                         <SelectItem value="intermediate">
                                             Intermediate
                                         </SelectItem>
-                                        <SelectItem value="advanced">Advanced</SelectItem>
+                                        <SelectItem value="advanced">
+                                            Advanced
+                                        </SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.skill_level} />
@@ -202,7 +230,10 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                 <Select
                                     value={data.team_size}
                                     onValueChange={(v) =>
-                                        setData('team_size', v as 'singles' | 'doubles')
+                                        setData(
+                                            'team_size',
+                                            v as 'singles' | 'doubles',
+                                        )
                                     }
                                 >
                                     <SelectTrigger>
@@ -257,7 +288,10 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     onValueChange={(v) =>
                                         setData(
                                             'bracket_generation',
-                                            v as 'automatic' | 'random' | 'manual',
+                                            v as
+                                                | 'automatic'
+                                                | 'random'
+                                                | 'manual',
                                         )
                                     }
                                 >
@@ -266,15 +300,21 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="automatic">
-                                            Automatic (seeded by registration order)
+                                            Automatic (seeded by registration
+                                            order)
                                         </SelectItem>
-                                        <SelectItem value="random">Random draw</SelectItem>
+                                        <SelectItem value="random">
+                                            Random draw
+                                        </SelectItem>
                                         <SelectItem value="manual">
-                                            Manual (I&apos;ll set up matchups myself)
+                                            Manual (I&apos;ll set up matchups
+                                            myself)
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <InputError message={errors.bracket_generation} />
+                                <InputError
+                                    message={errors.bracket_generation}
+                                />
                             </div>
                         </FormSection>
                     </div>
@@ -282,6 +322,8 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                     {/* Side column — capacity, courts, and the share QR. */}
                     <div className="space-y-6">
                         <FormSection
+                            icon={CircleDollarSign}
+                            tone="emerald"
                             title="Capacity & pricing"
                             contentClassName="grid gap-4 p-5 sm:grid-cols-1"
                         >
@@ -296,7 +338,10 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     min="0"
                                     value={data.price_per_player}
                                     onChange={(e) =>
-                                        setData('price_per_player', e.target.value)
+                                        setData(
+                                            'price_per_player',
+                                            e.target.value,
+                                        )
                                     }
                                 />
                                 <InputError message={errors.price_per_player} />
@@ -317,6 +362,8 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                         </FormSection>
 
                         <FormSection
+                            icon={LayoutGrid}
+                            tone="blue"
                             title="Courts"
                             description="Reserved courts are closed to regular bookings for the session's duration."
                             contentClassName="grid gap-4 p-5 sm:grid-cols-1"
@@ -339,7 +386,7 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                                     {resources.map((resource) => (
                                         <label
                                             key={resource.id}
-                                            className="hover:bg-muted flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors"
+                                            className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-muted"
                                         >
                                             <Checkbox
                                                 checked={data.resource_ids.includes(
@@ -365,9 +412,9 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                 </div>
 
                 {/* Sticky so Save stays reachable on a form this tall. */}
-                <div className="bg-background/95 sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+                <div className="sticky bottom-0 -mx-4 mt-auto flex items-center justify-end gap-2 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/75">
                     {isDirty ? (
-                        <p className="text-muted-foreground mr-auto text-xs">
+                        <p className="mr-auto text-xs text-muted-foreground">
                             You have unsaved changes.
                         </p>
                     ) : null}

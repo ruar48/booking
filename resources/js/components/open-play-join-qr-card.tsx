@@ -1,10 +1,16 @@
-import { Check, Copy, Download } from 'lucide-react';
+import { Check, Copy, Download, QrCode as QrCodeIcon } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useEffect, useMemo, useState } from 'react';
 
 import { QrCode } from '@/components/qr-code';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
 import { join as joinShow } from '@/routes/open-play';
 import type { OpenPlaySession } from '@/types/booking';
 
@@ -15,7 +21,9 @@ export function OpenPlayJoinQrCard({ session }: { session: OpenPlaySession }) {
     const joinUrl = useMemo(() => {
         const path = joinShow(session).url;
 
-        return typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
+        return typeof window === 'undefined'
+            ? path
+            : `${window.location.origin}${path}`;
     }, [session]);
 
     useEffect(() => {
@@ -49,12 +57,19 @@ export function OpenPlayJoinQrCard({ session }: { session: OpenPlaySession }) {
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Registration QR code</CardTitle>
-                <CardDescription>
-                    Print or display this at the venue — scanning it lets players register themselves
-                    for this session.
-                </CardDescription>
+            <CardHeader className="flex flex-row items-start gap-3 px-5 pt-5 pb-4">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                    <QrCodeIcon className="size-4.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <CardTitle className="text-base leading-tight">
+                        Registration QR code
+                    </CardTitle>
+                    <CardDescription className="mt-0.5">
+                        Print or display this at the venue — scanning it lets
+                        players register themselves for this session.
+                    </CardDescription>
+                </div>
             </CardHeader>
             {/* Centred rather than left-aligned: the card is used in narrow
                 side columns, where a floated QR left a wide empty gutter. */}
@@ -62,11 +77,11 @@ export function OpenPlayJoinQrCard({ session }: { session: OpenPlaySession }) {
                 <QrCode
                     value={joinUrl}
                     size={180}
-                    className="bg-card shrink-0 rounded-xl border p-3 shadow-sm"
+                    className="shrink-0 rounded-xl border bg-card p-3 shadow-sm"
                 />
 
                 <div className="flex w-full min-w-0 flex-col gap-2">
-                    <div className="bg-muted text-muted-foreground rounded-md border px-3 py-2 text-center text-xs break-all">
+                    <div className="rounded-md border bg-muted px-3 py-2 text-center text-xs break-all text-muted-foreground">
                         {joinUrl}
                     </div>
                     <div className="grid grid-cols-2 gap-2">
