@@ -127,13 +127,14 @@ export default function BookingsIndex({
         router.get(bookingsIndex().url, {}, { preserveState: true, replace: true });
     };
 
-    // Only admins cancel; members move a booking instead, and whether they
-    // still can is decided per booking by the policy (see can_reschedule).
+    // Decided per booking by the policy, not guessed from status here: members
+    // may drop an unpaid booking but not a confirmed one, and admins can always
+    // cancel a live booking.
     const canCancelBooking = useCallback(
         (booking: ResourceBooking) =>
-            canManage &&
+            booking.can_cancel === true &&
             !['cancelled', 'completed', 'rejected'].includes(booking.status),
-        [canManage],
+        [],
     );
 
     const confirmCancel = () => {

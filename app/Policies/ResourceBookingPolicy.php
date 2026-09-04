@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\BookingStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\Role;
 use App\Models\ResourceBooking;
 use App\Models\User;
@@ -59,7 +60,17 @@ class ResourceBookingPolicy
 
     public function cancel(User $user, ResourceBooking $resourceBooking): bool
     {
-        return $this->isClubAdmin($user);
+        if ($this->isClubAdmin($user)) {
+            return true;
+        }
+
+        // A member may still drop their own booking while it is unpaid and
+        // unconfirmed — that is abandoning checkout, not cancelling a
+        // reservation the venue is holding for them. Once it is paid or
+        // approved only staff can cancel, and the member reschedules instead.
+        return $this->ownsRecord($user, $resourceBooking->user_id)
+            && $resourceBooking->status === BookingStatus::Pending
+            && $resourceBooking->payment_status === PaymentStatus::Unpaid;
     }
 
     public function reschedule(User $user, ResourceBooking $resourceBooking): bool

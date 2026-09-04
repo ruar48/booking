@@ -53,7 +53,7 @@ class ResourceBookingController extends Controller
         $canManage = $user->isVenueAdmin();
 
         $bookings = $this->bookingRepository->paginateForUser($user, $filters);
-        $bookings->through(fn (ResourceBooking $booking) => $this->presenter->withRescheduleFlag($booking, $user));
+        $bookings->through(fn (ResourceBooking $booking) => $this->presenter->withPermissionFlags($booking, $user));
 
         $nextBooking = $canManage ? null : $this->bookingRepository->nextBookingForUser($user);
 
@@ -66,7 +66,7 @@ class ResourceBookingController extends Controller
                 : [],
             'stats' => $canManage ? null : $this->bookingRepository->statsForUser($user),
             'nextBooking' => $nextBooking
-                ? $this->presenter->withRescheduleFlag($nextBooking, $user)
+                ? $this->presenter->withPermissionFlags($nextBooking, $user)
                 : null,
         ]);
     }

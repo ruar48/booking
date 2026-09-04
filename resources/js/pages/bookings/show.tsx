@@ -37,6 +37,7 @@ type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
     canReschedule?: boolean;
+    canCancel?: boolean;
     paymentDeadline?: string | null;
 };
 
@@ -70,7 +71,13 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
     };
 }
 
-export default function BookingsShow({ booking, canManage = false, canReschedule = false, paymentDeadline = null }: Props) {
+export default function BookingsShow({
+    booking,
+    canManage = false,
+    canReschedule = false,
+    canCancel: canCancelProp = false,
+    paymentDeadline = null,
+}: Props) {
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
 
@@ -93,8 +100,10 @@ export default function BookingsShow({ booking, canManage = false, canReschedule
         canManage &&
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
+    // From the policy, not inferred here: members may drop an unpaid booking
+    // but not a confirmed one, while staff can cancel any live booking.
     const canCancel =
-        canManage &&
+        canCancelProp &&
         !['cancelled', 'completed', 'rejected'].includes(booking.status);
 
     const durationMinutes = differenceInMinutes(

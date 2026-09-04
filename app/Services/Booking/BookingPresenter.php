@@ -34,6 +34,7 @@ class BookingPresenter
             'booking' => $booking,
             'canManage' => $viewer->isVenueAdmin(),
             'canReschedule' => $viewer->can('reschedule', $booking),
+            'canCancel' => $viewer->can('cancel', $booking),
             'policies' => $this->checkoutPolicies(),
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
@@ -64,17 +65,18 @@ class BookingPresenter
     }
 
     /**
-     * Adds each row's own reschedule answer. The cutoff is per-booking, so a
-     * list cannot infer it from status alone.
+     * Attaches this viewer's answers for one booking.
      *
-     * @template T of ResourceBooking
-     *
-     * @param  T  $booking
-     * @return T
+     * Both rules are per-booking rather than per-status — rescheduling has a
+     * 2-day cutoff and a once-only limit, and cancelling depends on whether the
+     * booking is still unpaid — so a list cannot infer either from status
+     * alone without duplicating the policy in the frontend.
      */
-    public function withRescheduleFlag(ResourceBooking $booking, User $viewer): ResourceBooking
+    public function withPermissionFlags(ResourceBooking $booking, User $viewer): ResourceBooking
     {
-        return $booking->setAttribute('can_reschedule', $viewer->can('reschedule', $booking));
+        return $booking
+            ->setAttribute('can_reschedule', $viewer->can('reschedule', $booking))
+            ->setAttribute('can_cancel', $viewer->can('cancel', $booking));
     }
 
     /**

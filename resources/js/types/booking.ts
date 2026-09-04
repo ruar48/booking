@@ -162,8 +162,9 @@ export type ResourceBooking = {
     id: number;
     booking_group_id?: string | null;
     rescheduled_from_id?: number | null;
-    /** Policy result computed per row by the controller for list/detail views. */
+    /** Policy results computed per row by the controller for list/detail views. */
     can_reschedule?: boolean;
+    can_cancel?: boolean;
     resource_id: number;
     user_id: number;
     starts_at: string;
