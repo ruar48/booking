@@ -524,8 +524,15 @@ function PolicyDialog({
                 <div className="space-y-4">
                     {policies.map((policy) => (
                         <div key={policy.id} className="space-y-1.5">
-                            <p className="text-sm font-semibold">{policy.title}</p>
-                            <ul className="text-muted-foreground list-outside list-disc space-y-1 pl-4 text-sm">
+                            {/* With a single policy its title duplicates the
+                                dialog heading, so only label them when there
+                                is more than one to tell apart. */}
+                            {policies.length > 1 ? (
+                                <p className="text-sm font-semibold">
+                                    {policy.title}
+                                </p>
+                            ) : null}
+                            <ul className="text-muted-foreground list-outside list-disc space-y-1.5 pl-4 text-sm">
                                 {policy.body
                                     .split('\n')
                                     .map((line) => line.trim())
