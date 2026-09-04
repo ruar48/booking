@@ -59,11 +59,31 @@ class ResourceBookingPolicy
 
     public function cancel(User $user, ResourceBooking $resourceBooking): bool
     {
+        return $this->isClubAdmin($user);
+    }
+
+    public function reschedule(User $user, ResourceBooking $resourceBooking): bool
+    {
         if ($this->isClubAdmin($user)) {
             return true;
         }
 
-        return $this->ownsRecord($user, $resourceBooking->user_id)
-            && in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true);
+        if (! $this->ownsRecord($user, $resourceBooking->user_id)) {
+            return false;
+        }
+
+        if (! in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true)) {
+            return false;
+        }
+
+        // A booking that was itself created by a previous reschedule can't be
+        // rescheduled again, to prevent endlessly shifting the same slot.
+        if ($resourceBooking->rescheduled_from_id !== null) {
+            return false;
+        }
+
+        // Members must reschedule at least 2 full days before the booking
+        // starts; after that the slot is locked in.
+        return now()->addDays(2)->lte($resourceBooking->starts_at);
     }
 }

@@ -9,6 +9,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\BookingFailed;
 use App\Exceptions\BookingConflictException;
+use App\Http\Requests\RescheduleResourceBookingRequest;
 use App\Http\Requests\StoreBulkResourceBookingRequest;
 use App\Http\Requests\StoreResourceBookingRequest;
 use App\Http\Requests\StoreWalkInBookingRequest;
@@ -292,6 +293,7 @@ class ResourceBookingController extends Controller
         return [
             'booking' => $booking,
             'canManage' => request()->user()->isVenueAdmin(),
+            'canReschedule' => request()->user()->can('reschedule', $booking),
             'policies' => $this->checkoutPolicies(),
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
@@ -361,6 +363,34 @@ class ResourceBookingController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking cancelled.')]);
 
         return to_route('bookings.show', $booking);
+    }
+
+    public function editReschedule(ResourceBooking $booking): Response
+    {
+        $this->authorize('reschedule', $booking);
+
+        return Inertia::render('bookings/reschedule', [
+            'booking' => $booking->load('resource'),
+            ...$this->bookingScheduleData($booking->id),
+        ]);
+    }
+
+    public function reschedule(RescheduleResourceBookingRequest $request, ResourceBooking $booking): RedirectResponse
+    {
+        try {
+            $rescheduled = $this->resourceBookingService->reschedule(
+                $booking,
+                (int) $request->validated('resource_id'),
+                Carbon::parse($request->validated('starts_at')),
+                Carbon::parse($request->validated('ends_at')),
+            );
+        } catch (BookingConflictException $e) {
+            throw ValidationException::withMessages(['starts_at' => $e->getMessage()]);
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking rescheduled.')]);
+
+        return to_route('bookings.show', $rescheduled);
     }
 
     public function calendar(Request $request): Response
@@ -492,7 +522,7 @@ class ResourceBookingController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function bookingScheduleData(): array
+    protected function bookingScheduleData(?int $excludeBookingId = null): array
     {
         $resources = Resource::query()
             ->orderBy('resource_number')
@@ -501,6 +531,7 @@ class ResourceBookingController extends Controller
         $bookedSlots = ResourceBooking::query()
             ->where('starts_at', '>=', now()->startOfDay())
             ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
+            ->when($excludeBookingId, fn ($query) => $query->where('id', '!=', $excludeBookingId))
             ->with('resource:id,name')
             ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
             ->concat($this->resourceBookingService->getOpenPlayBookedSlots());

@@ -120,6 +120,44 @@ class ResourceBookingService
     }
 
     /**
+     * Move a booking to a new resource/time slot by creating a fresh booking
+     * linked back to the original (see ResourceBooking::rescheduledFrom())
+     * and cancelling the original. The new booking carries over the
+     * original's status and payment status so an already-approved/paid
+     * booking doesn't get bounced back to Pending/Unpaid just for moving its
+     * time slot. Authorization (ownership, the 2-day cutoff, and the
+     * one-reschedule-per-booking rule) is enforced by
+     * ResourceBookingPolicy::reschedule() before this runs.
+     */
+    public function reschedule(ResourceBooking $booking, int $resourceId, Carbon $startsAt, Carbon $endsAt): ResourceBooking
+    {
+        return DB::transaction(function () use ($booking, $resourceId, $startsAt, $endsAt): ResourceBooking {
+            $resource = Resource::query()->findOrFail($resourceId);
+            $hours = $startsAt->diffInMinutes($endsAt) / 60;
+
+            $rescheduled = $this->create([
+                'resource_id' => $resourceId,
+                'user_id' => $booking->user_id,
+                'starts_at' => $startsAt,
+                'ends_at' => $endsAt,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'amount' => round((float) $resource->hourly_rate * $hours, 2),
+                'rescheduled_from_id' => $booking->id,
+            ]);
+
+            $this->bookingRepository->update($booking, [
+                'status' => BookingStatus::Cancelled,
+                'cancellation_reason' => __('Rescheduled to booking #:id', ['id' => $rescheduled->id]),
+            ]);
+
+            event(new BookingCancelled($booking));
+
+            return $rescheduled;
+        });
+    }
+
+    /**
      * Cancel a booking together with every sibling from the same bulk
      * submission (see ResourceBooking::groupBookings()), so a customer
      * cancelling one part of a multi-slot booking doesn't leave the rest

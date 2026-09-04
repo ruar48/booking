@@ -134,6 +134,7 @@ export type Resource = {
 export type ResourceBooking = {
     id: number;
     booking_group_id?: string | null;
+    rescheduled_from_id?: number | null;
     resource_id: number;
     user_id: number;
     starts_at: string;

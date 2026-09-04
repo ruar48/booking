@@ -30,11 +30,13 @@ import {
     index as bookingsIndex,
     markPaid,
 } from '@/routes/bookings';
+import { edit as editReschedule } from '@/routes/bookings/reschedule';
 import type { ResourceBooking } from '@/types/booking';
 
 type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
+    canReschedule?: boolean;
     paymentDeadline?: string | null;
 };
 
@@ -68,7 +70,7 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
     };
 }
 
-export default function BookingsShow({ booking, canManage = false, paymentDeadline = null }: Props) {
+export default function BookingsShow({ booking, canManage = false, canReschedule = false, paymentDeadline = null }: Props) {
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
 
@@ -91,9 +93,9 @@ export default function BookingsShow({ booking, canManage = false, paymentDeadli
         canManage &&
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
-    const canCancel = !['cancelled', 'completed', 'rejected'].includes(
-        booking.status,
-    );
+    const canCancel =
+        canManage &&
+        !['cancelled', 'completed', 'rejected'].includes(booking.status);
 
     const durationMinutes = differenceInMinutes(
         new Date(booking.ends_at),
@@ -222,6 +224,11 @@ export default function BookingsShow({ booking, canManage = false, paymentDeadli
                                     }
                                 >
                                     Mark as paid
+                                </Button>
+                            ) : null}
+                            {canReschedule ? (
+                                <Button variant="outline" asChild>
+                                    <Link href={editReschedule(booking)}>Reschedule</Link>
                                 </Button>
                             ) : null}
                             {canCancel ? (

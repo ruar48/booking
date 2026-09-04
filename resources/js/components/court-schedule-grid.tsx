@@ -47,9 +47,20 @@ type Props = {
     errors?: Record<string, string>;
     customer?: WalkInCustomerPayload | null;
     markPaid?: boolean;
+    /**
+     * Reschedule mode: force every selection to snap to a contiguous run of
+     * `slotCount` hourly slots (matching the original booking's duration)
+     * starting at the clicked slot, and hand the resulting single run to
+     * `onSubmit` instead of posting to the bulk/walk-in booking endpoints.
+     * Pass a single-court `courts` array alongside this to keep the picker
+     * scoped to the court being rescheduled.
+     */
+    slotCount?: number;
+    onSubmit?: (run: BookingRun, options: { onStart: () => void; onFinish: () => void; onSuccess: () => void }) => void;
+    submitLabel?: string;
 };
 
-type BookingRun = {
+export type BookingRun = {
     resource_id: number;
     starts_at: string;
     ends_at: string;
@@ -219,6 +230,9 @@ export function CourtScheduleGrid({
     errors,
     customer = null,
     markPaid = false,
+    slotCount,
+    onSubmit,
+    submitLabel,
 }: Props) {
     const pageErrors = (usePage().props as { errors?: Record<string, string> }).errors ?? {};
     const effectiveErrors = errors ?? pageErrors;
@@ -286,6 +300,38 @@ export function CourtScheduleGrid({
             return;
         }
 
+        if (slotCount && slotCount > 1) {
+            const key = selectionKey(court.id, slot);
+            const alreadySelected = selections.some(
+                (s) => selectionKey(s.courtId, s.slot) === key,
+            );
+
+            if (alreadySelected) {
+                setSelections([]);
+                return;
+            }
+
+            const startMinutes = slotToMinutes(slot);
+            const run: SlotSelection[] = [];
+
+            for (let i = 0; i < slotCount; i++) {
+                const runSlot = minutesToSlot(startMinutes + i * 60);
+
+                if (
+                    !timeSlots.includes(runSlot) ||
+                    findBookedSlot(court.id, selectedDate, runSlot, bookedSlots) ||
+                    slotIsPast(selectedDate, runSlot)
+                ) {
+                    return;
+                }
+
+                run.push({ courtId: court.id, courtName: court.name, slot: runSlot });
+            }
+
+            setSelections(run);
+            return;
+        }
+
         const key = selectionKey(court.id, slot);
         setSelections((current) => {
             const exists = current.some(
@@ -343,6 +389,11 @@ export function CourtScheduleGrid({
             onFinish: () => setSubmitting(false),
             onSuccess: () => setSelections([]),
         };
+
+        if (onSubmit) {
+            onSubmit(bookings[0], requestOptions);
+            return;
+        }
 
         if (customer) {
             router.post(
@@ -724,7 +775,11 @@ export function CourtScheduleGrid({
                         disabled={!selections.length || processing || submitting}
                         className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
                     >
-                        {isAuthenticated ? (submitting ? 'Booking…' : 'Book now') : 'Sign up to book'}
+                        {isAuthenticated
+                            ? submitting
+                                ? `${submitLabel ?? 'Book now'}…`
+                                : (submitLabel ?? 'Book now')
+                            : 'Sign up to book'}
                     </Button>
                 </div>
             </div>

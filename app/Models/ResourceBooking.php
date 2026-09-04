@@ -17,6 +17,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property string|null $booking_group_id
+ * @property int|null $rescheduled_from_id
  * @property int $resource_id
  * @property int $user_id
  * @property int|null $created_by
@@ -34,6 +35,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'booking_group_id',
+    'rescheduled_from_id',
     'resource_id',
     'user_id',
     'created_by',
@@ -80,6 +82,11 @@ class ResourceBooking extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function rescheduledFrom(): BelongsTo
+    {
+        return $this->belongsTo(static::class, 'rescheduled_from_id');
     }
 
     /**
