@@ -10,7 +10,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "anthropic-ai/sdk": "*",
         "barryvdh/laravel-dompdf": "*",
         "endroid/qr-code": "*",
         "inertiajs/inertia-laravel": "^3.0",

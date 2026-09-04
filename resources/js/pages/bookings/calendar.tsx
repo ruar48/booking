@@ -20,6 +20,7 @@ import { FormEvent, useMemo, useState } from 'react';
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
+import { WeatherIcon } from '@/components/weather-icon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,12 @@ import { cn } from '@/lib/utils';
 import { calendar, create, show, index as bookingsIndex } from '@/routes/bookings';
 import { closeDate, reopenDate } from '@/routes/bookings/calendar';
 import { edit as editOpenPlay } from '@/routes/open-play';
-import type { DateOverride, OpenPlaySession, ResourceBooking } from '@/types/booking';
+import type {
+    DateOverride,
+    DayForecast,
+    OpenPlaySession,
+    ResourceBooking,
+} from '@/types/booking';
 
 type Props = {
     bookings: ResourceBooking[];
@@ -56,6 +62,8 @@ type Props = {
         start?: string;
         end?: string;
     };
+    /** Keyed by Y-m-d. Only the next 16 days are covered by the forecast. */
+    weather?: Record<string, DayForecast>;
 };
 
 const DEFAULT_HOURS = { open: '07:00', close: '22:00' };
@@ -75,6 +83,7 @@ export default function BookingsCalendar({
     dateOverrides,
     openPlaySessions,
     filters,
+    weather = {},
 }: Props) {
     const anchorDate = filters.start ? parseISO(filters.start) : new Date();
     const [monthCursor, setMonthCursor] = useState(startOfMonth(anchorDate));
@@ -273,17 +282,20 @@ export default function BookingsCalendar({
                                             </div>
                                         </div>
 
-                                        <Badge
-                                            variant={isOpenDay ? 'default' : 'outline'}
-                                            className={cn(
-                                                'h-4 w-fit px-1.5 text-[10px] font-medium',
-                                                isOpenDay
-                                                    ? 'bg-emerald-600 hover:bg-emerald-600'
-                                                    : 'text-destructive border-destructive/40',
-                                            )}
-                                        >
-                                            {isOpenDay ? 'Open' : 'Closed'}
-                                        </Badge>
+                                        <div className="flex items-center justify-between gap-1">
+                                            <Badge
+                                                variant={isOpenDay ? 'default' : 'outline'}
+                                                className={cn(
+                                                    'h-4 w-fit px-1.5 text-[10px] font-medium',
+                                                    isOpenDay
+                                                        ? 'bg-emerald-600 hover:bg-emerald-600'
+                                                        : 'text-destructive border-destructive/40',
+                                                )}
+                                            >
+                                                {isOpenDay ? 'Open' : 'Closed'}
+                                            </Badge>
+                                            <WeatherChip forecast={weather[key]} />
+                                        </div>
 
                                         <div
                                             className="flex flex-1 flex-col gap-0.5"
@@ -385,6 +397,32 @@ export default function BookingsCalendar({
                 />
             )}
         </>
+    );
+}
+
+/**
+ * Compact forecast for one calendar day. Renders nothing outside the 16-day
+ * forecast window rather than showing an empty placeholder.
+ */
+function WeatherChip({ forecast }: { forecast?: DayForecast }) {
+    if (!forecast) {
+        return null;
+    }
+
+    return (
+        <span
+            className="text-muted-foreground flex shrink-0 items-center gap-0.5 text-[10px] leading-none font-medium"
+            title={`${forecast.label} · ${forecast.max}° / ${forecast.min}° · ${forecast.precipitation}% chance of rain`}
+        >
+            <WeatherIcon icon={forecast.icon} className="size-3.5" />
+            <span className="tabular-nums">{forecast.max}°</span>
+            {/* Only worth the space once rain is actually likely. */}
+            {forecast.precipitation >= 40 && (
+                <span className="text-sky-600 tabular-nums dark:text-sky-400">
+                    {forecast.precipitation}%
+                </span>
+            )}
+        </span>
     );
 }
 

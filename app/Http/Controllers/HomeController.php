@@ -11,6 +11,7 @@ use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Services\ResourceBookingService;
+use App\Services\WeatherService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,6 +21,7 @@ class HomeController extends Controller
     public function __construct(
         private readonly AnnouncementRepositoryInterface $announcementRepository,
         private readonly ResourceBookingService $resourceBookingService,
+        private readonly WeatherService $weatherService,
     ) {}
 
     public function index(): Response
@@ -61,6 +63,7 @@ class HomeController extends Controller
             'openPlaySessions' => $openPlaySessions,
             'bookedSlots' => $bookedSlots,
             'dateOverrides' => $dateOverrides,
+            'hourlyWeather' => $this->weatherService->hourlyForecast(),
             'venue' => $this->venueProfile(),
             'stats' => [
                 'courts' => $courts->count(),

@@ -35,9 +35,14 @@ return [
         ],
     ],
 
-    'anthropic' => [
-        'key' => env('ANTHROPIC_API_KEY'),
-        'model' => env('ANTHROPIC_MODEL', 'claude-opus-5'),
+    /*
+     * Open-Meteo needs no API key or account. Coordinates default to
+     * Binalonan, Pangasinan; override per environment if the venue moves.
+     */
+    'weather' => [
+        'latitude' => env('WEATHER_LATITUDE', 16.0503),
+        'longitude' => env('WEATHER_LONGITUDE', 120.5926),
+        'timezone' => env('WEATHER_TIMEZONE', 'Asia/Manila'),
     ],
 
     'paymongo' => [

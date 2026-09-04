@@ -19,12 +19,18 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { WeatherIcon } from '@/components/weather-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
 import { join as joinOpenPlay } from '@/routes/open-play';
-import type { BookedSlot, DateOverride, Resource } from '@/types/booking';
+import type {
+    BookedSlot,
+    DateOverride,
+    HourForecast,
+    Resource,
+} from '@/types/booking';
 
 export type WalkInCustomerPayload =
     | { mode: 'existing'; user_id: number }
@@ -58,6 +64,8 @@ type Props = {
     slotCount?: number;
     onSubmit?: (run: BookingRun, options: { onStart: () => void; onFinish: () => void; onSuccess: () => void }) => void;
     submitLabel?: string;
+    /** Keyed by "Y-m-d H:00". Covers the next 7 days; other dates show nothing. */
+    hourlyWeather?: Record<string, HourForecast>;
 };
 
 export type BookingRun = {
@@ -213,6 +221,32 @@ function formatSlotRange(slot: string): string {
     return `${start}-${end}`;
 }
 
+/**
+ * Forecast for one slot's hour, shown under the time label. Renders nothing
+ * outside the 7-day hourly window rather than leaving a gap placeholder.
+ */
+function SlotWeather({ forecast }: { forecast?: HourForecast }) {
+    if (!forecast) {
+        return null;
+    }
+
+    return (
+        <span
+            className="mt-0.5 flex items-center gap-1 text-[11px] font-normal text-slate-500"
+            title={`${forecast.label} · ${forecast.temp}° · ${forecast.precipitation}% chance of rain`}
+        >
+            <WeatherIcon icon={forecast.icon} className="size-3.5" />
+            <span className="tabular-nums">{forecast.temp}°</span>
+            {/* Only shown once rain is actually likely for that hour. */}
+            {forecast.precipitation >= 40 && (
+                <span className="text-sky-600 tabular-nums">
+                    {forecast.precipitation}%
+                </span>
+            )}
+        </span>
+    );
+}
+
 function selectionKey(courtId: number, slot: string): string {
     return `${courtId}-${slot}`;
 }
@@ -233,6 +267,7 @@ export function CourtScheduleGrid({
     slotCount,
     onSubmit,
     submitLabel,
+    hourlyWeather = {},
 }: Props) {
     const pageErrors = (usePage().props as { errors?: Record<string, string> }).errors ?? {};
     const effectiveErrors = errors ?? pageErrors;
@@ -659,8 +694,17 @@ export function CourtScheduleGrid({
                                     key={slot}
                                     className="border-b border-slate-100 last:border-0"
                                 >
-                                    <td className="px-3 py-2 font-medium whitespace-nowrap text-slate-600">
-                                        {formatSlotRange(slot)}
+                                    <td className="px-3 py-2 whitespace-nowrap text-slate-600">
+                                        <span className="font-medium">
+                                            {formatSlotRange(slot)}
+                                        </span>
+                                        <SlotWeather
+                                            forecast={
+                                                hourlyWeather[
+                                                    `${selectedDate} ${slot.slice(0, 2)}:00`
+                                                ]
+                                            }
+                                        />
                                     </td>
                                     {visibleCourts.map((court) => {
                                         const unavailable = court.status !== 'available';

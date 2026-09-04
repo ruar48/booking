@@ -35,6 +35,7 @@ import type {
     Announcement,
     BookedSlot,
     DateOverride,
+    HourForecast,
     OpenPlaySession,
     Resource,
     VenueProfile,
@@ -54,6 +55,7 @@ type Props = {
     openPlaySessions?: OpenPlaySession[];
     bookedSlots?: BookedSlot[];
     dateOverrides?: DateOverride[];
+    hourlyWeather?: Record<string, HourForecast>;
 };
 
 function venueAddress(venue: VenueProfile): string {
@@ -462,11 +464,13 @@ function BookCourtTab({
     bookedSlots,
     dateOverrides,
     isAuthenticated,
+    hourlyWeather,
 }: {
     courts: Resource[];
     bookedSlots: BookedSlot[];
     dateOverrides: DateOverride[];
     isAuthenticated: boolean;
+    hourlyWeather: Record<string, HourForecast>;
 }) {
     return (
         <CourtScheduleGrid
@@ -474,6 +478,7 @@ function BookCourtTab({
             bookedSlots={bookedSlots}
             dateOverrides={dateOverrides}
             isAuthenticated={isAuthenticated}
+            hourlyWeather={hourlyWeather}
         />
     );
 }
@@ -598,6 +603,7 @@ export default function Welcome({
     openPlaySessions = [],
     bookedSlots = [],
     dateOverrides = [],
+    hourlyWeather = {},
 }: Props) {
     const { auth } = usePage().props;
     const businessName = brand.name;
@@ -792,6 +798,7 @@ export default function Welcome({
                                             bookedSlots={bookedSlots}
                                             dateOverrides={dateOverrides}
                                             isAuthenticated={!!auth.user}
+                                            hourlyWeather={hourlyWeather}
                                         />
                                     </TabsContent>
 

@@ -23,6 +23,7 @@ use App\Models\User;
 use App\Repositories\ResourceBookingRepository;
 use App\Services\PaymentService;
 use App\Services\ResourceBookingService;
+use App\Services\WeatherService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class ResourceBookingController extends Controller
         private readonly ResourceBookingRepositoryInterface $resourceBookingRepository,
         private readonly ResourceBookingService $resourceBookingService,
         private readonly PaymentService $paymentService,
+        private readonly WeatherService $weatherService,
     ) {}
 
     public function index(Request $request): Response
@@ -441,6 +443,9 @@ class ResourceBookingController extends Controller
             'dateOverrides' => $dateOverrides,
             'openPlaySessions' => $openPlaySessions,
             'filters' => $request->only(['start', 'end']),
+            // Covers the next 16 days only; days outside that window render
+            // without weather rather than with a placeholder.
+            'weather' => $this->weatherService->dailyForecast(),
         ]);
     }
 
@@ -561,6 +566,7 @@ class ResourceBookingController extends Controller
             'bookedSlots' => $bookedSlots,
             'dateOverrides' => $dateOverrides,
             'canManage' => request()->user()?->isVenueAdmin() ?? false,
+            'hourlyWeather' => $this->weatherService->hourlyForecast(),
         ];
     }
 }

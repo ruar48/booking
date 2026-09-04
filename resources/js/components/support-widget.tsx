@@ -7,9 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { chat as supportChat } from '@/routes/support';
 
-const QUICK_PROMPTS = [
-    'When is my next booking?',
+/**
+ * Chips shown before the first exchange. After each reply the server sends
+ * follow-ups tailored to what it just answered, and those replace these.
+ */
+const STARTER_PROMPTS = [
+    "When's my next booking?",
     'How do I reschedule?',
+    "What's available tomorrow?",
     'What are your rates?',
 ];
 
@@ -41,6 +46,7 @@ export function SupportWidget({
     const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
     const [draft, setDraft] = useState('');
     const [sending, setSending] = useState(false);
+    const [suggestions, setSuggestions] = useState<string[]>(STARTER_PROMPTS);
     const composerRef = useRef<HTMLTextAreaElement>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -100,7 +106,10 @@ export function SupportWidget({
                 }),
             });
 
-            const data = (await response.json()) as { message?: string };
+            const data = (await response.json()) as {
+                message?: string;
+                suggestions?: string[];
+            };
 
             setMessages((current) => [
                 ...current,
@@ -111,6 +120,10 @@ export function SupportWidget({
                         'Sorry, something went wrong. Please try again.',
                 },
             ]);
+
+            if (data.suggestions?.length) {
+                setSuggestions(data.suggestions);
+            }
         } catch {
             setMessages((current) => [
                 ...current,
@@ -185,20 +198,25 @@ export function SupportWidget({
                             </div>
                         ) : null}
 
-                        {messages.length === 1 && !sending ? (
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                                {QUICK_PROMPTS.map((prompt) => (
-                                    <button
-                                        key={prompt}
-                                        type="button"
-                                        onClick={() => send(prompt)}
-                                        className="border-primary/25 text-primary hover:bg-primary/5 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-                                    >
-                                        {prompt}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : null}
+                    </div>
+
+                    {/* Always on screen, so there is a next question available
+                        at every point in the conversation — not just at the
+                        start. Scrolls sideways rather than growing the panel. */}
+                    <div className="border-t px-3 py-2">
+                        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                            {suggestions.map((prompt) => (
+                                <button
+                                    key={prompt}
+                                    type="button"
+                                    disabled={sending}
+                                    onClick={() => send(prompt)}
+                                    className="border-primary/25 text-primary hover:bg-primary/5 shrink-0 rounded-full border px-3 py-1 text-xs font-medium whitespace-nowrap transition-colors disabled:opacity-50"
+                                >
+                                    {prompt}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     {email || phone ? (

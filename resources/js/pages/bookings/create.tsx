@@ -11,13 +11,19 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { create, index as bookingsIndex } from '@/routes/bookings';
 import customers from '@/routes/bookings/customers';
-import type { BookedSlot, DateOverride, Resource } from '@/types/booking';
+import type {
+    BookedSlot,
+    DateOverride,
+    HourForecast,
+    Resource,
+} from '@/types/booking';
 
 type Props = {
     resources: Resource[];
     bookedSlots: BookedSlot[];
     dateOverrides?: DateOverride[];
     canManage: boolean;
+    hourlyWeather?: Record<string, HourForecast>;
 };
 
 type BookingForMode = 'myself' | 'existing' | 'new';
@@ -28,7 +34,13 @@ type CustomerSearchResult = {
     phone: string | null;
 };
 
-export default function BookingsCreate({ resources, bookedSlots, dateOverrides = [], canManage }: Props) {
+export default function BookingsCreate({
+    resources,
+    bookedSlots,
+    dateOverrides = [],
+    canManage,
+    hourlyWeather = {},
+}: Props) {
     const { auth } = usePage().props;
 
     const [mode, setMode] = useState<BookingForMode>('myself');
@@ -211,6 +223,7 @@ export default function BookingsCreate({ resources, bookedSlots, dateOverrides =
                             isAuthenticated={!!auth.user}
                             customer={customerPayload}
                             markPaid={markPaid}
+                            hourlyWeather={hourlyWeather}
                         />
                     </CardContent>
                 </Card>

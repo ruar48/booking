@@ -81,6 +81,33 @@ export type BookedSlot = {
     resource?: Pick<Resource, 'id' | 'name'>;
 };
 
+export type WeatherIcon =
+    | 'clear'
+    | 'partly'
+    | 'cloudy'
+    | 'fog'
+    | 'drizzle'
+    | 'rain'
+    | 'showers'
+    | 'snow'
+    | 'storm';
+
+/** Keyed by "Y-m-d H:00" so an hourly booking slot can look up its own hour. */
+export type HourForecast = {
+    icon: WeatherIcon;
+    label: string;
+    temp: number;
+    precipitation: number;
+};
+
+export type DayForecast = {
+    icon: WeatherIcon;
+    label: string;
+    max: number;
+    min: number;
+    precipitation: number;
+};
+
 export type DateOverride = {
     id: number;
     date: string;
