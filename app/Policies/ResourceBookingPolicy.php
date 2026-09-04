@@ -8,6 +8,7 @@ use App\Enums\Role;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Policies\Concerns\HandlesRoles;
+use Illuminate\Auth\Access\Response;
 
 class ResourceBookingPolicy
 {
@@ -73,30 +74,41 @@ class ResourceBookingPolicy
             && $resourceBooking->payment_status === PaymentStatus::Unpaid;
     }
 
-    public function reschedule(User $user, ResourceBooking $resourceBooking): bool
+    /**
+     * Returns a Response rather than a bool so every refusal carries its
+     * reason. A denied reschedule is a dead end for the customer, and the
+     * default "This action is unauthorized." tells them nothing about which
+     * rule they hit. These messages are what the toast shows — see the
+     * Inertia 403 handler in bootstrap/app.php.
+     */
+    public function reschedule(User $user, ResourceBooking $resourceBooking): Response
     {
         // A booking in a terminal state can't be moved by anyone, admins
         // included — there is no live slot left to move.
         if (! in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true)) {
-            return false;
+            return Response::deny(__('This booking is :status and can no longer be rescheduled.', [
+                'status' => $resourceBooking->status->value,
+            ]));
         }
 
         if ($this->isClubAdmin($user)) {
-            return true;
+            return Response::allow();
         }
 
         if (! $this->ownsRecord($user, $resourceBooking->user_id)) {
-            return false;
+            return Response::deny();
         }
 
         // A booking that was itself created by a previous reschedule can't be
         // rescheduled again, to prevent endlessly shifting the same slot.
         if ($resourceBooking->rescheduled_from_id !== null) {
-            return false;
+            return Response::deny(__('This booking has already been rescheduled once. Please contact the venue to move it again.'));
         }
 
         // Members must reschedule at least 2 full days before the booking
         // starts; after that the slot is locked in.
-        return now()->addDays(2)->lte($resourceBooking->starts_at);
+        return now()->addDays(2)->lte($resourceBooking->starts_at)
+            ? Response::allow()
+            : Response::deny(__('Bookings can only be rescheduled up to 2 days before the start time.'));
     }
 }

@@ -3,15 +3,22 @@
 namespace App\Http\Requests\Booking;
 
 use App\Models\Resource;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 
 class RescheduleResourceBookingRequest extends FormRequest
 {
-    public function authorize(): bool
+    /**
+     * Returns the Gate's Response rather than a bool so the policy's reason
+     * for refusing survives into the AuthorizationException — a plain `can()`
+     * would flatten it to "This action is unauthorized."
+     */
+    public function authorize(): Response
     {
-        return $this->user()->can('reschedule', $this->route('booking'));
+        return Gate::forUser($this->user())->inspect('reschedule', $this->route('booking'));
     }
 
     /**
