@@ -61,14 +61,20 @@ class ResourceBookingPolicy
 
     public function cancel(User $user, ResourceBooking $resourceBooking): bool
     {
+        // Paid bookings are final under the venue's Payment and Booking
+        // Policy — nobody cancels one from the app, staff included.
+        if ($resourceBooking->payment_status === PaymentStatus::Paid) {
+            return false;
+        }
+
         if ($this->isClubAdmin($user)) {
             return true;
         }
 
         // A member may still drop their own booking while it is unpaid and
         // unconfirmed — that is abandoning checkout, not cancelling a
-        // reservation the venue is holding for them. Once it is paid or
-        // approved only staff can cancel, and the member reschedules instead.
+        // reservation the venue is holding for them. Once it is approved only
+        // staff can cancel.
         return $this->ownsRecord($user, $resourceBooking->user_id)
             && $resourceBooking->status === BookingStatus::Pending
             && $resourceBooking->payment_status === PaymentStatus::Unpaid;
@@ -89,6 +95,12 @@ class ResourceBookingPolicy
             return Response::deny(__('This booking is :status and can no longer be rescheduled.', [
                 'status' => $resourceBooking->status->value,
             ]));
+        }
+
+        // Paid bookings are final: the date, time and court can't change once
+        // payment is complete, for staff and members alike.
+        if ($resourceBooking->payment_status === PaymentStatus::Paid) {
+            return Response::deny(__('This booking is paid and can no longer be rescheduled.'));
         }
 
         if ($this->isClubAdmin($user)) {

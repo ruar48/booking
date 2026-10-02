@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { SPORTS, type SportValue } from '@/lib/sport';
 import { index as resourcesIndex, update } from '@/routes/resources';
 import type { Resource, SelectOption } from '@/types/booking';
 
@@ -96,19 +97,21 @@ export default function ResourcesEdit({ resource, surfaceTypes = [] }: Props) {
                                 <Select
                                     value={data.sport}
                                     onValueChange={(v) =>
-                                        setData('sport', v as 'pickleball' | 'billiards')
+                                        setData('sport', v as SportValue)
                                     }
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="pickleball">
-                                            Pickleball
-                                        </SelectItem>
-                                        <SelectItem value="billiards">
-                                            Billiards
-                                        </SelectItem>
+                                        {SPORTS.map((sport) => (
+                                            <SelectItem
+                                                key={sport.value}
+                                                value={sport.value}
+                                            >
+                                                {sport.label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.sport} />

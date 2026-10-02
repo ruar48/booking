@@ -2,10 +2,10 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { format, parseISO } from 'date-fns';
 import {
     ArrowRight,
-    Calendar,
     CalendarDays,
     ChevronDown,
     Clock,
+    Globe,
     Grid3x3,
     ImageIcon,
     Info,
@@ -21,6 +21,7 @@ import { CourtScheduleGrid } from '@/components/court-schedule-grid';
 import { BrandLogo } from '@/components/brand-logo';
 import { InstallAppButton } from '@/components/install-app-button';
 import { SupportWidget } from '@/components/support-widget';
+import { VenueMap, venueAddress } from '@/components/venue-map';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -57,12 +58,6 @@ type Props = {
     dateOverrides?: DateOverride[];
     hourlyWeather?: Record<string, HourForecast>;
 };
-
-function venueAddress(venue: VenueProfile): string {
-    return [venue.address_line_1, venue.city, venue.state, venue.postal_code]
-        .filter(Boolean)
-        .join(', ');
-}
 
 function formatSkillLevel(level?: string): string {
     if (!level || level === 'all_levels') {
@@ -113,23 +108,6 @@ function HeroLanding({
                             nameClassName="hidden text-white sm:inline"
                         />
                     </Link>
-
-                    <nav className="hidden items-center gap-8 text-sm font-semibold md:flex">
-                        <button
-                            type="button"
-                            onClick={onBook}
-                            className="text-white/70 transition-colors hover:text-brand-lime"
-                        >
-                            Courts
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onExplore}
-                            className="text-white/70 transition-colors hover:text-brand-lime"
-                        >
-                            Photos
-                        </button>
-                    </nav>
 
                     <div className="flex items-center gap-2">
                         <InstallAppButton
@@ -295,14 +273,33 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                                 </a>
                             </div>
                         )}
-                        {venueAddress(venue) && (
-                            <div className="flex items-start gap-3">
-                                <MapPin className="mt-0.5 size-4 shrink-0 text-brand-court" />
-                                <span>{venueAddress(venue)}</span>
+                        {venue.website && (
+                            <div className="flex items-center gap-3">
+                                <Globe className="size-4 text-brand-court" />
+                                <a
+                                    href={
+                                        /^https?:\/\//.test(venue.website)
+                                            ? venue.website
+                                            : `https://${venue.website}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:underline"
+                                >
+                                    {venue.website}
+                                </a>
                             </div>
                         )}
                     </CardContent>
                 </Card>
+
+                {venueAddress(venue) && (
+                    <Card className="border-slate-200 shadow-sm">
+                        <CardContent className="pt-6">
+                            <VenueMap venue={venue} mapClassName="h-56 sm:h-64" />
+                        </CardContent>
+                    </Card>
+                )}
 
                 {amenities.length > 0 && (
                     <Card className="border-slate-200 shadow-sm">
@@ -554,17 +551,7 @@ function PhotosTab({ courts, gallery = [] }: { courts: Resource[]; gallery?: str
     );
 }
 
-function NewsTab({ announcements }: { announcements: Announcement[] }) {
-    if (!announcements.length) {
-        return (
-            <Card className="border-slate-200 shadow-sm">
-                <CardContent className="py-12 text-center text-sm text-slate-500">
-                    No news posted yet.
-                </CardContent>
-            </Card>
-        );
-    }
-
+function NewsList({ announcements }: { announcements: Announcement[] }) {
     return (
         <div className="space-y-4">
             {announcements.map((announcement) => (
@@ -613,7 +600,7 @@ export default function Welcome({
         : brand.logo;
     const metaDescription = (venue?.description
         ? venue.description.replace(/\s+/g, ' ').trim().slice(0, 155)
-        : `Book pickleball courts and billiards tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`);
+        : `Book pickleball courts, billiard and table tennis tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`);
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'SportsActivityLocation',
@@ -715,23 +702,6 @@ export default function Welcome({
                                 <h2 className="text-2xl font-extrabold text-brand-navy">
                                     {businessName}
                                 </h2>
-                                {venue && venueAddress(venue) ? (
-                                    <p className="mt-1 flex items-center justify-center gap-1 text-sm text-slate-500">
-                                        <MapPin className="size-3.5" />
-                                        {venueAddress(venue)}
-                                    </p>
-                                ) : (
-                                    <p className="mt-2 text-sm text-slate-500">
-                                        {stats.courts} pickleball courts · Online booking
-                                    </p>
-                                )}
-                                <Button
-                                    className="mt-4 bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
-                                    onClick={() => setActiveTab('book')}
-                                >
-                                    <Calendar className="mr-2 size-4" />
-                                    Book a court
-                                </Button>
                             </div>
 
                             <Tabs
@@ -740,7 +710,7 @@ export default function Welcome({
                                 className="gap-0"
                             >
                                 <div className="border-y border-slate-200 bg-slate-50 px-2 py-2 sm:px-4">
-                                    <TabsList className="grid h-auto w-full grid-cols-5 gap-1 bg-transparent p-0">
+                                    <TabsList className="grid h-auto w-full grid-cols-4 gap-1 bg-transparent p-0">
                                         <TabsTrigger
                                             value="about"
                                             className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
@@ -764,12 +734,6 @@ export default function Welcome({
                                             className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
                                         >
                                             Photos
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="news"
-                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
-                                        >
-                                            News
                                         </TabsTrigger>
                                     </TabsList>
                                 </div>
@@ -806,12 +770,19 @@ export default function Welcome({
                                         <PhotosTab courts={courts} gallery={venue?.gallery ?? []} />
                                     </TabsContent>
 
-                                    <TabsContent value="news" className="mt-0">
-                                        <NewsTab announcements={announcements} />
-                                    </TabsContent>
                                 </div>
                             </Tabs>
                         </div>
+
+                        {announcements.length > 0 && (
+                            <section className="mt-8">
+                                <h2 className="mb-4 flex items-center gap-2 text-xl font-extrabold text-brand-navy">
+                                    <Megaphone className="size-5 text-brand-court" />
+                                    News &amp; announcements
+                                </h2>
+                                <NewsList announcements={announcements} />
+                            </section>
+                        )}
                     </main>
                 </section>
 

@@ -1,3 +1,5 @@
+import type { SportValue } from '@/lib/sport';
+
 export type Paginated<T> = {
     data: T[];
     current_page: number;
@@ -148,7 +150,7 @@ export type Player = {
 
 export type Resource = {
     id: number;
-    sport: 'pickleball' | 'billiards';
+    sport: SportValue;
     name: string;
     resource_number: string;
     surface_type: string;
@@ -403,6 +405,7 @@ export type VenueProfile = {
     description?: string | null;
     phone?: string | null;
     email?: string | null;
+    website?: string | null;
     address_line_1?: string | null;
     city?: string | null;
     state?: string | null;

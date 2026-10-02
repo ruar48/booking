@@ -94,7 +94,7 @@ export default function OpenPlayShow({ session }: Props) {
                                     )}
                                 </div>
                             </div>
-                            {!isSessionComplete && (
+                            {!isSessionComplete && !session.is_registration_closed && (
                                 <Button
                                     asChild
                                     className="bg-brand-lime shrink-0 font-bold text-brand-navy hover:bg-brand-lime-dark"
@@ -123,8 +123,7 @@ export default function OpenPlayShow({ session }: Props) {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground text-sm">
-                                    The bracket hasn&apos;t been generated yet — check back once the
-                                    organizer sets the matchups.
+                                    The bracket will be generated once all required player slots have been filled.
                                 </p>
                             </CardContent>
                         </Card>

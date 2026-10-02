@@ -667,6 +667,22 @@ export default function AdminSettingsIndex({
                                                 }
                                             />
                                         </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-website">
+                                                Website
+                                            </Label>
+                                            <Input
+                                                id="venue-website"
+                                                value={venueField('website')}
+                                                placeholder="galaangramospickleball.com"
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'website',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
                                     </FormSection>
 
                                     <InputError

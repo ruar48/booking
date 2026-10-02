@@ -169,7 +169,7 @@ function SessionCard({ session }: { session: BrowseSession }) {
                             Session full
                         </Button>
                     ) : session.is_registration_closed ? (
-                        <Button className="w-full" disabled>
+                        <Button variant="destructive" className="w-full" disabled>
                             Registration closed
                         </Button>
                     ) : (

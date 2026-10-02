@@ -9,6 +9,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Enums\Role as RoleEnum;
 use App\Enums\Sport;
+use App\Enums\SurfaceType;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
 use App\Models\Announcement;
@@ -47,20 +48,21 @@ class DemoDataSeeder extends Seeder
             'group' => 'venue',
             'key' => 'profile',
             'value' => [
-                'phone' => '+1 (555) 010-2026',
+                'phone' => '+639507370338',
                 'email' => 'owner@galaangramos.test',
-                'address_line_1' => '123 Court Lane',
-                'city' => 'Ramos',
+                'website' => 'galaangramospickleball.com',
+                'address_line_1' => 'Santa Maria Norte',
+                'city' => 'Binalonan',
                 'state' => 'Pangasinan',
-                'postal_code' => '2411',
+                'postal_code' => '2436',
                 'country' => 'PH',
-                'description' => 'Welcome to Galaang-Ramos Pickleball — your neighborhood spot for open play and court reservations. We run two indoor acrylic courts with lighting, perfect for beginners and competitive players alike. Book the Male Court or Female Court online anytime.',
+                'description' => 'Galaang-Ramos Pickleball is a place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.',
                 'amenities' => [
-                    'Parking',
-                    'Comfort rooms',
-                    'Changing areas',
-                    'Water station',
-                    'Court lighting',
+                    'Restrooms',
+                    'Shower rooms',
+                    'Equipment rental',
+                    'Parking area',
+                    'Snack or refreshment area',
                 ],
                 'gallery' => [],
             ],
@@ -88,13 +90,26 @@ class DemoDataSeeder extends Seeder
             ->create(['sport' => Sport::Pickleball]);
 
         $billiardsTables = Resource::factory()
-            ->count(3)
+            ->count(1)
             ->sequence(
-                ['name' => 'Training Station 1', 'resource_number' => '1', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
-                ['name' => 'Training Station 2', 'resource_number' => '2', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
-                ['name' => 'Training Station 3', 'resource_number' => '3', 'surface_type' => 'felt', 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Billiard Table', 'resource_number' => '1', 'surface_type' => SurfaceType::Felt->value, 'has_lighting' => true, 'hourly_rate' => 15],
             )
             ->create(['sport' => Sport::Billiards]);
+
+        $tableTennisTables = Resource::factory()
+            ->count(1)
+            ->sequence(
+                ['name' => 'Table Tennis Table', 'resource_number' => '1', 'surface_type' => SurfaceType::Hard->value, 'location_type' => 'indoor', 'has_lighting' => true, 'hourly_rate' => 15],
+            )
+            ->create(['sport' => Sport::TableTennis]);
+
+        $trainingStations = Resource::factory()
+            ->count(2)
+            ->sequence(
+                ['name' => 'Training Station 1', 'resource_number' => '1', 'surface_type' => SurfaceType::Acrylic->value, 'has_lighting' => true, 'hourly_rate' => 15],
+                ['name' => 'Training Station 2', 'resource_number' => '2', 'surface_type' => SurfaceType::Acrylic->value, 'has_lighting' => true, 'hourly_rate' => 15],
+            )
+            ->create(['sport' => Sport::PickleRange]);
 
         $members = collect();
 
@@ -629,7 +644,10 @@ class DemoDataSeeder extends Seeder
         // Extra resource bookings for a busier calendar demo, spread across
         // the current month with a realistic mix of statuses.
         // -----------------------------------------------------------------
-        $bookableResources = $courts->merge($billiardsTables);
+        $bookableResources = $courts
+            ->merge($billiardsTables)
+            ->merge($tableTennisTables)
+            ->merge($trainingStations);
         $bookingStatusCycle = [
             [BookingStatus::Approved, PaymentStatus::Paid],
             [BookingStatus::Approved, PaymentStatus::Paid],

@@ -15,6 +15,14 @@ interface ResourceRepositoryInterface
      */
     public function paginateFiltered(array $filters = [], int $perPage = 15): LengthAwarePaginator;
 
+    /**
+     * Venue-wide totals for the admin resources list, counted across every
+     * resource (not one page) so they don't change while paging.
+     *
+     * @return array{total: int, by_sport: array<string, int>, available: int, min_rate: float}
+     */
+    public function stats(): array;
+
     public function find(int $id): ?Resource;
 
     public function create(array $data): Resource;

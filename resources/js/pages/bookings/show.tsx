@@ -21,6 +21,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { VenueMap, venueAddress } from '@/components/venue-map';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatDateTime, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -31,7 +32,7 @@ import {
     markPaid,
 } from '@/routes/bookings';
 import { edit as editReschedule } from '@/routes/bookings/reschedule';
-import type { ResourceBooking } from '@/types/booking';
+import type { ResourceBooking, VenueProfile } from '@/types/booking';
 
 type Props = {
     booking: ResourceBooking;
@@ -39,6 +40,7 @@ type Props = {
     canReschedule?: boolean;
     canCancel?: boolean;
     paymentDeadline?: string | null;
+    venue?: VenueProfile | null;
 };
 
 function useDeadlineCountdown(deadline: string | null | undefined) {
@@ -77,6 +79,7 @@ export default function BookingsShow({
     canReschedule = false,
     canCancel: canCancelProp = false,
     paymentDeadline = null,
+    venue = null,
 }: Props) {
     const [cancelOpen, setCancelOpen] = useState(false);
     const [reason, setReason] = useState('');
@@ -150,7 +153,11 @@ export default function BookingsShow({
             : [
                   {
                       label: 'Booking completed',
-                      done: booking.status === 'completed',
+                      // A paid booking is final, so it reads as complete
+                      // without waiting for the slot's end time to pass.
+                      done:
+                          booking.status === 'completed' ||
+                          booking.payment_status === 'paid',
                       timestamp: null,
                   },
               ]),
@@ -332,6 +339,20 @@ export default function BookingsShow({
                         </CardContent>
                     </Card>
                 </div>
+
+                {venue && venueAddress(venue) ? (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <MapPin className="size-4" />
+                                Venue location
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <VenueMap venue={venue} />
+                        </CardContent>
+                    </Card>
+                ) : null}
 
                 {/* Timeline */}
                 <Card>

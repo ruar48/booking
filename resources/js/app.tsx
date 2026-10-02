@@ -1,4 +1,4 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -37,6 +37,20 @@ createInertiaApp({
     progress: {
         color: '#4B5563',
     },
+});
+
+// Sidebar and header links prefetch on hover, and Inertia then serves that
+// response for 30 seconds without asking the server again. After a write it
+// only flushes the page the write redirected to, so renting out, returning or
+// editing an item and then clicking a nav link could still render the list
+// from before the write (stale availability, revenue, names). Any completed
+// write invalidates every prefetched page so the next navigation reflects it.
+router.on('finish', (event) => {
+    const { visit } = event.detail;
+
+    if (visit.method !== 'get' && visit.completed) {
+        router.flushAll();
+    }
 });
 
 // This will set light / dark mode on load...

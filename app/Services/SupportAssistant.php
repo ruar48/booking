@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\Sport;
 use App\Models\DateOverride;
 use App\Models\OpenPlaySession;
 use App\Models\Policy;
@@ -43,7 +44,7 @@ class SupportAssistant
         'hours' => ['what time do you open', 'opening hours', 'closing time', 'what time do you close', 'hours', 'open today', 'are you open'],
         'open_play' => ['open play', 'session', 'sessions', 'tournament', 'ladder', 'doubles'],
         'policies' => ['policy', 'policies', 'rules', 'terms', 'refund policy'],
-        'courts' => ['what courts', 'how many courts', 'facilities', 'amenities', 'billiards', 'what do you have'],
+        'courts' => ['what courts', 'how many courts', 'facilities', 'amenities', 'billiard', 'table tennis', 'ping pong', 'pickle range', 'training station', 'what do you have'],
         'contact' => ['where are you', 'address', 'location', 'contact', 'phone number', 'email', 'directions', 'how do i reach'],
         'greeting' => ['hello', 'hi ', 'hey', 'good morning', 'good afternoon', 'good evening'],
         'thanks' => ['thank', 'thanks', 'salamat', 'appreciate'],
@@ -364,7 +365,10 @@ class SupportAssistant
         $parts = $bySport->map(function ($courts, $sport) {
             $rates = $courts->pluck('hourly_rate')->unique();
 
-            $label = ucfirst((string) $sport).' '.(strtolower((string) $sport) === 'billiards' ? 'tables' : 'courts');
+            $case = $sport instanceof Sport ? $sport : Sport::tryFrom((string) $sport);
+            $label = $case !== null
+                ? $case->label().' '.$case->unitNoun()
+                : ucfirst((string) $sport).' courts';
 
             return $rates->count() === 1
                 ? $label.' are '.$this->money((string) $rates->first()).' per hour'

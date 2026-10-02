@@ -39,7 +39,21 @@ class BookingPresenter
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
             'paymentDeadline' => $this->paymentDeadline($booking),
+            'venue' => $this->venueProfile(),
         ];
+    }
+
+    /**
+     * The venue profile, for the location card and its directions map.
+     *
+     * @return array<string, mixed>
+     */
+    private function venueProfile(): array
+    {
+        return Setting::query()
+            ->where('group', 'venue')
+            ->where('key', 'profile')
+            ->value('value') ?? [];
     }
 
     /**

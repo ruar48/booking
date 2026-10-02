@@ -517,7 +517,7 @@ function PolicyDialog({
                         Payment &amp; Refund Policy
                     </DialogTitle>
                     <DialogDescription>
-                        Please read these before continuing to payment.
+                        Please review the following terms and conditions carefully before proceeding with payment.
                     </DialogDescription>
                 </DialogHeader>
 

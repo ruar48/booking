@@ -29,7 +29,10 @@ class RentalItemSeeder extends Seeder
         $seededRentalItems = collect();
 
         foreach ($rentalItems as $item) {
-            $model = RentalItem::query()->updateOrCreate(
+            // firstOrCreate, not updateOrCreate: a re-run must not overwrite an
+            // admin's edits or reset available_quantity to full while units are
+            // still rented out.
+            $model = RentalItem::query()->firstOrCreate(
                 ['sku' => $item['sku']],
                 [
                     'name' => $item['name'],

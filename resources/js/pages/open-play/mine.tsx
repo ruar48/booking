@@ -325,8 +325,7 @@ export default function OpenPlayMine({ session, registrationId }: Props) {
                     <CardContent>
                         {matches.length === 0 ? (
                             <p className="text-muted-foreground text-sm">
-                                The bracket hasn&apos;t been generated yet — check back once the
-                                organizer sets the matchups.
+                                The bracket will be generated once all required player slots have been filled.
                             </p>
                         ) : !nextMatch ? (
                             <div className="flex flex-col items-center gap-2 py-6 text-center">

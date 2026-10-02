@@ -23,6 +23,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { SPORTS, type SportValue } from '@/lib/sport';
 import { index as resourcesIndex, store } from '@/routes/resources';
 import type { SelectOption } from '@/types/booking';
 
@@ -32,7 +33,7 @@ type Props = {
 
 export default function ResourcesCreate({ surfaceTypes = [] }: Props) {
     const { data, setData, post, processing, errors } = useForm({
-        sport: 'pickleball' as 'pickleball' | 'billiards',
+        sport: 'pickleball' as SportValue,
         name: '',
         resource_number: '',
         // Matches the seeded courts; the full list comes from SurfaceType.
@@ -97,19 +98,21 @@ export default function ResourcesCreate({ surfaceTypes = [] }: Props) {
                                 <Select
                                     value={data.sport}
                                     onValueChange={(v) =>
-                                        setData('sport', v as 'pickleball' | 'billiards')
+                                        setData('sport', v as SportValue)
                                     }
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="pickleball">
-                                            Pickleball
-                                        </SelectItem>
-                                        <SelectItem value="billiards">
-                                            Billiards
-                                        </SelectItem>
+                                        {SPORTS.map((sport) => (
+                                            <SelectItem
+                                                key={sport.value}
+                                                value={sport.value}
+                                            >
+                                                {sport.label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.sport} />

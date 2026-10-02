@@ -4,6 +4,7 @@ import {
     ChevronsUpDown,
     CircleCheck,
     CircleDollarSign,
+    CircleDot,
     Grid2x2,
     LayoutGrid,
     ListFilter,
@@ -17,7 +18,7 @@ import { useCallback } from 'react';
 
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
+import { StatCard, type StatTone } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,14 +35,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/format';
+import { SPORTS, sportLabel, type SportValue } from '@/lib/sport';
 import { cn } from '@/lib/utils';
 import { create, edit, index as resourcesIndex } from '@/routes/resources';
 import type { Paginated, Resource } from '@/types/booking';
 
 type ResourceStats = {
     total: number;
-    pickleball: number;
-    billiards: number;
+    by_sport: Partial<Record<SportValue, number>>;
     available: number;
     min_rate: number;
 };
@@ -61,18 +62,32 @@ type Props = {
 };
 
 const SPORT_STYLES: Record<
-    string,
-    { chip: string; badge: string; Icon: typeof Grid2x2 }
+    SportValue,
+    { chip: string; badge: string; Icon: typeof Grid2x2; tone: StatTone }
 > = {
     pickleball: {
         chip: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
         badge: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400',
         Icon: Grid2x2,
+        tone: 'blue',
     },
     billiards: {
         chip: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
         badge: 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-400',
         Icon: CircleDollarSign,
+        tone: 'violet',
+    },
+    table_tennis: {
+        chip: 'bg-violet-500/10 text-violet-600 dark:text-violet-400',
+        badge: 'border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900/50 dark:bg-violet-950/40 dark:text-violet-400',
+        Icon: CircleDot,
+        tone: 'brand',
+    },
+    pickle_range: {
+        chip: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+        badge: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-400',
+        Icon: Target,
+        tone: 'amber',
     },
 };
 
@@ -175,7 +190,7 @@ export default function ResourcesIndex({
                         ).badge,
                     )}
                 >
-                    {row.original.sport}
+                    {sportLabel(row.original.sport)}
                 </Badge>
             ),
         },
@@ -288,7 +303,7 @@ export default function ResourcesIndex({
                 />
 
                 {stats ? (
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <StatCard
                             orientation="inline"
                             label="Total resources"
@@ -297,22 +312,21 @@ export default function ResourcesIndex({
                             icon={LayoutGrid}
                             tone="emerald"
                         />
-                        <StatCard
-                            orientation="inline"
-                            label="Pickleball courts"
-                            value={stats.pickleball}
-                            caption="Pickleball courts"
-                            icon={Target}
-                            tone="blue"
-                        />
-                        <StatCard
-                            orientation="inline"
-                            label="Billiards tables"
-                            value={stats.billiards}
-                            caption="Billiards tables"
-                            icon={CircleDollarSign}
-                            tone="violet"
-                        />
+                        {SPORTS.map((sport) => {
+                            const label = `${sport.label} ${sport.unit}`;
+
+                            return (
+                                <StatCard
+                                    key={sport.value}
+                                    orientation="inline"
+                                    label={label}
+                                    value={stats.by_sport[sport.value] ?? 0}
+                                    caption={label}
+                                    icon={SPORT_STYLES[sport.value].Icon}
+                                    tone={SPORT_STYLES[sport.value].tone}
+                                />
+                            );
+                        })}
                         <StatCard
                             orientation="inline"
                             label="Min rate"
@@ -359,12 +373,14 @@ export default function ResourcesIndex({
                                     <SelectItem value="all">
                                         All sports
                                     </SelectItem>
-                                    <SelectItem value="pickleball">
-                                        Pickleball
-                                    </SelectItem>
-                                    <SelectItem value="billiards">
-                                        Billiards
-                                    </SelectItem>
+                                    {SPORTS.map((sport) => (
+                                        <SelectItem
+                                            key={sport.value}
+                                            value={sport.value}
+                                        >
+                                            {sport.label}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <Select

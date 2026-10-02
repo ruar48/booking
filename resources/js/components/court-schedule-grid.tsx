@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { WeatherIcon } from '@/components/weather-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { compareSports, sportLabel, sportUnit } from '@/lib/sport';
 import { cn } from '@/lib/utils';
 import { register } from '@/routes';
 import { storeBulk as storeBookingsBulk, storeWalkIn as storeWalkInBooking } from '@/routes/bookings';
@@ -251,10 +252,6 @@ function selectionKey(courtId: number, slot: string): string {
     return `${courtId}-${slot}`;
 }
 
-function capitalize(value: string): string {
-    return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 export function CourtScheduleGrid({
     courts,
     bookedSlots,
@@ -276,15 +273,18 @@ export function CourtScheduleGrid({
     const [selectedDate, setSelectedDate] = useState(today);
     const [selections, setSelections] = useState<SlotSelection[]>([]);
     const [submitting, setSubmitting] = useState(false);
-    const [selectedSport, setSelectedSport] = useState<Resource['sport']>('pickleball');
+    // Only sports the venue has resources for get a tab, in enum order.
+    const availableSports = useMemo(
+        () => [...new Set(courts.map((court) => court.sport))].sort(compareSports),
+        [courts],
+    );
+
+    const [selectedSport, setSelectedSport] = useState<Resource['sport']>(
+        () => availableSports[0] ?? 'pickleball',
+    );
     const [datePickerOpen, setDatePickerOpen] = useState(false);
     const [monthCursor, setMonthCursor] = useState(() =>
         startOfMonth(parseISO(`${today}T12:00:00`)),
-    );
-
-    const availableSports = useMemo(
-        () => [...new Set(courts.map((court) => court.sport))],
-        [courts],
     );
 
     const visibleCourts = useMemo(
@@ -630,7 +630,7 @@ export function CourtScheduleGrid({
                 >
                     {availableSports.map((sport) => (
                         <ToggleGroupItem key={sport} value={sport}>
-                            {capitalize(sport)}
+                            {sportLabel(sport)}
                         </ToggleGroupItem>
                     ))}
                 </ToggleGroup>
@@ -650,7 +650,7 @@ export function CourtScheduleGrid({
                 </div>
             ) : visibleCourts.length === 0 ? (
                 <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm font-medium text-slate-500">
-                    No {selectedSport} {selectedSport === 'billiards' ? 'tables' : 'courts'} available
+                    No {sportLabel(selectedSport).toLowerCase()} {sportUnit(selectedSport)} available
                 </div>
             ) : (
                 <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -680,7 +680,7 @@ export function CourtScheduleGrid({
                                                 </Badge>
                                             ) : (
                                                 <span className="mt-0.5 block text-xs font-normal text-slate-500">
-                                                    {capitalize(court.sport)}
+                                                    {sportLabel(court.sport)}
                                                 </span>
                                             )}
                                         </th>
