@@ -43,7 +43,8 @@ class RentalStockMovement extends Model
 
     public function rentalItem(): BelongsTo
     {
-        return $this->belongsTo(RentalItem::class);
+        // History outlives the item: keep movements linked after a delete.
+        return $this->belongsTo(RentalItem::class)->withTrashed();
     }
 
     public function user(): BelongsTo

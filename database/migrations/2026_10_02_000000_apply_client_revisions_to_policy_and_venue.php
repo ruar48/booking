@@ -9,7 +9,8 @@ use Illuminate\Support\Facades\DB;
  * after one hour, and the venue moved its listed address and contact details.
  *
  * Venue fields are merged into the existing profile rather than replacing it,
- * so the email and gallery an admin has set are kept.
+ * so the email and gallery an admin has set are kept; the profile is created
+ * when there is none.
  */
 return new class extends Migration
 {
@@ -34,9 +35,11 @@ return new class extends Migration
         'state' => 'Pangasinan',
         'postal_code' => '2436',
         'country' => 'PH',
+        'latitude' => '16.064892',
+        'longitude' => '120.585013',
         'phone' => '+639507370338',
         'website' => 'galaangramospickleball.com',
-        'description' => 'Galaang-Ramos Pickleball is a place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.',
+        'description' => 'A place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.',
         'amenities' => [
             'Restrooms',
             'Shower rooms',
@@ -71,8 +74,6 @@ return new class extends Migration
             ->where('key', 'profile')
             ->value('value');
 
-        // No profile row means a fresh install; the admin fills it in from
-        // Venue Settings, and there is nothing to merge into.
         if ($profile !== null) {
             DB::table('settings')
                 ->where('group', 'venue')
@@ -81,7 +82,20 @@ return new class extends Migration
                     'value' => json_encode([...(json_decode($profile, true) ?? []), ...self::VENUE]),
                     'updated_at' => now(),
                 ]);
+
+            return;
         }
+
+        // No profile yet (e.g. an install that never ran the demo seeder):
+        // create it, otherwise the public About tab renders empty and Venue
+        // Settings has no form to edit.
+        DB::table('settings')->insert([
+            'group' => 'venue',
+            'key' => 'profile',
+            'value' => json_encode([...self::VENUE, 'email' => null, 'gallery' => []]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 
     /**

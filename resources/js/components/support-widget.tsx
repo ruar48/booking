@@ -14,7 +14,7 @@ import { chat as supportChat } from '@/routes/support';
  */
 const STARTER_PROMPTS = [
     "When's my next booking?",
-    'How do I reschedule?',
+    'How do I pay?',
     "What's available tomorrow?",
     'What are your rates?',
 ];

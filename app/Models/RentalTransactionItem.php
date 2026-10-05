@@ -40,8 +40,12 @@ class RentalTransactionItem extends Model
         return $this->belongsTo(RentalTransaction::class);
     }
 
+    /**
+     * Includes soft-deleted items: a transaction must still reach the item it
+     * rented after an admin deletes it, or returning those units fails.
+     */
     public function rentalItem(): BelongsTo
     {
-        return $this->belongsTo(RentalItem::class);
+        return $this->belongsTo(RentalItem::class)->withTrashed();
     }
 }

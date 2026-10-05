@@ -41,6 +41,7 @@ trait ResourceValidationRules
             ],
             'has_lighting' => ['sometimes', 'boolean'],
             'hourly_rate' => ['required', 'numeric', 'min:0'],
+            'evening_rate' => ['nullable', 'numeric', 'min:0'],
             'status' => ['sometimes', 'string', Rule::enum(ResourceStatus::class)],
             'photos' => ['nullable', 'array'],
             'photos.*' => ['string', 'max:255'],

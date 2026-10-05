@@ -85,7 +85,9 @@ class RentalItemRepository implements RentalItemRepositoryInterface
     ): RentalItem {
         return DB::transaction(function () use ($rentalItem, $delta, $type, $user, $reason, $reference): RentalItem {
             /** @var RentalItem $locked */
-            $locked = RentalItem::query()->whereKey($rentalItem->id)->lockForUpdate()->firstOrFail();
+            // withTrashed: units of a since-deleted item can still come back
+            // from an open rental, and the ledger should record that.
+            $locked = RentalItem::query()->withTrashed()->whereKey($rentalItem->id)->lockForUpdate()->firstOrFail();
 
             $newQuantity = $locked->available_quantity + $delta;
 

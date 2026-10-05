@@ -63,7 +63,7 @@ test('editing a rental item saves the changes', function () {
             'status' => RentalItemStatus::Inactive->value,
         ]))
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('rental-items.edit', $item));
+        ->assertRedirect(route('rental-items.index'));
 
     $item->refresh();
 
@@ -119,6 +119,34 @@ test('renting out lowers availability and returning restores it', function () {
 
     expect($item->refresh()->available_quantity)->toBe(12)
         ->and($transaction->refresh()->status)->toBe(RentalStatus::Returned);
+});
+
+// Regression: returning units of an item deleted while they were out threw a
+// TypeError (the relation skipped the soft-deleted item) and a 500 page.
+test('units of a deleted item can still be returned', function () {
+    $admin = rentalClubAdmin();
+    $item = makeRentalItem();
+
+    $this->actingAs($admin)->post(route('rentals.store'), [
+        'items' => [['rental_item_id' => $item->id, 'quantity' => 2]],
+        'renter_name' => 'Walk-in',
+    ]);
+
+    $transaction = RentalTransaction::query()->with('items')->sole();
+    $item->delete();
+
+    $this->actingAs($admin)
+        ->patch(route('rentals.transactions.return-items', $transaction), [
+            'items' => [[
+                'rental_transaction_item_id' => $transaction->items->first()->id,
+                'quantity_returned' => 2,
+            ]],
+        ])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect();
+
+    expect($transaction->refresh()->status)->toBe(RentalStatus::Returned)
+        ->and(RentalItem::withTrashed()->find($item->id)->available_quantity)->toBe(12);
 });
 
 test('the rentals index reflects current availability and revenue', function () {

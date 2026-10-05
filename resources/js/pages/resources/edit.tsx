@@ -41,6 +41,7 @@ export default function ResourcesEdit({ resource, surfaceTypes = [] }: Props) {
         location_type: resource.location_type,
         has_lighting: resource.has_lighting,
         hourly_rate: resource.hourly_rate,
+        evening_rate: resource.evening_rate ?? null,
         status: resource.status,
         description: resource.description ?? '',
     });
@@ -223,7 +224,7 @@ export default function ResourcesEdit({ resource, surfaceTypes = [] }: Props) {
                         >
                             <div className="grid gap-2">
                                 <Label htmlFor="hourly_rate">
-                                    Hourly rate (₱)
+                                    Hourly rate until 6pm (₱)
                                 </Label>
                                 <Input
                                     id="hourly_rate"
@@ -236,6 +237,26 @@ export default function ResourcesEdit({ resource, surfaceTypes = [] }: Props) {
                                     }
                                 />
                                 <InputError message={errors.hourly_rate} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="evening_rate">
+                                    Hourly rate from 6pm (₱)
+                                </Label>
+                                <Input
+                                    id="evening_rate"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="Same as the day rate"
+                                    value={data.evening_rate ?? ''}
+                                    onChange={(e) =>
+                                        setData(
+                                            'evening_rate',
+                                            e.target.value === '' ? null : Number(e.target.value),
+                                        )
+                                    }
+                                />
+                                <InputError message={errors.evening_rate} />
                             </div>
                         </FormSection>
 

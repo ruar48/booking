@@ -6,11 +6,12 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
+use App\Services\Booking\BookingPricer;
 use App\Services\ResourceBookingService;
 use Illuminate\Support\Carbon;
 
 /**
- * Creates one booking, pricing it from the resource's hourly rate.
+ * Creates one booking, pricing it from the resource's day/evening rates.
  *
  * Pricing lives here rather than in the controller so every entry point —
  * self-service, bulk and walk-in — charges identically.
@@ -19,6 +20,7 @@ class CreateBooking
 {
     public function __construct(
         private readonly ResourceBookingService $bookingService,
+        private readonly BookingPricer $pricer,
     ) {}
 
     /**
@@ -49,10 +51,10 @@ class CreateBooking
      */
     private function priceFor(array $data): float
     {
-        $resource = Resource::query()->findOrFail($data['resource_id']);
-        $startsAt = Carbon::parse($data['starts_at']);
-        $endsAt = Carbon::parse($data['ends_at']);
-
-        return round((float) $resource->hourly_rate * ($startsAt->diffInMinutes($endsAt) / 60), 2);
+        return $this->pricer->price(
+            Resource::query()->findOrFail($data['resource_id']),
+            Carbon::parse($data['starts_at']),
+            Carbon::parse($data['ends_at']),
+        );
     }
 }

@@ -624,6 +624,44 @@ export default function AdminSettingsIndex({
                                                 }
                                             />
                                         </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-latitude">
+                                                Map latitude
+                                            </Label>
+                                            <Input
+                                                id="venue-latitude"
+                                                inputMode="decimal"
+                                                placeholder="16.064892"
+                                                value={venueField('latitude')}
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'latitude',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-longitude">
+                                                Map longitude
+                                            </Label>
+                                            <Input
+                                                id="venue-longitude"
+                                                inputMode="decimal"
+                                                placeholder="120.585013"
+                                                value={venueField('longitude')}
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'longitude',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Pins the map exactly. Leave blank to
+                                                locate by address.
+                                            </p>
+                                        </div>
                                     </FormSection>
                                 </div>
 

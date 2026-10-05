@@ -35,8 +35,7 @@ class SupportAssistant
      * @var array<string, list<string>>
      */
     private const INTENTS = [
-        'reschedule' => ['reschedule', 'resched', 'move my booking', 'change the date', 'change my booking', 'change the time', 'move it', 'different day'],
-        'cancel' => ['cancel', 'refund my', 'get my money back'],
+        'changes' => ['reschedule', 'resched', 'move my booking', 'change the date', 'change my booking', 'change the time', 'move it', 'different day', 'cancel', 'refund my', 'get my money back'],
         'next_booking' => ['next booking', 'my booking', 'my bookings', 'my reservation', 'upcoming booking', 'do i have a booking', 'when is my', 'when am i'],
         'payment' => ['unpaid', 'how do i pay', 'payment', 'pay for', 'qr ph', 'qrph', 'gcash', 'not paid', 'still owe'],
         'availability' => ['available', 'availability', 'free slot', 'open slot', 'any slots', 'is it free', 'can i book', 'vacant', 'what times'],
@@ -59,8 +58,7 @@ class SupportAssistant
         $intent = $question === '' ? null : $this->detectIntent($question);
 
         $message = match ($intent) {
-            'reschedule' => $this->answerReschedule($user),
-            'cancel' => $this->answerCancel(),
+            'changes' => $this->answerChanges(),
             'next_booking' => $this->answerNextBooking($user),
             'payment' => $this->answerPayment($user),
             'availability' => $this->answerAvailability($question),
@@ -94,18 +92,17 @@ class SupportAssistant
         $mine = "When's my next booking?";
 
         $chips = match ($intent) {
-            'next_booking' => ['How do I reschedule?', 'How do I pay?', 'What are your rates?'],
-            'reschedule' => [$mine, 'Can I cancel instead?', "What's available tomorrow?"],
-            'cancel' => ['How do I reschedule?', $mine, 'Where are you located?'],
+            'next_booking' => ['How do I pay?', 'What are your rates?', 'Where are you located?'],
+            'changes' => [$mine, 'What is your refund policy?', "What's available tomorrow?"],
             'payment' => [$mine, 'What is your refund policy?', 'What are your rates?'],
             'availability' => ['What are your rates?', 'What time do you open?', 'What courts do you have?'],
             'rates' => ["What's available tomorrow?", 'What time do you open?', 'What courts do you have?'],
             'hours' => ["What's available tomorrow?", 'What are your rates?', 'Where are you located?'],
             'open_play' => ["What's available tomorrow?", 'What are your rates?', 'What time do you open?'],
-            'policies' => ['How do I reschedule?', 'How do I pay?', 'Where are you located?'],
+            'policies' => ['How do I pay?', 'What are your rates?', 'Where are you located?'],
             'courts' => ['What are your rates?', "What's available tomorrow?", 'What time do you open?'],
             'contact' => ['What time do you open?', "What's available tomorrow?", 'What are your rates?'],
-            default => [$mine, 'How do I reschedule?', "What's available tomorrow?", 'What are your rates?'],
+            default => [$mine, 'How do I pay?', "What's available tomorrow?", 'What are your rates?'],
         };
 
         // Personal lookups are pointless for a signed-out visitor.
@@ -142,8 +139,7 @@ class SupportAssistant
      * @var array<string, int>
      */
     private const INTENT_WEIGHTS = [
-        'reschedule' => 3,
-        'cancel' => 3,
+        'changes' => 3,
         'payment' => 2,
     ];
 
@@ -202,11 +198,6 @@ class SupportAssistant
                 .' ('.$this->money($booking->amount).').',
         ];
 
-        if ($user->can('reschedule', $booking)) {
-            $lines[] = 'You can still reschedule it until '
-                .$booking->starts_at->copy()->subDays(2)->format('M j, Y \a\t g:i A').'.';
-        }
-
         if ($booking->payment_status === PaymentStatus::Unpaid) {
             $lines[] = 'It still needs payment — open the booking and tap "Pay now".';
         }
@@ -214,42 +205,12 @@ class SupportAssistant
         return implode(' ', $lines);
     }
 
-    private function answerReschedule(?User $user): string
+    private function answerChanges(): string
     {
-        $intro = 'You can reschedule a booking yourself up to 2 days before its start time, and once per booking. '
-            .'Open the booking from "My bookings" and tap "Reschedule", then pick a new slot. '
-            .'After that 2-day cutoff the slot is locked and you\'ll need to contact the venue.';
-
-        if ($user === null) {
-            return $intro;
-        }
-
-        $reschedulable = ResourceBooking::query()
-            ->where('user_id', $user->id)
-            ->where('starts_at', '>=', now())
-            ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
-            ->with('resource:id,name')
-            ->orderBy('starts_at')
-            ->get()
-            ->filter(fn (ResourceBooking $b) => $user->can('reschedule', $b));
-
-        if ($reschedulable->isEmpty()) {
-            return $intro.' Right now none of your bookings are still within that window.';
-        }
-
-        $list = $reschedulable
-            ->map(fn (ResourceBooking $b) => ($b->resource?->name ?? 'Court').' on '
-                .$b->starts_at->format('M j').' (until '
-                .$b->starts_at->copy()->subDays(2)->format('M j').')')
-            ->implode('; ');
-
-        return $intro.' You can currently reschedule: '.$list.'.';
-    }
-
-    private function answerCancel(): string
-    {
-        return 'Members can\'t cancel a booking directly — you can reschedule it instead, up to 2 days before the start time. '
-            .'If you really need it cancelled, contact the venue'.$this->contactSuffix().' and a staff member can do it for you.';
+        return 'Bookings are final once made — they can\'t be cancelled or rescheduled, and payments are non-refundable '
+            .'unless the venue cancels. Please double-check the court, date and time before paying. '
+            .'Unpaid bookings are released automatically if payment isn\'t completed in time. '
+            .'If something is wrong with your booking, contact the venue'.$this->contactSuffix().'.';
     }
 
     private function answerPayment(?User $user): string
@@ -355,7 +316,7 @@ class SupportAssistant
     {
         $bySport = Resource::query()
             ->orderBy('resource_number')
-            ->get(['name', 'sport', 'hourly_rate'])
+            ->get(['name', 'sport', 'hourly_rate', 'evening_rate'])
             ->groupBy('sport');
 
         if ($bySport->isEmpty()) {
@@ -370,9 +331,15 @@ class SupportAssistant
                 ? $case->label().' '.$case->unitNoun()
                 : ucfirst((string) $sport).' courts';
 
-            return $rates->count() === 1
+            $eveningRates = $courts->pluck('evening_rate')->filter(fn ($rate) => $rate !== null)->unique();
+            $evening = $eveningRates->count() === 1
+                ? ', and '.$this->money((string) $eveningRates->first()).' per hour from 6pm'
+                : '';
+
+            return ($rates->count() === 1
                 ? $label.' are '.$this->money((string) $rates->first()).' per hour'
-                : $label.' range from '.$this->money((string) $rates->min()).' to '.$this->money((string) $rates->max()).' per hour';
+                : $label.' range from '.$this->money((string) $rates->min()).' to '.$this->money((string) $rates->max()).' per hour')
+                .$evening;
         })->values()->implode('. ');
 
         return $parts.'. Bookings are charged per hour.';
@@ -499,7 +466,7 @@ class SupportAssistant
 
     private function fallback(): string
     {
-        return 'I\'m not sure about that one. I can help with your bookings, rescheduling, court availability, rates, opening hours and policies. '
+        return 'I\'m not sure about that one. I can help with your bookings, payments, court availability, rates, opening hours and policies. '
             .'For anything else, please contact the venue'.$this->contactSuffix().'.';
     }
 

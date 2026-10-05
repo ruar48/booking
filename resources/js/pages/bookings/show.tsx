@@ -16,29 +16,23 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type {ComponentType, ReactNode} from 'react';
 
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
 import { VenueMap, venueAddress } from '@/components/venue-map';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatDateTime, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
-    cancel,
     checkout,
     index as bookingsIndex,
     markPaid,
 } from '@/routes/bookings';
-import { edit as editReschedule } from '@/routes/bookings/reschedule';
 import type { ResourceBooking, VenueProfile } from '@/types/booking';
 
 type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
-    canReschedule?: boolean;
-    canCancel?: boolean;
     paymentDeadline?: string | null;
     venue?: VenueProfile | null;
 };
@@ -76,14 +70,9 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
 export default function BookingsShow({
     booking,
     canManage = false,
-    canReschedule = false,
-    canCancel: canCancelProp = false,
     paymentDeadline = null,
     venue = null,
 }: Props) {
-    const [cancelOpen, setCancelOpen] = useState(false);
-    const [reason, setReason] = useState('');
-
     const isUnpaid = booking.payment_status === 'unpaid';
     useBookingPaymentChannel(isUnpaid ? booking.id : null);
 
@@ -103,11 +92,6 @@ export default function BookingsShow({
         canManage &&
         booking.payment_status === 'unpaid' &&
         !['cancelled', 'rejected'].includes(booking.status);
-    // From the policy, not inferred here: members may drop an unpaid booking
-    // but not a confirmed one, while staff can cancel any live booking.
-    const canCancel =
-        canCancelProp &&
-        !['cancelled', 'completed', 'rejected'].includes(booking.status);
 
     const durationMinutes = differenceInMinutes(
         new Date(booking.ends_at),
@@ -240,19 +224,6 @@ export default function BookingsShow({
                                     }
                                 >
                                     Mark as paid
-                                </Button>
-                            ) : null}
-                            {canReschedule ? (
-                                <Button variant="outline" asChild>
-                                    <Link href={editReschedule(booking)}>Reschedule</Link>
-                                </Button>
-                            ) : null}
-                            {canCancel ? (
-                                <Button
-                                    variant="destructive"
-                                    onClick={() => setCancelOpen(true)}
-                                >
-                                    Cancel booking
                                 </Button>
                             ) : null}
                         </div>
@@ -415,29 +386,6 @@ export default function BookingsShow({
                     </Card>
                 ) : null}
             </div>
-
-            <ConfirmDialog
-                open={cancelOpen}
-                onOpenChange={setCancelOpen}
-                title="Cancel booking"
-                description="Provide an optional reason for cancellation."
-                confirmLabel="Cancel booking"
-                variant="destructive"
-                onConfirm={() =>
-                    router.patch(
-                        cancel(booking).url,
-                        { cancellation_reason: reason || undefined },
-                        { preserveScroll: true, preserveState: true },
-                    )
-                }
-            >
-                <Textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Reason for cancellation (optional)"
-                    rows={3}
-                />
-            </ConfirmDialog>
         </>
     );
 }

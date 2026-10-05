@@ -73,11 +73,16 @@ class OpenPlaySession extends Model
         ];
     }
 
+    /**
+     * Closed once the registration deadline passes, or — when no deadline was
+     * set — once the session has started. Without the second rule a past
+     * session with no deadline still offered "Join".
+     */
     protected function isRegistrationClosed(): Attribute
     {
         return Attribute::make(
-            get: fn (): bool => $this->registration_closes_at !== null
-                && $this->registration_closes_at->isPast(),
+            get: fn (): bool => ($this->registration_closes_at !== null && $this->registration_closes_at->isPast())
+                || ($this->starts_at !== null && $this->starts_at->isPast()),
         );
     }
 

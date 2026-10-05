@@ -157,6 +157,8 @@ export type Resource = {
     location_type: string;
     has_lighting: boolean;
     hourly_rate: number;
+    // Charged from 6pm; null means hourly_rate applies all day.
+    evening_rate?: number | null;
     status: string;
     photos?: string[] | null;
     description?: string | null;
@@ -170,9 +172,6 @@ export type ResourceBooking = {
     id: number;
     booking_group_id?: string | null;
     rescheduled_from_id?: number | null;
-    /** Policy results computed per row by the controller for list/detail views. */
-    can_reschedule?: boolean;
-    can_cancel?: boolean;
     resource_id: number;
     user_id: number;
     starts_at: string;
@@ -407,6 +406,9 @@ export type VenueProfile = {
     email?: string | null;
     website?: string | null;
     address_line_1?: string | null;
+    // Exact map pin; the address is geocoded when these are missing.
+    latitude?: number | string | null;
+    longitude?: number | string | null;
     city?: string | null;
     state?: string | null;
     postal_code?: string | null;

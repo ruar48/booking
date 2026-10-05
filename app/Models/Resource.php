@@ -23,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property string $location_type
  * @property bool $has_lighting
  * @property string $hourly_rate
+ * @property string|null $evening_rate Charged from BookingPricer::EVENING_STARTS; null means hourly_rate all day.
  * @property ResourceStatus $status
  * @property array|null $photos
  * @property string|null $description
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
     'location_type',
     'has_lighting',
     'hourly_rate',
+    'evening_rate',
     'status',
     'photos',
     'description',
@@ -55,6 +57,7 @@ class Resource extends Model
             'sport' => Sport::class,
             'has_lighting' => 'boolean',
             'hourly_rate' => 'decimal:2',
+            'evening_rate' => 'decimal:2',
             'status' => ResourceStatus::class,
             'photos' => 'array',
             'metadata' => 'array',

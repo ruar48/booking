@@ -45,7 +45,7 @@ class OpenPlayDoubleEliminationSeeder extends Seeder
             'starts_at' => now()->subHours(2),
             'ends_at' => now()->addHours(3),
             'location' => 'Courts 1, 2',
-            'price_per_player' => 15,
+            'price_per_player' => 100,
             'max_players' => 8,
             'skill_level' => 'intermediate',
             'team_size' => TeamSize::Singles,

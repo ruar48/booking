@@ -1,6 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
 import {
-    AlertTriangle,
     Check,
     CheckCircle2,
     MapPin,
@@ -30,7 +29,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { cancel as bookingsCancel, create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
+import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
 import checkoutActions from '@/routes/bookings/checkout';
 import type { ResourceBooking } from '@/types/booking';
 
@@ -128,8 +127,6 @@ export default function BookingsCheckout({
     const [agreed, setAgreed] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const [cancelling, setCancelling] = useState(false);
-    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     const qrExpiry = useDeadlineCountdown(qrPayment?.expiresAt ?? null);
     const qrExpired = qrPayment ? qrExpiry.expired : false;
@@ -180,19 +177,6 @@ export default function BookingsCheckout({
         });
     };
 
-    const confirmCancelBooking = () => {
-        setCancelDialogOpen(false);
-        setCancelling(true);
-        router.patch(
-            bookingsCancel({ booking: booking.id }).url,
-            { cancellation_reason: 'Cancelled by customer during checkout' },
-            {
-                onError: () => toast.error("Couldn't cancel this booking. Please try again."),
-                onFinish: () => setCancelling(false),
-            },
-        );
-    };
-
     return (
         <>
             <Head title={`Checkout — Booking #${booking.id}`} />
@@ -238,11 +222,9 @@ export default function BookingsCheckout({
                                     qrExpired={qrExpired}
                                     generating={generating}
                                     refreshing={refreshing}
-                                    cancelling={cancelling}
                                     countdownLabel={deadline.label}
                                     onRefresh={refresh}
                                     onGenerateNew={generateQr}
-                                    onCancel={() => setCancelDialogOpen(true)}
                                 />
                             ) : (
                                 <ConfirmationPanel booking={booking} amount={amountDue} />
@@ -264,53 +246,10 @@ export default function BookingsCheckout({
                                 </CardContent>
                             </Card>
                         ) : null}
-
-                        <CancelBookingDialog
-                            open={cancelDialogOpen}
-                            cancelling={cancelling}
-                            onOpenChange={setCancelDialogOpen}
-                            onConfirm={confirmCancelBooking}
-                        />
                     </>
                 )}
             </div>
         </>
-    );
-}
-
-function CancelBookingDialog({
-    open,
-    cancelling,
-    onOpenChange,
-    onConfirm,
-}: {
-    open: boolean;
-    cancelling: boolean;
-    onOpenChange: (open: boolean) => void;
-    onConfirm: () => void;
-}) {
-    return (
-        <Dialog open={open} onOpenChange={(next) => (cancelling ? null : onOpenChange(next))}>
-            <DialogContent className="sm:max-w-sm">
-                <DialogHeader className="items-center text-center sm:items-center sm:text-center">
-                    <div className="bg-destructive/10 text-destructive flex size-11 items-center justify-center rounded-full">
-                        <AlertTriangle className="size-5.5" />
-                    </div>
-                    <DialogTitle>Cancel this booking?</DialogTitle>
-                    <DialogDescription>
-                        This will release your court reservation and this action cannot be undone.
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="sm:justify-center">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} disabled={cancelling}>
-                        Keep booking
-                    </Button>
-                    <Button variant="destructive" onClick={onConfirm} disabled={cancelling}>
-                        {cancelling ? 'Cancelling…' : 'Yes, cancel booking'}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     );
 }
 
@@ -602,22 +541,18 @@ function PaymentPanel({
     qrExpired,
     generating,
     refreshing,
-    cancelling,
     countdownLabel,
     onRefresh,
     onGenerateNew,
-    onCancel,
 }: {
     amount?: number | null;
     qrPayment: QrPayment | null;
     qrExpired: boolean;
     generating: boolean;
     refreshing: boolean;
-    cancelling: boolean;
     countdownLabel: string | null;
     onRefresh: (label: string) => void;
     onGenerateNew: () => void;
-    onCancel: () => void;
 }) {
     const showExpired = qrExpired && !generating;
 
@@ -671,7 +606,7 @@ function PaymentPanel({
                         Waiting for payment — this page updates automatically once it&apos;s received.
                     </div>
                 ) : null}
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center">
                     <button
                         type="button"
                         disabled={refreshing}
@@ -679,15 +614,6 @@ function PaymentPanel({
                         className="text-muted-foreground hover:text-foreground text-xs disabled:opacity-50"
                     >
                         {refreshing ? 'Checking…' : 'Refresh status'}
-                    </button>
-                    <span className="text-muted-foreground text-xs">·</span>
-                    <button
-                        type="button"
-                        disabled={cancelling}
-                        onClick={onCancel}
-                        className="text-destructive/80 hover:text-destructive text-xs disabled:opacity-50"
-                    >
-                        {cancelling ? 'Cancelling…' : 'Cancel booking'}
                     </button>
                 </div>
             </CardContent>

@@ -67,3 +67,24 @@ it('exposes the closed state to the bracket page', function () {
             ->component('open-play/show')
             ->where('session.is_registration_closed', true));
 });
+
+it('treats a session that has already started as closed when no deadline was set', function () {
+    $user = closedRegistrationPlayer();
+    $session = OpenPlaySession::factory()->create([
+        'team_size' => TeamSize::Singles,
+        'price_per_player' => 0,
+        'max_players' => 16,
+        'starts_at' => now()->subDay(),
+        'ends_at' => now()->subDay()->addHours(2),
+        'registration_closes_at' => null,
+    ]);
+
+    expect($session->is_registration_closed)->toBeTrue();
+
+    $this->actingAs($user)
+        ->from(route('open-play.show', $session))
+        ->post(route('open-play.join.store', $session))
+        ->assertRedirect(route('open-play.show', $session));
+
+    expect(OpenPlayRegistration::query()->where('open_play_session_id', $session->id)->exists())->toBeFalse();
+});

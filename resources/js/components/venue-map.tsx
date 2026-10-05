@@ -1,5 +1,4 @@
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
-import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -12,12 +11,12 @@ export function venueAddress(venue: VenueProfile): string {
 }
 
 /**
- * Where the venue is, with a route to it on request.
+ * Where the venue is, with a link out to the route.
  *
- * Uses Google's keyless embed, so there is no API key to manage. The visitor's
- * location is only asked for when they press "Get directions"; if they refuse
- * (or the browser can't tell), Google Maps opens in a new tab and works out the
- * route from there instead.
+ * The inline map only shows the pin (Google's keyless embed, so there is no API
+ * key to manage). "Get directions" opens Google Maps in a new tab, which starts
+ * the route from the visitor's own location and offers driving, transit and
+ * walking — far more usable than a route squeezed into a card.
  */
 export function VenueMap({
     venue,
@@ -29,39 +28,21 @@ export function VenueMap({
     mapClassName?: string;
 }) {
     const address = venueAddress(venue);
-    const [origin, setOrigin] = useState<string | null>(null);
-    const [locating, setLocating] = useState(false);
 
     if (!address) {
         return null;
     }
 
-    const destination = encodeURIComponent(address);
+    // An exact pin beats geocoding the address, which can land on the wrong
+    // spot for rural barangays.
+    const hasPin =
+        String(venue.latitude ?? '').trim() !== '' &&
+        String(venue.longitude ?? '').trim() !== '';
+    const destination = encodeURIComponent(
+        hasPin ? `${venue.latitude},${venue.longitude}` : address,
+    );
     const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-    const embedUrl = origin
-        ? `https://maps.google.com/maps?saddr=${encodeURIComponent(origin)}&daddr=${destination}&output=embed`
-        : `https://maps.google.com/maps?q=${destination}&z=15&output=embed`;
-
-    const showDirections = () => {
-        if (!('geolocation' in navigator)) {
-            window.open(directionsUrl, '_blank', 'noopener');
-
-            return;
-        }
-
-        setLocating(true);
-        navigator.geolocation.getCurrentPosition(
-            ({ coords }) => {
-                setOrigin(`${coords.latitude},${coords.longitude}`);
-                setLocating(false);
-            },
-            () => {
-                setLocating(false);
-                window.open(directionsUrl, '_blank', 'noopener');
-            },
-            { timeout: 10000 },
-        );
-    };
+    const embedUrl = `https://maps.google.com/maps?q=${destination}&z=15&output=embed`;
 
     return (
         <div className={cn('space-y-3', className)}>
@@ -70,30 +51,16 @@ export function VenueMap({
                     <MapPin className="mt-0.5 size-4 shrink-0 text-brand-court" />
                     <span>{address}</span>
                 </p>
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        size="sm"
-                        onClick={showDirections}
-                        disabled={locating}
-                    >
+                <Button size="sm" asChild>
+                    <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
                         <Navigation className="size-4" />
-                        {locating
-                            ? 'Locating…'
-                            : origin
-                              ? 'Refresh route'
-                              : 'Get directions'}
-                    </Button>
-                    <Button size="sm" variant="outline" asChild>
-                        <a href={directionsUrl} target="_blank" rel="noopener noreferrer">
-                            Open in Maps
-                            <ExternalLink className="size-3.5" />
-                        </a>
-                    </Button>
-                </div>
+                        Get directions
+                        <ExternalLink className="size-3.5" />
+                    </a>
+                </Button>
             </div>
             <iframe
-                key={embedUrl}
-                title={`Map to ${address}`}
+                title={`Map of ${address}`}
                 src={embedUrl}
                 className={cn('h-64 w-full rounded-lg border-0 sm:h-80', mapClassName)}
                 loading="lazy"

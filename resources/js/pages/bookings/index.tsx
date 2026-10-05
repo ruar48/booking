@@ -12,9 +12,8 @@ import {
     WalletCards,
     X,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
-import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
@@ -29,16 +28,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 import {
     calendar as bookingsCalendar,
-    cancel,
     create,
     index as bookingsIndex,
     show,
 } from '@/routes/bookings';
-import { edit as editReschedule } from '@/routes/bookings/reschedule';
 import type {
     BookingStats,
     Paginated,
@@ -91,11 +87,6 @@ export default function BookingsIndex({
     stats = null,
     nextBooking = null,
 }: Props) {
-    const [cancelTarget, setCancelTarget] = useState<ResourceBooking | null>(
-        null,
-    );
-    const [cancelReason, setCancelReason] = useState('');
-
     const applyFilters = useCallback(
         (next: Partial<BookingFilters>) => {
             router.get(
@@ -125,33 +116,6 @@ export default function BookingsIndex({
 
     const clearFilters = () => {
         router.get(bookingsIndex().url, {}, { preserveState: true, replace: true });
-    };
-
-    // Decided per booking by the policy, not guessed from status here: members
-    // may drop an unpaid booking but not a confirmed one, and admins can always
-    // cancel a live booking.
-    const canCancelBooking = useCallback(
-        (booking: ResourceBooking) =>
-            booking.can_cancel === true &&
-            !['cancelled', 'completed', 'rejected'].includes(booking.status),
-        [],
-    );
-
-    const confirmCancel = () => {
-        if (!cancelTarget) return;
-
-        router.patch(
-            cancel(cancelTarget).url,
-            { cancellation_reason: cancelReason || undefined },
-            {
-                preserveScroll: true,
-                preserveState: true,
-                onSuccess: () => {
-                    setCancelTarget(null);
-                    setCancelReason('');
-                },
-            },
-        );
     };
 
     const columns: ColumnDef<ResourceBooking>[] = [
@@ -230,30 +194,6 @@ export default function BookingsIndex({
                             <Eye className="size-4" />
                         </Link>
                     </Button>
-                    {row.original.can_reschedule && (
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            asChild
-                            className="text-primary hover:text-primary hover:bg-primary/5 border-primary/25 size-8"
-                            title="Reschedule"
-                        >
-                            <Link href={editReschedule(row.original)}>
-                                <CalendarClock className="size-4" />
-                            </Link>
-                        </Button>
-                    )}
-                    {canCancelBooking(row.original) && (
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            className="text-destructive hover:text-destructive size-8 border-red-200 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/30"
-                            title="Cancel booking"
-                            onClick={() => setCancelTarget(row.original)}
-                        >
-                            <X className="size-4" />
-                        </Button>
-                    )}
                 </div>
             ),
         },
@@ -328,11 +268,7 @@ export default function BookingsIndex({
                 )}
 
                 {!canManage && nextBooking && (
-                    <NextBookingCard
-                        booking={nextBooking}
-                        canCancel={canCancelBooking(nextBooking)}
-                        onCancel={() => setCancelTarget(nextBooking)}
-                    />
+                    <NextBookingCard booking={nextBooking} />
                 )}
 
                 <DataTable
@@ -349,11 +285,7 @@ export default function BookingsIndex({
                         canManage
                             ? undefined
                             : (booking) => (
-                                  <BookingCard
-                                      booking={booking}
-                                      canCancel={canCancelBooking(booking)}
-                                      onCancel={() => setCancelTarget(booking)}
-                                  />
+                                  <BookingCard booking={booking} />
                               )
                     }
                     filters={
@@ -470,41 +402,11 @@ export default function BookingsIndex({
                     emptyDescription="Reserve your first court to see it here."
                 />
             </div>
-
-            <ConfirmDialog
-                open={cancelTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setCancelTarget(null);
-                        setCancelReason('');
-                    }
-                }}
-                title="Cancel booking"
-                description="Provide an optional reason for cancellation."
-                confirmLabel="Cancel booking"
-                variant="destructive"
-                onConfirm={confirmCancel}
-            >
-                <Textarea
-                    value={cancelReason}
-                    onChange={(e) => setCancelReason(e.target.value)}
-                    placeholder="Reason for cancellation (optional)"
-                    rows={3}
-                />
-            </ConfirmDialog>
         </>
     );
 }
 
-function NextBookingCard({
-    booking,
-    canCancel,
-    onCancel,
-}: {
-    booking: ResourceBooking;
-    canCancel: boolean;
-    onCancel: () => void;
-}) {
+function NextBookingCard({ booking }: { booking: ResourceBooking }) {
     return (
         <Card className="relative overflow-hidden">
             <CourtDecor />
@@ -536,18 +438,6 @@ function NextBookingCard({
                     <Button variant="outline" asChild>
                         <Link href={show(booking)}>View details</Link>
                     </Button>
-                    {booking.can_reschedule && (
-                        <Button variant="outline" asChild>
-                            <Link href={editReschedule(booking)}>
-                                Reschedule
-                            </Link>
-                        </Button>
-                    )}
-                    {canCancel && (
-                        <Button variant="destructive" onClick={onCancel}>
-                            Cancel
-                        </Button>
-                    )}
                 </div>
             </CardContent>
         </Card>
@@ -579,15 +469,7 @@ function CourtDecor() {
     );
 }
 
-function BookingCard({
-    booking,
-    canCancel,
-    onCancel,
-}: {
-    booking: ResourceBooking;
-    canCancel: boolean;
-    onCancel: () => void;
-}) {
+function BookingCard({ booking }: { booking: ResourceBooking }) {
     return (
         <Card>
             <CardContent className="space-y-3 px-4">
@@ -617,30 +499,6 @@ function BookingCard({
                             View
                         </Link>
                     </Button>
-                    {booking.can_reschedule && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            asChild
-                        >
-                            <Link href={editReschedule(booking)}>
-                                <CalendarClock className="size-4" />
-                                Reschedule
-                            </Link>
-                        </Button>
-                    )}
-                    {canCancel && (
-                        <Button
-                            variant="destructive"
-                            size="sm"
-                            className="flex-1"
-                            onClick={onCancel}
-                        >
-                            <X className="size-4" />
-                            Cancel
-                        </Button>
-                    )}
                 </div>
             </CardContent>
         </Card>

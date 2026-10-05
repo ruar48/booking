@@ -218,6 +218,11 @@ export default function ResourcesIndex({
             cell: ({ row }) => (
                 <span className="font-medium tabular-nums">
                     {formatCurrency(row.original.hourly_rate)}
+                    {row.original.evening_rate != null ? (
+                        <span className="text-muted-foreground block text-xs font-normal">
+                            {formatCurrency(row.original.evening_rate)} from 6pm
+                        </span>
+                    ) : null}
                 </span>
             ),
         },

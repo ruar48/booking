@@ -33,8 +33,6 @@ class BookingPresenter
         return [
             'booking' => $booking,
             'canManage' => $viewer->isVenueAdmin(),
-            'canReschedule' => $viewer->can('reschedule', $booking),
-            'canCancel' => $viewer->can('cancel', $booking),
             'policies' => $this->checkoutPolicies(),
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
@@ -76,21 +74,6 @@ class BookingPresenter
         }
 
         return $booking->created_at->addMinutes((int) $minutes)->toIso8601String();
-    }
-
-    /**
-     * Attaches this viewer's answers for one booking.
-     *
-     * Both rules are per-booking rather than per-status — rescheduling has a
-     * 2-day cutoff and a once-only limit, and cancelling depends on whether the
-     * booking is still unpaid — so a list cannot infer either from status
-     * alone without duplicating the policy in the frontend.
-     */
-    public function withPermissionFlags(ResourceBooking $booking, User $viewer): ResourceBooking
-    {
-        return $booking
-            ->setAttribute('can_reschedule', $viewer->can('reschedule', $booking))
-            ->setAttribute('can_cancel', $viewer->can('cancel', $booking));
     }
 
     /**

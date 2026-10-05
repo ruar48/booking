@@ -37,16 +37,21 @@ class DemoDataSeeder extends Seeder
     {
         $password = Hash::make('password');
 
-        $owner = User::factory()->create([
-            'name' => 'Court Owner',
-            'email' => 'owner@galaangramos.test',
-            'password' => $password,
-        ]);
+        // firstOrCreate so a seed that died part-way can simply be re-run.
+        $owner = User::query()->where('email', 'owner@galaangramos.test')->first()
+            ?? User::factory()->create([
+                'name' => 'Court Owner',
+                'email' => 'owner@galaangramos.test',
+                'password' => $password,
+            ]);
         $owner->assignRole(RoleEnum::SuperAdmin);
 
-        Setting::query()->create([
+        // The 2026_10_02 client-revisions migration may already have created
+        // this row, so update it rather than inserting a duplicate.
+        Setting::query()->updateOrCreate([
             'group' => 'venue',
             'key' => 'profile',
+        ], [
             'value' => [
                 'phone' => '+639507370338',
                 'email' => 'owner@galaangramos.test',
@@ -56,7 +61,9 @@ class DemoDataSeeder extends Seeder
                 'state' => 'Pangasinan',
                 'postal_code' => '2436',
                 'country' => 'PH',
-                'description' => 'Galaang-Ramos Pickleball is a place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.',
+                'latitude' => '16.064892',
+                'longitude' => '120.585013',
+                'description' => 'A place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.',
                 'amenities' => [
                     'Restrooms',
                     'Shower rooms',
@@ -84,8 +91,8 @@ class DemoDataSeeder extends Seeder
         $courts = Resource::factory()
             ->count(2)
             ->sequence(
-                ['name' => 'Male Court', 'resource_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
-                ['name' => 'Female Court', 'resource_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 25],
+                ['name' => 'Male Court', 'resource_number' => '1', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 200, 'evening_rate' => 250],
+                ['name' => 'Female Court', 'resource_number' => '2', 'surface_type' => 'acrylic', 'has_lighting' => true, 'hourly_rate' => 200, 'evening_rate' => 250],
             )
             ->create(['sport' => Sport::Pickleball]);
 
@@ -176,7 +183,7 @@ class DemoDataSeeder extends Seeder
                 'starts_at' => $spec['starts_at'],
                 'ends_at' => (clone $spec['starts_at'])->addHours(5),
                 'location' => 'Courts 1, 2',
-                'price_per_player' => 10,
+                'price_per_player' => 100,
                 'max_players' => 16,
                 'skill_level' => 'all_levels',
             ]));
@@ -465,7 +472,7 @@ class DemoDataSeeder extends Seeder
             'starts_at' => now()->addWeek()->next('Monday')->setTime(18, 0),
             'ends_at' => now()->addWeek()->next('Monday')->setTime(21, 0),
             'location' => 'Male Court',
-            'price_per_player' => 10,
+            'price_per_player' => 100,
             'max_players' => 8,
             'skill_level' => 'intermediate',
             'team_size' => TeamSize::Singles,
@@ -506,7 +513,7 @@ class DemoDataSeeder extends Seeder
             'starts_at' => now()->addDays(4)->setTime(19, 0),
             'ends_at' => now()->addDays(4)->setTime(21, 30),
             'location' => 'Female Court',
-            'price_per_player' => 15,
+            'price_per_player' => 100,
             'max_players' => 8,
             'skill_level' => 'advanced',
             'team_size' => TeamSize::Singles,
@@ -561,7 +568,7 @@ class DemoDataSeeder extends Seeder
             'starts_at' => now()->addWeek()->next('Tuesday')->setTime(18, 30),
             'ends_at' => now()->addWeek()->next('Tuesday')->setTime(21, 0),
             'location' => 'Courts 1, 2',
-            'price_per_player' => 12,
+            'price_per_player' => 100,
             'max_players' => 12,
             'skill_level' => 'all_levels',
             'team_size' => TeamSize::Doubles,
@@ -603,7 +610,7 @@ class DemoDataSeeder extends Seeder
             'starts_at' => now()->addWeek()->next('Saturday')->setTime(13, 0),
             'ends_at' => now()->addWeek()->next('Saturday')->setTime(17, 0),
             'location' => 'Courts 1, 2',
-            'price_per_player' => 15,
+            'price_per_player' => 100,
             'max_players' => 16,
             'skill_level' => 'intermediate',
             'team_size' => TeamSize::Doubles,

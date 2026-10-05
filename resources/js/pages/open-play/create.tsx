@@ -52,7 +52,7 @@ export default function OpenPlayCreate({ resources }: Props) {
         ends_at: defaultEndsAt(),
         registration_closes_at: '',
         location: 'Courts 1, 2',
-        price_per_player: '10',
+        price_per_player: '100',
         max_players: '16',
         skill_level: 'all_levels',
         team_size: 'singles',

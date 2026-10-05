@@ -15,7 +15,6 @@ use App\Exceptions\BookingConflictException;
 use App\Http\Requests\Booking\CheckoutRequest;
 use App\Http\Requests\Booking\CloseDateRequest;
 use App\Http\Requests\Booking\ReopenDateRequest;
-use App\Http\Requests\Booking\RescheduleResourceBookingRequest;
 use App\Http\Requests\Booking\SearchCustomersRequest;
 use App\Http\Requests\Booking\StoreBulkResourceBookingRequest;
 use App\Http\Requests\Booking\StoreResourceBookingRequest;
@@ -52,22 +51,15 @@ class ResourceBookingController extends Controller
         $filters = $request->only(['search', 'status', 'payment_status', 'resource_id', 'date']);
         $canManage = $user->isVenueAdmin();
 
-        $bookings = $this->bookingRepository->paginateForUser($user, $filters);
-        $bookings->through(fn (ResourceBooking $booking) => $this->presenter->withPermissionFlags($booking, $user));
-
-        $nextBooking = $canManage ? null : $this->bookingRepository->nextBookingForUser($user);
-
         return Inertia::render('bookings/index', [
-            'bookings' => $bookings,
+            'bookings' => $this->bookingRepository->paginateForUser($user, $filters),
             'canManage' => $canManage,
             'filters' => $filters,
             'resources' => $canManage
                 ? Resource::query()->orderBy('name')->get(['id', 'name'])
                 : [],
             'stats' => $canManage ? null : $this->bookingRepository->statsForUser($user),
-            'nextBooking' => $nextBooking
-                ? $this->presenter->withPermissionFlags($nextBooking, $user)
-                : null,
+            'nextBooking' => $canManage ? null : $this->bookingRepository->nextBookingForUser($user),
         ]);
     }
 
@@ -209,45 +201,6 @@ class ResourceBookingController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment marked as paid.')]);
 
         return to_route('bookings.show', $booking);
-    }
-
-    public function cancel(Request $request, ResourceBooking $booking): RedirectResponse
-    {
-        $this->authorize('cancel', $booking);
-
-        $this->bookingService->cancelGroup($booking, $request->input('cancellation_reason'));
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking cancelled.')]);
-
-        return to_route('bookings.show', $booking);
-    }
-
-    public function editReschedule(Request $request, ResourceBooking $booking): Response
-    {
-        $this->authorize('reschedule', $booking);
-
-        return Inertia::render('bookings/reschedule', [
-            'booking' => $booking->load('resource'),
-            ...$this->scheduleService->pickerData($request->user(), $booking->id),
-        ]);
-    }
-
-    public function reschedule(RescheduleResourceBookingRequest $request, ResourceBooking $booking): RedirectResponse
-    {
-        try {
-            $rescheduled = $this->bookingService->reschedule(
-                $booking,
-                (int) $request->validated('resource_id'),
-                Carbon::parse($request->validated('starts_at')),
-                Carbon::parse($request->validated('ends_at')),
-            );
-        } catch (BookingConflictException $e) {
-            throw $this->slotUnavailable($e);
-        }
-
-        Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking rescheduled.')]);
-
-        return to_route('bookings.show', $rescheduled);
     }
 
     public function calendar(Request $request): Response

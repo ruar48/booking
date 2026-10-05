@@ -47,11 +47,11 @@ class RentalItemController extends Controller
 
     public function store(StoreRentalItemRequest $request): RedirectResponse
     {
-        $rentalItem = $this->rentalItemRepository->create($request->validated());
+        $this->rentalItemRepository->create($request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Rental item created.')]);
 
-        return to_route('rental-items.edit', $rentalItem);
+        return to_route('rental-items.index');
     }
 
     public function edit(RentalItem $rentalItem): Response
@@ -69,7 +69,7 @@ class RentalItemController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Rental item updated.')]);
 
-        return to_route('rental-items.edit', $rentalItem);
+        return to_route('rental-items.index');
     }
 
     public function destroy(RentalItem $rentalItem): RedirectResponse

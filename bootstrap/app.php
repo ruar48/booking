@@ -41,10 +41,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Inertia cannot render Laravel's plain 403 page: the visitor gets a
         // raw error overlay with no way back. This happens in normal use
         // whenever a page is acted on after the underlying record changed —
-        // permission flags are baked into props, so a "Reschedule" button
-        // restored from history cache stays clickable after the booking has
-        // already been moved. Bounce them to the page they came from with the
-        // policy's reason instead. Non-Inertia requests keep the real 403.
+        // permission flags are baked into props, so a button restored from
+        // history cache can stay clickable after the action stopped being
+        // allowed. Bounce them to the page they came from with the policy's
+        // reason instead. Non-Inertia requests keep the real 403.
         $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
             if ($response->getStatusCode() !== 403 || ! $request->hasHeader('X-Inertia')) {
                 return $response;
