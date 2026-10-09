@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Award, Pencil, Star, Users } from 'lucide-react';
+import { Award, Pencil, Users } from 'lucide-react';
 
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
@@ -35,12 +35,7 @@ export default function PlayersShow({ player }: Props) {
                     }
                 />
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <StatCard
-                        label="Skill rating"
-                        value={player.skill_rating}
-                        icon={Star}
-                    />
+                <div className="grid gap-4 sm:grid-cols-2">
                     <StatCard
                         label="Experience"
                         value={player.experience_level}

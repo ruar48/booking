@@ -10,6 +10,7 @@ use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
+use App\Services\GalleryService;
 use App\Services\ResourceBookingService;
 use App\Services\WeatherService;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,7 @@ class HomeController extends Controller
         private readonly AnnouncementRepositoryInterface $announcementRepository,
         private readonly ResourceBookingService $resourceBookingService,
         private readonly WeatherService $weatherService,
+        private readonly GalleryService $galleryService,
     ) {}
 
     public function index(): Response
@@ -65,6 +67,7 @@ class HomeController extends Controller
             'dateOverrides' => $dateOverrides,
             'hourlyWeather' => $this->weatherService->hourlyForecast(),
             'venue' => $this->venueProfile(),
+            'gallery' => $this->galleryService->publicSections(),
             'stats' => [
                 'courts' => $courts->count(),
                 'members' => Player::query()->where('is_active', true)->count(),

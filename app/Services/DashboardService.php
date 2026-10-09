@@ -10,6 +10,7 @@ class DashboardService
     public function __construct(
         private readonly DashboardRepositoryInterface $dashboardRepository,
         private readonly AnnouncementRepositoryInterface $announcementRepository,
+        private readonly RevenueReportService $revenueReport,
     ) {}
 
     public function getData(): array
@@ -17,7 +18,7 @@ class DashboardService
         return [
             'stats' => $this->dashboardRepository->getStats(),
             'resourceAvailability' => $this->dashboardRepository->getResourceAvailability(),
-            'revenueChart' => $this->dashboardRepository->getRevenueChart(),
+            'sales' => $this->revenueReport->summary(),
             'bookingStatusBreakdown' => $this->dashboardRepository->getBookingStatusBreakdown(),
             'recentBookings' => $this->dashboardRepository->getRecentBookings(),
             'openPlaySessions' => $this->dashboardRepository->getUpcomingOpenPlay(),

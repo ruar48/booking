@@ -21,19 +21,9 @@ import {
     Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import {
-    Area,
-    AreaChart,
-    CartesianGrid,
-    Cell,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
+import { SalesCard } from '@/components/sales-card';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -55,7 +45,6 @@ import {
     formatCurrency,
     formatStatusLabel,
     formatTime,
-    monthLabel,
 } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard } from '@/routes';
@@ -99,7 +88,7 @@ export default function Dashboard({ data }: Props) {
     const {
         stats,
         resourceAvailability = [],
-        revenueChart = [],
+        sales,
         bookingStatusBreakdown = [],
         recentBookings,
         openPlaySessions = [],
@@ -111,16 +100,8 @@ export default function Dashboard({ data }: Props) {
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     const firstName = auth.user?.name?.split(' ')[0] ?? '';
 
-    const revenueData = revenueChart.map((point) => ({
-        label: monthLabel(point.year, point.month),
-        total: point.total,
-    }));
-
     const bookingsTrend = pctChange(stats.bookings_today, stats.bookings_yesterday);
-    const revenueTrend = pctChange(stats.revenue_this_month, stats.revenue_last_month);
-    const avgBookingValue = stats.bookings_this_month > 0
-        ? stats.revenue_this_month / stats.bookings_this_month
-        : 0;
+    const revenueTrend = pctChange(sales.month.current.total, sales.month.previous_total);
 
     const totalStatusCount = bookingStatusBreakdown.reduce((sum, entry) => sum + entry.count, 0);
 
@@ -214,85 +195,14 @@ export default function Dashboard({ data }: Props) {
                     />
                     <KpiCard
                         label="Revenue This Month"
-                        value={formatCurrency(stats.revenue_this_month)}
+                        value={formatCurrency(sales.month.current.total)}
                         icon={DollarSign}
                         iconClassName="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                        subtitle={<TrendText value={revenueTrend} label="this month" />}
+                        subtitle={<TrendText value={revenueTrend} label="vs last month" />}
                     />
                 </div>
 
-                <div>
-                    <Card>
-                        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                            <div>
-                                <CardTitle>Revenue</CardTitle>
-                                <CardDescription>Monthly booking income</CardDescription>
-                            </div>
-                            <div className="flex gap-6 text-right">
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Total revenue</p>
-                                    <p className="text-sm font-semibold tabular-nums">
-                                        {formatCurrency(stats.revenue_this_month)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Avg booking</p>
-                                    <p className="text-sm font-semibold tabular-nums">
-                                        {formatCurrency(avgBookingValue)}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-muted-foreground text-xs">Bookings</p>
-                                    <p className="text-sm font-semibold tabular-nums">
-                                        {stats.bookings_this_month}
-                                    </p>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            {revenueData.length ? (
-                                <ResponsiveContainer width="100%" height={260}>
-                                    <AreaChart data={revenueData}>
-                                        <defs>
-                                            <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.35} />
-                                                <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0} />
-                                            </linearGradient>
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
-                                        <XAxis dataKey="label" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
-                                        <YAxis
-                                            tick={{ fontSize: 12 }}
-                                            tickLine={false}
-                                            axisLine={false}
-                                            tickFormatter={(v) => formatCurrency(Number(v)).replace(/\.00$/, '')}
-                                            width={64}
-                                        />
-                                        <Tooltip
-                                            contentStyle={{
-                                                backgroundColor: 'var(--color-popover)',
-                                                border: '1px solid var(--color-border)',
-                                                borderRadius: 8,
-                                                fontSize: 12,
-                                            }}
-                                            formatter={(value) => formatCurrency(Number(value ?? 0))}
-                                        />
-                                        <Area
-                                            type="monotone"
-                                            dataKey="total"
-                                            stroke="var(--chart-2)"
-                                            strokeWidth={2}
-                                            fill="url(#revenueFill)"
-                                        />
-                                    </AreaChart>
-                                </ResponsiveContainer>
-                            ) : (
-                                <p className="text-muted-foreground py-16 text-center text-sm">No revenue data yet</p>
-                            )}
-                        </CardContent>
-                    </Card>
-
-                </div>
+                <SalesCard sales={sales} />
 
                 <div className="grid gap-4 lg:grid-cols-3">
                     <Card className="lg:col-span-2">

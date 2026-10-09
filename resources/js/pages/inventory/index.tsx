@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Package, Pencil, Plus } from 'lucide-react';
-import { useCallback } from 'react';
+import { Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
@@ -12,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { create, edit, index as productsIndex } from '@/routes/products';
+import { create, destroy, edit, index as productsIndex } from '@/routes/products';
 import type { Paginated } from '@/types/booking';
 import type { Product } from '@/types/inventory';
 
@@ -25,6 +26,8 @@ type Props = {
 };
 
 export default function InventoryIndex({ products, filters }: Props) {
+    const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+
     const handleSearch = useCallback(
         (value: string) => {
             router.get(
@@ -105,11 +108,21 @@ export default function InventoryIndex({ products, filters }: Props) {
             id: 'actions',
             header: '',
             cell: ({ row }) => (
-                <Button variant="ghost" size="icon" asChild>
-                    <Link href={edit(row.original)}>
-                        <Pencil className="size-4" />
-                    </Link>
-                </Button>
+                <div className="flex justify-end gap-1">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={edit(row.original)}>
+                            <Pencil className="size-4" />
+                        </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Delete product"
+                        onClick={() => setProductToDelete(row.original)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
+                    </Button>
+                </div>
             ),
         },
     ];
@@ -152,6 +165,26 @@ export default function InventoryIndex({ products, filters }: Props) {
                     emptyDescription="Add a product or adjust your filters."
                 />
             </div>
+
+            <ConfirmDialog
+                open={productToDelete !== null}
+                onOpenChange={(open) => !open && setProductToDelete(null)}
+                title="Delete product"
+                description={
+                    productToDelete
+                        ? `This will remove "${productToDelete.name}" from inventory and the POS. Past sales are kept.`
+                        : undefined
+                }
+                confirmLabel="Delete"
+                variant="destructive"
+                onConfirm={() => {
+                    if (productToDelete) {
+                        router.delete(destroy(productToDelete).url, {
+                            onSuccess: () => setProductToDelete(null),
+                        });
+                    }
+                }}
+            />
         </>
     );
 }

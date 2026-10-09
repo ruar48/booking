@@ -68,6 +68,16 @@ export default defineConfig({
                 // page navigations.
                 navigateFallback: null,
                 globPatterns: ['**/*.{js,css,ico,png,svg,woff2}'],
+                // outDir is public/, so the glob also sees user uploads. Those
+                // are content, not app shell: precaching them bloats every
+                // install and fails the build once one passes 2 MiB.
+                globIgnores: [
+                    '**/node_modules/**',
+                    'gallery-media/**',
+                    'announcement-media/**',
+                    'profile/**',
+                    'storage/**',
+                ],
             },
             // The dev service worker would be served by Vite (:5173) while the
             // app is served by Laravel (:8000); a service worker must be

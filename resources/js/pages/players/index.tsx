@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { Eye, Pencil, Plus, Users } from 'lucide-react';
-import { useCallback } from 'react';
+import { Eye, Pencil, Plus, Trash2, Users } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
@@ -14,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { create, edit, index as playersIndex, show } from '@/routes/players';
+import { create, destroy, edit, index as playersIndex, show } from '@/routes/players';
 import type { Paginated, Player } from '@/types/booking';
 
 type Props = {
@@ -26,6 +27,8 @@ type Props = {
 };
 
 export default function PlayersIndex({ players, filters }: Props) {
+    const [playerToDelete, setPlayerToDelete] = useState<Player | null>(null);
+
     const handleSearch = useCallback(
         (value: string) => {
             router.get(
@@ -68,11 +71,6 @@ export default function PlayersIndex({ players, filters }: Props) {
             ),
         },
         {
-            accessorKey: 'skill_rating',
-            header: 'Rating',
-            cell: ({ row }) => row.original.skill_rating,
-        },
-        {
             accessorKey: 'is_active',
             header: 'Status',
             cell: ({ row }) => (
@@ -95,6 +93,14 @@ export default function PlayersIndex({ players, filters }: Props) {
                         <Link href={edit(row.original)}>
                             <Pencil className="size-4" />
                         </Link>
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        title="Delete member"
+                        onClick={() => setPlayerToDelete(row.original)}
+                    >
+                        <Trash2 className="size-4 text-destructive" />
                     </Button>
                 </div>
             ),
@@ -148,6 +154,26 @@ export default function PlayersIndex({ players, filters }: Props) {
                     emptyDescription="Add a player or adjust your filters."
                 />
             </div>
+
+            <ConfirmDialog
+                open={playerToDelete !== null}
+                onOpenChange={(open) => !open && setPlayerToDelete(null)}
+                title="Delete member"
+                description={
+                    playerToDelete
+                        ? `This removes ${playerToDelete.user?.name ?? 'this member'}'s member profile. Their login account and booking history are kept.`
+                        : undefined
+                }
+                confirmLabel="Delete"
+                variant="destructive"
+                onConfirm={() => {
+                    if (playerToDelete) {
+                        router.delete(destroy(playerToDelete).url, {
+                            onSuccess: () => setPlayerToDelete(null),
+                        });
+                    }
+                }}
+            />
         </>
     );
 }

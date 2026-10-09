@@ -9,24 +9,19 @@ import {
     LayoutGrid,
     ListFilter,
     MapPin,
-    MoreHorizontal,
     Pencil,
     Plus,
     Target,
+    Trash2,
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatCard, type StatTone } from '@/components/stat-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Select,
     SelectContent,
@@ -37,7 +32,7 @@ import {
 import { formatCurrency } from '@/lib/format';
 import { SPORTS, sportLabel, type SportValue } from '@/lib/sport';
 import { cn } from '@/lib/utils';
-import { create, edit, index as resourcesIndex } from '@/routes/resources';
+import { create, destroy, edit, index as resourcesIndex } from '@/routes/resources';
 import type { Paginated, Resource } from '@/types/booking';
 
 type ResourceStats = {
@@ -111,6 +106,8 @@ export default function ResourcesIndex({
     stats = null,
     filters = {},
 }: Props) {
+    const [resourceToDelete, setResourceToDelete] = useState<Resource | null>(null);
+
     const applyFilters = useCallback(
         (next: Partial<ResourceFilters>) => {
             router.get(
@@ -265,26 +262,15 @@ export default function ResourcesIndex({
                             <Pencil className="size-4" />
                         </Link>
                     </Button>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="size-8 text-muted-foreground hover:text-foreground"
-                                title="More actions"
-                            >
-                                <MoreHorizontal className="size-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                                <Link href={edit(row.original)}>
-                                    <Pencil className="size-4" />
-                                    Edit resource
-                                </Link>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="size-8 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/30"
+                        title="Delete resource"
+                        onClick={() => setResourceToDelete(row.original)}
+                    >
+                        <Trash2 className="size-4" />
+                    </Button>
                 </div>
             ),
         },
@@ -425,6 +411,26 @@ export default function ResourcesIndex({
                     emptyDescription="Create a court or table, or clear your filters."
                 />
             </div>
+
+            <ConfirmDialog
+                open={resourceToDelete !== null}
+                onOpenChange={(open) => !open && setResourceToDelete(null)}
+                title="Delete resource"
+                description={
+                    resourceToDelete
+                        ? `"${resourceToDelete.name}" will no longer be bookable. Its past bookings are kept.`
+                        : undefined
+                }
+                confirmLabel="Delete"
+                variant="destructive"
+                onConfirm={() => {
+                    if (resourceToDelete) {
+                        router.delete(destroy(resourceToDelete).url, {
+                            onSuccess: () => setResourceToDelete(null),
+                        });
+                    }
+                }}
+            />
         </>
     );
 }

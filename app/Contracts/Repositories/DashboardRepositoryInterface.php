@@ -16,8 +16,6 @@ interface DashboardRepositoryInterface
 
     public function getResourceAvailability(): Collection;
 
-    public function getRevenueChart(): array;
-
     public function getMatchStats(): array;
 
     public function getBookingStatusBreakdown(): array;

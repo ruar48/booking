@@ -95,6 +95,13 @@
     --chart-3: oklch(0.45 0.08 250);
     --chart-4: oklch(0.65 0.12 230);
     --chart-5: oklch(0.35 0.06 250);
+    /* Dashboard sales sources, in fixed categorical order. Validated with the
+       dataviz palette checker on the white card (aqua/yellow sit under 3:1,
+       so the chart always ships with a labelled breakdown beside it). */
+    --sales-bookings: #2a78d6;
+    --sales-pos: #eb6834;
+    --sales-rentals: #1baf7a;
+    --sales-open-play: #eda100;
     --radius: 0.625rem;
     /* Light shell: a white sidebar separated from the canvas by a hairline
        border, with the brand green carrying the active/selected state. */
@@ -133,6 +140,11 @@
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
+    /* Same four hues stepped for the dark card (all pass, >= 3:1). */
+    --sales-bookings: #3987e5;
+    --sales-pos: #d95926;
+    --sales-rentals: #199e70;
+    --sales-open-play: #c98500;
     /* Dark shell keeps the brand navy/lime rather than falling back to the
        stock neutral grays, so the sidebar still reads as branded. */
     --sidebar: oklch(0.21 0.03 250);

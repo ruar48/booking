@@ -20,6 +20,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CourtScheduleGrid } from '@/components/court-schedule-grid';
 import { BrandLogo } from '@/components/brand-logo';
 import { InstallAppButton } from '@/components/install-app-button';
+import { PhotoLightbox } from '@/components/photo-lightbox';
 import { SupportWidget } from '@/components/support-widget';
 import { VenueMap, venueAddress } from '@/components/venue-map';
 import { Badge } from '@/components/ui/badge';
@@ -31,11 +32,15 @@ import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
 import { index as bookingsIndex } from '@/routes/bookings';
-import { browse as openPlayBrowse, show as openPlayShow } from '@/routes/open-play';
+import {
+    browse as openPlayBrowse,
+    show as openPlayShow,
+} from '@/routes/open-play';
 import type {
     Announcement,
     BookedSlot,
     DateOverride,
+    GallerySection,
     HourForecast,
     OpenPlaySession,
     Resource,
@@ -57,6 +62,7 @@ type Props = {
     bookedSlots?: BookedSlot[];
     dateOverrides?: DateOverride[];
     hourlyWeather?: Record<string, HourForecast>;
+    gallery?: GallerySection[];
 };
 
 function formatSkillLevel(level?: string): string {
@@ -156,7 +162,7 @@ function HeroLanding({
                 </div>
             </header>
 
-            <div className="relative z-10 mx-auto flex flex-1 max-w-7xl flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
+            <div className="relative z-10 mx-auto flex max-w-7xl flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
                 <div className="grid items-center gap-12 lg:grid-cols-2">
                     <div className="min-w-0">
                         <Badge className="mb-6 border-brand-lime/40 bg-brand-lime/15 text-brand-lime">
@@ -164,7 +170,9 @@ function HeroLanding({
                         </Badge>
                         <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
                             Welcome to{' '}
-                            <span className="text-brand-lime">{businessName}</span>
+                            <span className="text-brand-lime">
+                                {businessName}
+                            </span>
                         </h1>
                         <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
                             {venue?.description ??
@@ -211,14 +219,21 @@ function HeroLanding({
                     {[
                         { label: 'Pickleball courts', value: stats.courts },
                         { label: 'Active members', value: stats.members },
-                        { label: 'Bookings today', value: stats.bookings_today },
+                        {
+                            label: 'Bookings today',
+                            value: stats.bookings_today,
+                        },
                     ].map((stat) => (
                         <div
                             key={stat.label}
                             className="rounded-2xl border border-brand-lime/20 bg-white/10 p-3 text-center backdrop-blur-sm sm:p-5"
                         >
-                            <p className="text-2xl font-bold text-brand-lime sm:text-3xl">{stat.value}</p>
-                            <p className="mt-1 text-xs text-white/70 sm:text-sm">{stat.label}</p>
+                            <p className="text-2xl font-bold text-brand-lime sm:text-3xl">
+                                {stat.value}
+                            </p>
+                            <p className="mt-1 text-xs text-white/70 sm:text-sm">
+                                {stat.label}
+                            </p>
                         </div>
                     ))}
                 </div>
@@ -248,9 +263,11 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                     <CardTitle className="text-base">About</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm leading-relaxed text-slate-600">
-                    {(venue.description ?? '').split('\n').map((paragraph, index) => (
-                        <p key={index}>{paragraph}</p>
-                    ))}
+                    {(venue.description ?? '')
+                        .split('\n')
+                        .map((paragraph, index) => (
+                            <p key={index}>{paragraph}</p>
+                        ))}
                 </CardContent>
             </Card>
 
@@ -260,7 +277,10 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                         {venue.phone && (
                             <div className="flex items-center gap-3">
                                 <Phone className="size-4 text-brand-court" />
-                                <a href={`tel:${venue.phone}`} className="hover:underline">
+                                <a
+                                    href={`tel:${venue.phone}`}
+                                    className="hover:underline"
+                                >
                                     {venue.phone}
                                 </a>
                             </div>
@@ -268,7 +288,10 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                         {venue.email && (
                             <div className="flex items-center gap-3">
                                 <Mail className="size-4 text-brand-court" />
-                                <a href={`mailto:${venue.email}`} className="hover:underline">
+                                <a
+                                    href={`mailto:${venue.email}`}
+                                    className="hover:underline"
+                                >
                                     {venue.email}
                                 </a>
                             </div>
@@ -296,7 +319,10 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                 {venueAddress(venue) && (
                     <Card className="border-slate-200 shadow-sm">
                         <CardContent className="pt-6">
-                            <VenueMap venue={venue} mapClassName="h-56 sm:h-64" />
+                            <VenueMap
+                                venue={venue}
+                                mapClassName="h-56 sm:h-64"
+                            />
                         </CardContent>
                     </Card>
                 )}
@@ -304,7 +330,9 @@ function AboutTab({ venue }: { venue: VenueProfile }) {
                 {amenities.length > 0 && (
                     <Card className="border-slate-200 shadow-sm">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-base">Amenities</CardTitle>
+                            <CardTitle className="text-base">
+                                Amenities
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="flex flex-wrap gap-2">
                             {amenities.map((amenity) => (
@@ -331,12 +359,15 @@ function OpenPlayTab({
     sessions: OpenPlaySession[];
     isAuthenticated: boolean;
 }) {
-    const grouped = sessions.reduce<Record<string, OpenPlaySession[]>>((acc, session) => {
-        const day = session.starts_at.split('T')[0];
-        acc[day] = acc[day] ?? [];
-        acc[day].push(session);
-        return acc;
-    }, {});
+    const grouped = sessions.reduce<Record<string, OpenPlaySession[]>>(
+        (acc, session) => {
+            const day = session.starts_at.split('T')[0];
+            acc[day] = acc[day] ?? [];
+            acc[day].push(session);
+            return acc;
+        },
+        {},
+    );
 
     const days = Object.keys(grouped).sort();
 
@@ -360,7 +391,10 @@ function OpenPlayTab({
                     </div>
                     <div className="space-y-3">
                         {grouped[day].map((session) => (
-                            <Card key={session.id} className="border-slate-200 shadow-sm">
+                            <Card
+                                key={session.id}
+                                className="border-slate-200 shadow-sm"
+                            >
                                 <CardContent className="pt-6">
                                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                         <div className="space-y-3">
@@ -369,13 +403,17 @@ function OpenPlayTab({
                                                     {session.title}
                                                 </h3>
                                                 <Badge variant="secondary">
-                                                    {formatSkillLevel(session.skill_level)}
+                                                    {formatSkillLevel(
+                                                        session.skill_level,
+                                                    )}
                                                 </Badge>
                                             </div>
                                             <ul className="space-y-1.5 text-sm text-slate-600">
                                                 <li className="flex items-center gap-2">
                                                     <Clock className="size-4 text-brand-court" />
-                                                    {formatTime(session.starts_at)}
+                                                    {formatTime(
+                                                        session.starts_at,
+                                                    )}
                                                     {session.ends_at &&
                                                         ` – ${formatTime(session.ends_at)}`}
                                                 </li>
@@ -396,22 +434,29 @@ function OpenPlayTab({
                                                         <li className="flex items-center gap-2 text-amber-700">
                                                             <Clock className="size-4" />
                                                             Registration closes{' '}
-                                                            {formatTime(session.registration_closes_at)}
+                                                            {formatTime(
+                                                                session.registration_closes_at,
+                                                            )}
                                                         </li>
                                                     )}
                                             </ul>
                                         </div>
                                         <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
-                                            {session.price_per_player != null && (
+                                            {session.price_per_player !=
+                                                null && (
                                                 <p className="text-sm font-semibold text-slate-700">
-                                                    {formatCurrency(session.price_per_player)}{' '}
+                                                    {formatCurrency(
+                                                        session.price_per_player,
+                                                    )}{' '}
                                                     <span className="font-normal text-slate-500">
                                                         per player
                                                     </span>
                                                 </p>
                                             )}
                                             {session.is_registration_closed ? (
-                                                <Button disabled>Registration closed</Button>
+                                                <Button disabled>
+                                                    Registration closed
+                                                </Button>
                                             ) : (
                                                 <Button
                                                     asChild
@@ -428,7 +473,11 @@ function OpenPlayTab({
                                                     </Link>
                                                 </Button>
                                             )}
-                                            <Button asChild variant="outline" size="sm">
+                                            <Button
+                                                asChild
+                                                variant="outline"
+                                                size="sm"
+                                            >
                                                 {/* Guests hit the auth-gated browse page, bounce
                                                     through login/register, and land back on the
                                                     Open Play dashboard via Laravel's intended-URL
@@ -437,7 +486,9 @@ function OpenPlayTab({
                                                 <Link
                                                     href={
                                                         isAuthenticated
-                                                            ? openPlayShow(session)
+                                                            ? openPlayShow(
+                                                                  session,
+                                                              )
                                                             : openPlayBrowse()
                                                     }
                                                 >
@@ -480,7 +531,83 @@ function BookCourtTab({
     );
 }
 
-function PhotosTab({ courts, gallery = [] }: { courts: Resource[]; gallery?: string[] }) {
+function PhotosTab({
+    courts,
+    sections = [],
+}: {
+    courts: Resource[];
+    sections?: GallerySection[];
+}) {
+    // The viewer steps through every photo on the tab, across sections, so
+    // each section knows where its photos start in that combined list.
+    const allPhotos = sections.flatMap((section) => section.photos);
+    const starts = sections.map((_, i) =>
+        sections.slice(0, i).reduce((sum, s) => sum + s.photos.length, 0),
+    );
+    const [viewing, setViewing] = useState<number | null>(null);
+
+    if (allPhotos.length > 0) {
+        return (
+            <div className="space-y-6">
+                {sections.map((section, sectionIndex) => {
+                    const start = starts[sectionIndex];
+
+                    return (
+                        <Card
+                            key={section.id ?? 'uncategorized'}
+                            className="border-slate-200 shadow-sm"
+                        >
+                            <CardHeader className="flex flex-row items-center gap-2 pb-3">
+                                <ImageIcon className="size-5 text-brand-court" />
+                                <CardTitle className="text-base">
+                                    {section.name}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid gap-3 sm:grid-cols-2">
+                                    {section.photos.map((photo, i) => (
+                                        <button
+                                            key={photo.id}
+                                            type="button"
+                                            onClick={() =>
+                                                setViewing(start + i)
+                                            }
+                                            className="group relative overflow-hidden rounded-lg bg-slate-100 text-left focus-visible:ring-2 focus-visible:ring-brand-lime focus-visible:outline-none"
+                                        >
+                                            {/* object-contain shows the whole photo; the
+                                                tile background fills any letterbox. */}
+                                            <img
+                                                src={photo.url}
+                                                alt={
+                                                    photo.caption ??
+                                                    `${brand.name} photo`
+                                                }
+                                                className="aspect-video w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                                                loading="lazy"
+                                            />
+                                            {photo.caption ? (
+                                                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-3 text-sm font-semibold text-white">
+                                                    {photo.caption}
+                                                </span>
+                                            ) : null}
+                                        </button>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
+
+                <PhotoLightbox
+                    photos={allPhotos}
+                    index={viewing}
+                    onIndexChange={setViewing}
+                />
+            </div>
+        );
+    }
+
+    // Nothing uploaded yet: placeholders built from the courts list.
     return (
         <div className="space-y-6">
             <Card className="border-slate-200 shadow-sm">
@@ -489,34 +616,21 @@ function PhotosTab({ courts, gallery = [] }: { courts: Resource[]; gallery?: str
                     <CardTitle className="text-base">Gallery</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {gallery.length > 0 ? (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            {gallery.map((photo, index) => (
-                                <img
-                                    key={index}
-                                    src={photo}
-                                    alt=""
-                                    className="aspect-video rounded-lg object-cover"
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            {courts.map((court, index) => (
-                                <div
-                                    key={court.id}
-                                    className={cn(
-                                        'flex aspect-video items-end rounded-lg bg-gradient-to-br p-4',
-                                        courtGradients[index % 2],
-                                    )}
-                                >
-                                    <span className="font-semibold text-white">
-                                        {court.name} — {court.surface_type}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        {courts.map((court, index) => (
+                            <div
+                                key={court.id}
+                                className={cn(
+                                    'flex aspect-video items-end rounded-lg bg-gradient-to-br p-4',
+                                    courtGradients[index % 2],
+                                )}
+                            >
+                                <span className="font-semibold text-white">
+                                    {court.name} — {court.surface_type}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
 
@@ -555,7 +669,10 @@ function NewsList({ announcements }: { announcements: Announcement[] }) {
     return (
         <div className="space-y-4">
             {announcements.map((announcement) => (
-                <Card key={announcement.id} className="border-slate-200 shadow-sm">
+                <Card
+                    key={announcement.id}
+                    className="border-slate-200 shadow-sm"
+                >
                     <CardHeader className="pb-2">
                         <div className="flex items-start gap-2">
                             <Megaphone className="mt-0.5 size-4 shrink-0 text-brand-court" />
@@ -564,7 +681,7 @@ function NewsList({ announcements }: { announcements: Announcement[] }) {
                                     {announcement.title}
                                 </CardTitle>
                                 {announcement.published_at && (
-                                    <p className="text-muted-foreground mt-1 text-xs">
+                                    <p className="mt-1 text-xs text-muted-foreground">
                                         {formatDate(announcement.published_at)}
                                     </p>
                                 )}
@@ -591,16 +708,18 @@ export default function Welcome({
     bookedSlots = [],
     dateOverrides = [],
     hourlyWeather = {},
+    gallery = [],
 }: Props) {
     const { auth } = usePage().props;
     const businessName = brand.name;
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
-    const ogImage = typeof window !== 'undefined'
-        ? `${window.location.origin}${brand.logo}`
-        : brand.logo;
-    const metaDescription = (venue?.description
+    const ogImage =
+        typeof window !== 'undefined'
+            ? `${window.location.origin}${brand.logo}`
+            : brand.logo;
+    const metaDescription = venue?.description
         ? venue.description.replace(/\s+/g, ' ').trim().slice(0, 155)
-        : `Book pickleball courts, billiard and table tennis tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`);
+        : `Book pickleball courts, billiard and table tennis tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`;
     const structuredData = {
         '@context': 'https://schema.org',
         '@type': 'SportsActivityLocation',
@@ -650,7 +769,10 @@ export default function Welcome({
 
     const scrollToVenue = (tab = 'about') => {
         setActiveTab(tab);
-        venueSection.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        venueSection.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        });
     };
 
     return (
@@ -667,7 +789,9 @@ export default function Welcome({
                 <meta name="twitter:title" content={businessName} />
                 <meta name="twitter:description" content={metaDescription} />
                 <meta name="twitter:image" content={ogImage} />
-                <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+                <script type="application/ld+json">
+                    {JSON.stringify(structuredData)}
+                </script>
             </Head>
 
             <div className="overflow-x-hidden bg-slate-100 text-brand-navy">
@@ -713,25 +837,25 @@ export default function Welcome({
                                     <TabsList className="grid h-auto w-full grid-cols-4 gap-1 bg-transparent p-0">
                                         <TabsTrigger
                                             value="about"
-                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
                                         >
                                             About
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="open-play"
-                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
                                         >
                                             Open play
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="book"
-                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
                                         >
                                             Book a court
                                         </TabsTrigger>
                                         <TabsTrigger
                                             value="photos"
-                                            className="data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold sm:text-sm"
+                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
                                         >
                                             Photos
                                         </TabsTrigger>
@@ -744,12 +868,16 @@ export default function Welcome({
                                             <AboutTab venue={venue} />
                                         ) : (
                                             <p className="text-sm text-slate-500">
-                                                Venue information is not available.
+                                                Venue information is not
+                                                available.
                                             </p>
                                         )}
                                     </TabsContent>
 
-                                    <TabsContent value="open-play" className="mt-0">
+                                    <TabsContent
+                                        value="open-play"
+                                        className="mt-0"
+                                    >
                                         <OpenPlayTab
                                             sessions={openPlaySessions}
                                             isAuthenticated={!!auth.user}
@@ -766,10 +894,15 @@ export default function Welcome({
                                         />
                                     </TabsContent>
 
-                                    <TabsContent value="photos" className="mt-0">
-                                        <PhotosTab courts={courts} gallery={venue?.gallery ?? []} />
+                                    <TabsContent
+                                        value="photos"
+                                        className="mt-0"
+                                    >
+                                        <PhotosTab
+                                            courts={courts}
+                                            sections={gallery}
+                                        />
                                     </TabsContent>
-
                                 </div>
                             </Tabs>
                         </div>

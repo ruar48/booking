@@ -21,7 +21,6 @@ import { create, index as playersIndex, store } from '@/routes/players';
 export default function PlayersCreate() {
     const { data, setData, post, processing, errors } = useForm({
         user_id: '',
-        skill_rating: 1000,
         experience_level: 'beginner',
         playing_hand: '',
         gender: '',
@@ -81,18 +80,6 @@ export default function PlayersCreate() {
                                     </SelectContent>
                                 </Select>
                                 <InputError message={errors.experience_level} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="skill_rating">Skill rating</Label>
-                                <Input
-                                    id="skill_rating"
-                                    type="number"
-                                    value={data.skill_rating}
-                                    onChange={(e) =>
-                                        setData('skill_rating', Number(e.target.value))
-                                    }
-                                />
-                                <InputError message={errors.skill_rating} />
                             </div>
                         </CardContent>
                     </Card>

@@ -67,6 +67,20 @@ return [
         // latter collides with the /announcements route — a real directory
         // at that path shadows the router on the dev server (and via
         // Apache's `!-d` rewrite condition in production too).
+        // Venue photos for the public "Photos" tab. Public for the same reason
+        // as 'announcements' below, and suffixed "-media" for the same
+        // route-shadowing reason. The URL is root-relative so images load on
+        // whatever host the page is served from, even when APP_URL differs
+        // (e.g. APP_URL=http://localhost while browsing 127.0.0.1:8000).
+        'gallery' => [
+            'driver' => 'local',
+            'root' => public_path('gallery-media'),
+            'url' => '/gallery-media',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'announcements' => [
             'driver' => 'local',
             'root' => public_path('announcement-media'),

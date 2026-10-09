@@ -400,6 +400,27 @@ export type Policy = {
     updated_at?: string;
 };
 
+export type GalleryPhoto = {
+    id: number;
+    gallery_category_id: number | null;
+    url: string;
+    caption: string | null;
+    created_at: string;
+};
+
+export type GalleryCategory = {
+    id: number;
+    name: string;
+    photos_count?: number;
+};
+
+/** One section of the public Photos tab; id null = uncategorized photos. */
+export type GallerySection = {
+    id: number | null;
+    name: string;
+    photos: GalleryPhoto[];
+};
+
 export type VenueProfile = {
     description?: string | null;
     phone?: string | null;
@@ -434,8 +455,6 @@ export type DashboardStats = {
     pending_bookings: number;
     upcoming_tournaments: number;
     matches_scheduled: number;
-    revenue_this_month: number;
-    revenue_last_month: number;
     bookings_yesterday: number;
     bookings_this_month: number;
     members_new_this_week: number;
@@ -455,16 +474,26 @@ export type DashboardMatchStats = {
     total: number;
 };
 
-export type RevenueChartPoint = {
-    year: number;
-    month: number;
+export type RevenueSource = 'bookings' | 'pos' | 'rentals' | 'open_play';
+
+export type RevenueBucket = Record<RevenueSource, number> & {
+    key: string;
+    label: string;
     total: number;
 };
+
+export type RevenueSeries = {
+    buckets: RevenueBucket[];
+    current: Record<RevenueSource, number> & { total: number };
+    previous_total: number;
+};
+
+export type RevenueGranularity = 'day' | 'week' | 'month';
 
 export type DashboardData = {
     stats: DashboardStats;
     resourceAvailability: Resource[];
-    revenueChart: RevenueChartPoint[];
+    sales: Record<RevenueGranularity, RevenueSeries>;
     bookingStatusBreakdown: BookingStatusBreakdownPoint[];
     recentBookings?: ResourceBooking[];
     openPlaySessions?: OpenPlaySession[];

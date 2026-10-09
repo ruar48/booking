@@ -50,16 +50,6 @@ class DashboardRepository implements DashboardRepositoryInterface
             'matches_scheduled' => (clone $matchesQuery)
                 ->where('status', MatchStatus::Scheduled)
                 ->count(),
-            'revenue_this_month' => (float) (clone $bookingsQuery)
-                ->where('payment_status', PaymentStatus::Paid)
-                ->whereMonth('starts_at', now()->month)
-                ->whereYear('starts_at', now()->year)
-                ->sum('amount'),
-            'revenue_last_month' => (float) (clone $bookingsQuery)
-                ->where('payment_status', PaymentStatus::Paid)
-                ->whereMonth('starts_at', now()->subMonthNoOverflow()->month)
-                ->whereYear('starts_at', now()->subMonthNoOverflow()->year)
-                ->sum('amount'),
             'bookings_yesterday' => (clone $bookingsQuery)
                 ->whereDate('starts_at', today()->subDay())
                 ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved, BookingStatus::Completed])
@@ -136,36 +126,6 @@ class DashboardRepository implements DashboardRepositoryInterface
             ])
             ->orderBy('resource_number')
             ->get();
-    }
-
-    public function getRevenueChart(): array
-    {
-        $periodExpression = match (DB::connection()->getDriverName()) {
-            'sqlite' => "strftime('%Y-%m', starts_at)",
-            'pgsql' => "to_char(starts_at, 'YYYY-MM')",
-            default => "DATE_FORMAT(starts_at, '%Y-%m')",
-        };
-
-        $rows = ResourceBooking::query()
-            ->select([
-                DB::raw("{$periodExpression} as period"),
-                DB::raw('SUM(amount) as total'),
-            ])
-            ->where('payment_status', PaymentStatus::Paid)
-            ->where('starts_at', '>=', now()->subMonths(11)->startOfMonth())
-            ->groupBy('period')
-            ->orderBy('period')
-            ->get();
-
-        return $rows->map(function ($row) {
-            [$year, $month] = explode('-', (string) $row->period);
-
-            return [
-                'year' => (int) $year,
-                'month' => (int) $month,
-                'total' => (float) $row->total,
-            ];
-        })->all();
     }
 
     public function getMatchStats(): array

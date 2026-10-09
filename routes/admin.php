@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\GalleryCategoryController;
+use App\Http\Controllers\Admin\GalleryPhotoController;
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\SettingController;
 use Illuminate\Support\Facades\Route;
@@ -18,4 +20,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('policies/{policy}/edit', [PolicyController::class, 'edit'])->name('policies.edit');
     Route::put('policies/{policy}', [PolicyController::class, 'update'])->name('policies.update');
     Route::delete('policies/{policy}', [PolicyController::class, 'destroy'])->name('policies.destroy');
+
+    Route::get('gallery', [GalleryPhotoController::class, 'index'])->name('gallery.index');
+    Route::post('gallery', [GalleryPhotoController::class, 'store'])->name('gallery.store');
+    Route::patch('gallery/{galleryPhoto}', [GalleryPhotoController::class, 'update'])->name('gallery.update');
+    Route::delete('gallery/{galleryPhoto}', [GalleryPhotoController::class, 'destroy'])->name('gallery.destroy');
+
+    Route::post('gallery-categories', [GalleryCategoryController::class, 'store'])->name('gallery-categories.store');
+    Route::patch('gallery-categories/{galleryCategory}', [GalleryCategoryController::class, 'update'])->name('gallery-categories.update');
+    Route::delete('gallery-categories/{galleryCategory}', [GalleryCategoryController::class, 'destroy'])->name('gallery-categories.destroy');
 });
