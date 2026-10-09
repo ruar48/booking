@@ -5,10 +5,13 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+import { brand } from '@/lib/brand';
 import SettingsLayout from '@/layouts/settings/layout';
 import { registerSW } from 'virtual:pwa-register';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+// From the brand, not VITE_APP_NAME: the env default is "Laravel", and a stale
+// build-time value would put that in every browser tab.
+const appName = brand.name;
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

@@ -32,11 +32,11 @@ export default defineConfig({
             registerType: 'autoUpdate',
             injectRegister: false,
             outDir: 'public',
-            includeAssets: ['favicon.ico', 'favicon.svg', 'apple-touch-icon.png'],
+            includeAssets: ['favicon.ico', 'favicon-32.png', 'apple-touch-icon.png'],
             manifest: {
-                name: 'Booking',
-                short_name: 'Booking',
-                description: 'Booking',
+                name: 'Galaang-Ramos Pickleball',
+                short_name: 'Galaang-Ramos',
+                description: 'Book courts and join open play at Galaang-Ramos Pickleball',
                 start_url: '/',
                 scope: '/',
                 display: 'standalone',
@@ -44,17 +44,17 @@ export default defineConfig({
                 theme_color: '#0f2847',
                 icons: [
                     {
-                        src: '/logos.png',
+                        src: '/pwa-192.png',
                         sizes: '192x192',
                         type: 'image/png',
                     },
                     {
-                        src: '/logos.png',
+                        src: '/pwa-512.png',
                         sizes: '512x512',
                         type: 'image/png',
                     },
                     {
-                        src: '/logos.png',
+                        src: '/pwa-512.png',
                         sizes: '512x512',
                         type: 'image/png',
                         purpose: 'maskable',

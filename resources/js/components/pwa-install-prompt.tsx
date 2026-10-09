@@ -44,7 +44,7 @@ export function PwaInstallPrompt() {
         >
             <div className="flex w-full max-w-md items-start gap-3 rounded-xl border bg-background p-4 shadow-lg">
                 <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <img src="/logos.png" alt="" className="size-7 rounded" />
+                    <img src="/pwa-192.png" alt="" className="size-7 rounded" />
                 </div>
 
                 <div className="min-w-0 flex-1">
