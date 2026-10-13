@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\GalleryCategoryController;
 use App\Http\Controllers\Admin\GalleryPhotoController;
@@ -13,6 +14,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('settings/payment-window', [SettingController::class, 'updatePaymentWindow'])->name('settings.update-payment-window');
     Route::put('settings/notifications', [SettingController::class, 'updateNotifications'])->name('settings.update-notifications');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
+    Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
 
     Route::get('policies', [PolicyController::class, 'index'])->name('policies.index');
     Route::get('policies/create', [PolicyController::class, 'create'])->name('policies.create');

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\PageView;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -10,6 +11,9 @@ Artisan::command('inspire', function () {
 
 Schedule::command('bookings:cancel-unpaid')->everyMinute();
 Schedule::command('bookings:mark-completed')->everyFiveMinutes();
+
+// Drop analytics page views older than PageView::RETENTION_DAYS.
+Schedule::command('model:prune', ['--model' => [PageView::class]])->daily();
 
 // Shared hosting (cPanel) can't run a persistent `queue:work` daemon — the
 // process just gets killed. Draining the queue once a minute via the

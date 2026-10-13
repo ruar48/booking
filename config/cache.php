@@ -18,6 +18,15 @@ return [
     'default' => env('CACHE_STORE', 'database'),
 
     /*
+    | Store used by rate limiters. Every request touches a limiter, so on the
+    | database store a traffic flood becomes a flood of DB writes. Set
+    | CACHE_LIMITER_STORE=file in production (single server) to keep that
+    | off the database. Null = use the default store.
+    */
+
+    'limiter' => env('CACHE_LIMITER_STORE'),
+
+    /*
     |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------

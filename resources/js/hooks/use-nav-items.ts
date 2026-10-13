@@ -2,6 +2,7 @@ import {
     Calendar,
     CalendarClock,
     CalendarDays,
+    ChartLine,
     CreditCard,
     Dumbbell,
     FileText,
@@ -17,6 +18,7 @@ import {
 
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { dashboard } from '@/routes';
+import { index as adminAnalyticsIndex } from '@/routes/admin/analytics';
 import { index as adminGalleryIndex } from '@/routes/admin/gallery';
 import { index as adminPoliciesIndex } from '@/routes/admin/policies';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
@@ -72,6 +74,7 @@ export function useNavItems(): NavItems {
 
     const adminNavItems: NavItem[] = isVenueAdmin
         ? [
+              { title: 'Analytics', href: adminAnalyticsIndex(), icon: ChartLine },
               { title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings },
               { title: 'Gallery', href: adminGalleryIndex(), icon: ImageIcon },
               { title: 'Policies', href: adminPoliciesIndex(), icon: FileText },

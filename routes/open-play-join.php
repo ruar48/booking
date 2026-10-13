@@ -17,4 +17,7 @@ Route::post('open-play/{open_play}/checkout', [OpenPlayJoinController::class, 'c
 // Any authenticated member can search players (name only) to pick a doubles
 // partner, whether registering themselves via the public join page or an
 // admin registering entries from the manage page.
-Route::get('open-play/players/search', [OpenPlayController::class, 'search'])->name('open-play.players.search');
+// Throttled: each keystroke is a LIKE query over every user's name.
+Route::get('open-play/players/search', [OpenPlayController::class, 'search'])
+    ->middleware('throttle:30,1')
+    ->name('open-play.players.search');

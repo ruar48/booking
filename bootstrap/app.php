@@ -3,11 +3,13 @@
 use App\Http\Middleware\EnsureVenueAdmin;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RecordPageView;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,10 +29,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'venue.admin' => EnsureVenueAdmin::class,
         ]);
 
+        // Rate limits (defined in AppServiceProvider): "flood" before the
+        // session starts, "web" after it once the user is known.
+        $middleware->web(prepend: [
+            ThrottleRequests::using('flood'),
+        ]);
+
         $middleware->web(append: [
+            ThrottleRequests::using('web'),
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            RecordPageView::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

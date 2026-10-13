@@ -26,11 +26,14 @@ use App\Policies\TrainingSessionPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -69,6 +72,50 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureEventListeners();
         $this->configureMail();
+        $this->configureRateLimiting();
+    }
+
+    /**
+     * Abuse limits for the whole web app. "flood" runs before the session
+     * starts so a rejected request costs no session write; "web" runs after
+     * it, when the signed-in user is known.
+     */
+    protected function configureRateLimiting(): void
+    {
+        RateLimiter::for('flood', function (Request $request) {
+            // PayMongo retries webhooks from a handful of IPs — never block them.
+            if ($request->is('webhooks/*')) {
+                return Limit::none();
+            }
+
+            // Generous: a whole venue or mobile carrier can share one IP.
+            return Limit::perMinute(300)->by('flood|'.$request->ip());
+        });
+
+        RateLimiter::for('web', function (Request $request) {
+            $user = $request->user();
+
+            if ($request->is('webhooks/*') || ($user?->isVenueAdmin() ?? false)) {
+                return Limit::none();
+            }
+
+            $limits = [
+                $user !== null
+                    ? Limit::perMinute(240)->by('web|user|'.$user->id)
+                    : Limit::perMinute(120)->by('web|guest|'.$request->ip()),
+            ];
+
+            // Each sign-up or reset sends an email — stop bots farming them.
+            if ($request->isMethod('POST') && $request->is('register')) {
+                $limits[] = Limit::perHour(10)->by('register|'.$request->ip());
+            }
+
+            if ($request->isMethod('POST') && $request->is('forgot-password')) {
+                $limits[] = Limit::perHour(10)->by('forgot-password|'.$request->ip());
+            }
+
+            return $limits;
+        });
     }
 
     protected function registerPolicies(): void
