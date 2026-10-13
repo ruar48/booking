@@ -7,6 +7,8 @@ use App\Enums\TeamSize;
 use App\Models\OpenPlaySession;
 use App\Models\OpenPlayRegistration;
 use App\Models\Player;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class OpenPlayRegistrationService
 {
@@ -75,6 +77,73 @@ class OpenPlayRegistrationService
         }
 
         return $registration;
+    }
+
+    /**
+     * Registers a player together with friends they are paying for. One
+     * payment covers the whole group: the lead registration carries the
+     * total (price × everyone, computed here from the session price — never
+     * from client input) and each friend's row carries 0, so revenue sums
+     * stay correct. Friends are marked paid when the lead's payment succeeds
+     * (see markGroupPaid()).
+     *
+     * @param  Collection<int, Player>  $friends
+     * @return OpenPlayRegistration|string The lead registration, or an error message.
+     */
+    public function registerWithFriends(OpenPlaySession $event, Player $lead, Collection $friends, int $createdBy): OpenPlayRegistration|string
+    {
+        if ($event->team_size === TeamSize::Doubles) {
+            return 'Paying for friends is only available for singles sessions.';
+        }
+
+        $friends = $friends->unique('id')->values();
+
+        if ($friends->contains(fn (Player $friend) => $friend->id === $lead->id)) {
+            return 'You are already part of this registration — pick other players.';
+        }
+
+        foreach ([$lead, ...$friends->all()] as $player) {
+            if ($this->isRegistered($event, $player)) {
+                return $player->id === $lead->id
+                    ? 'This player is already registered for this session.'
+                    : 'One of your friends is already registered for this session.';
+            }
+        }
+
+        $requiresPayment = $event->price_per_player !== null && (float) $event->price_per_player > 0;
+        $status = $requiresPayment ? PaymentStatus::Unpaid : PaymentStatus::Paid;
+        $groupSize = $friends->count() + 1;
+
+        return DB::transaction(function () use ($event, $lead, $friends, $createdBy, $requiresPayment, $status, $groupSize): OpenPlayRegistration {
+            $leadRegistration = OpenPlayRegistration::query()->create([
+                'open_play_session_id' => $event->id,
+                'player_id' => $lead->id,
+                'created_by' => $createdBy,
+                'payment_status' => $status,
+                'amount' => $requiresPayment ? round((float) $event->price_per_player * $groupSize, 2) : 0,
+            ]);
+
+            foreach ($friends as $friend) {
+                OpenPlayRegistration::query()->create([
+                    'open_play_session_id' => $event->id,
+                    'player_id' => $friend->id,
+                    'group_lead_id' => $leadRegistration->id,
+                    'created_by' => $createdBy,
+                    'payment_status' => $status,
+                    'amount' => 0,
+                ]);
+            }
+
+            return $leadRegistration;
+        });
+    }
+
+    /**
+     * Cascade a paid lead registration to the friends it covers.
+     */
+    public function markGroupPaid(OpenPlayRegistration $lead): void
+    {
+        $lead->groupMembers()->update(['payment_status' => PaymentStatus::Paid]);
     }
 
     /**

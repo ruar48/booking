@@ -13,6 +13,7 @@ use App\Http\Requests\StoreSaleRequest;
 use App\Http\Requests\VoidSaleRequest;
 use App\Models\Product;
 use App\Models\Sale;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,6 +37,7 @@ class PosController extends Controller
 
         return Inertia::render('pos/checkout', [
             'products' => $products,
+            'customers' => User::query()->orderBy('name')->get(['id', 'name', 'email']),
             'paymentMethods' => collect(PaymentMethod::cases())->map(fn (PaymentMethod $method) => [
                 'value' => $method->value,
                 'label' => $method->label(),

@@ -31,6 +31,10 @@ function fakePaymongoGateway(bool $includeExpiresAt = true): void
         'services.paymongo.secret_key' => 'sk_test_fake',
         'services.paymongo.public_key' => 'pk_test_fake',
         'services.paymongo.webhook_secret' => 'whsec_fake',
+        // Fee-free by default so amount assertions stay about prices; the
+        // convenience-fee test below turns it on.
+        'services.paymongo.fee_percent' => 0,
+        'services.paymongo.fee_fixed' => 0,
     ]);
 
     $code = ['image_url' => 'https://api.paymongo.com/qr/test.png'];
@@ -380,4 +384,110 @@ it('keeps showing the same pending QR Ph payment across a refresh, even when Pay
     // Still only the one payment/QR — refreshing must not have generated a
     // second one.
     expect(Payment::query()->where('payable_id', $booking->id)->count())->toBe(1);
+});
+
+it('charges price × everyone when a player pays for friends, ignoring any client-sent amount, and emails the friends', function () {
+    fakePaymongoGateway();
+    Illuminate\Support\Facades\Notification::fake();
+
+    $user = playerUser();
+    $player = Player::factory()->for($user)->create();
+    $friends = Player::factory()->count(2)->create();
+
+    $session = OpenPlaySession::factory()->create([
+        'team_size' => TeamSize::Singles,
+        'price_per_player' => 200,
+        'max_players' => 16,
+        'starts_at' => now()->addDays(3),
+        'ends_at' => now()->addDays(3)->addHours(2),
+    ]);
+
+    $this->actingAs($user);
+
+    $this->post(route('open-play.join.store', $session), [
+        'friend_player_ids' => $friends->pluck('id')->all(),
+        'amount' => 1, // must be ignored
+    ])->assertRedirect(route('open-play.checkout', $session));
+
+    $lead = $session->registrations()->where('player_id', $player->id)->firstOrFail();
+
+    // 3 players (payer + 2 friends) × ₱200 = ₱600, on the lead row only.
+    expect((float) $lead->amount)->toBe(600.0)
+        ->and($lead->groupMembers)->toHaveCount(2)
+        ->and($lead->groupMembers->every(fn ($m) => (float) $m->amount === 0.0 && $m->payment_status->value === 'unpaid'))->toBeTrue();
+
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+
+    $payment = Payment::query()->where('payable_id', $lead->id)->latest()->firstOrFail();
+    expect((float) $payment->amount)->toBe(600.0);
+
+    postPaymongoWebhook($payment->paymongo_payment_intent_id)->assertOk();
+
+    expect($session->registrations()->where('payment_status', 'paid')->count())->toBe(3);
+
+    foreach ($friends as $friend) {
+        Illuminate\Support\Facades\Notification::assertSentTo(
+            $friend->user,
+            App\Notifications\OpenPlayPaidForYouNotification::class,
+        );
+    }
+});
+
+it('refuses to add a friend who is already registered or exceeds the remaining spots', function () {
+    $user = playerUser();
+    Player::factory()->for($user)->create();
+    $taken = Player::factory()->create();
+    $other = Player::factory()->create();
+
+    $session = OpenPlaySession::factory()->create([
+        'team_size' => TeamSize::Singles,
+        'price_per_player' => 200,
+        'max_players' => 2,
+        'starts_at' => now()->addDays(3),
+        'ends_at' => now()->addDays(3)->addHours(2),
+    ]);
+
+    $this->actingAs($user);
+
+    // 3 people into a 2-player session.
+    $this->post(route('open-play.join.store', $session), [
+        'friend_player_ids' => [$taken->id, $other->id],
+    ])->assertRedirect();
+
+    expect($session->registrations()->count())->toBe(0);
+});
+
+it('passes the PayMongo fee on to the customer so the venue nets the full price', function () {
+    fakePaymongoGateway();
+    config(['services.paymongo.fee_percent' => 2.0]);
+
+    $user = playerUser();
+    $player = Player::factory()->for($user)->create();
+    $session = OpenPlaySession::factory()->create([
+        'team_size' => TeamSize::Singles,
+        'price_per_player' => 98,
+        'max_players' => 16,
+        'starts_at' => now()->addDays(3),
+        'ends_at' => now()->addDays(3)->addHours(2),
+    ]);
+
+    $this->actingAs($user);
+    $this->post(route('open-play.join.store', $session))->assertRedirect();
+
+    // 98 / (1 - 0.02) = 100.00 → fee 2.00; shown on checkout before paying.
+    $this->get(route('open-play.checkout', $session))
+        ->assertInertia(fn ($page) => $page->where('fee.fee', 2)->where('fee.total', 100));
+
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+
+    $registration = $session->registrations()->where('player_id', $player->id)->firstOrFail();
+    $payment = Payment::query()->where('payable_id', $registration->id)->firstOrFail();
+
+    expect((float) $payment->amount)->toBe(100.0)
+        ->and((float) $payment->convenience_fee)->toBe(2.0)
+        // The registration (what revenue reports sum) keeps the price only.
+        ->and((float) $registration->amount)->toBe(98.0);
+
+    Http::assertSent(fn ($request) => str_contains($request->url(), 'payment_intents')
+        && ($request['data']['attributes']['amount'] ?? null) === 10000);
 });

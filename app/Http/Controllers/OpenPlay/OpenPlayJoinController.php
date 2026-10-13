@@ -12,6 +12,7 @@ use App\Models\Player;
 use App\Models\Policy;
 use App\Services\OpenPlayRegistrationService;
 use App\Services\PaymentService;
+use App\Support\ConvenienceFee;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -163,7 +164,11 @@ class OpenPlayJoinController extends Controller
             'session' => $open_play,
             'registrationsCount' => $registrationsCount,
             'isRegistered' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Paid,
-            'paymentPending' => $myRegistration !== null && $myRegistration->payment_status === PaymentStatus::Unpaid,
+            // A friend's row waits on the payer's checkout, so only the payer
+            // gets a "Resume payment" prompt.
+            'paymentPending' => $myRegistration !== null
+                && $myRegistration->payment_status === PaymentStatus::Unpaid
+                && $myRegistration->group_lead_id === null,
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
             'needsProfile' => $player === null || $player->birthdate === null,
             'myRegistrationId' => $myRegistration?->payment_status === PaymentStatus::Paid ? $myRegistration->id : null,
@@ -180,10 +185,14 @@ class OpenPlayJoinController extends Controller
 
         $validated = $request->validate([
             'partner_player_id' => ['nullable', 'integer', 'exists:players,id'],
+            'friend_player_ids' => ['nullable', 'array', 'max:9'],
+            'friend_player_ids.*' => ['integer', 'distinct', 'exists:players,id'],
         ]);
 
+        $friendIds = $validated['friend_player_ids'] ?? [];
+
         $registrationsCount = $open_play->registeredPlayersCount();
-        $partySize = isset($validated['partner_player_id']) ? 2 : 1;
+        $partySize = isset($validated['partner_player_id']) ? 2 : 1 + count($friendIds);
 
         if ($open_play->max_players !== null && $registrationsCount + $partySize > $open_play->max_players) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __('This session is full.')]);
@@ -215,7 +224,14 @@ class OpenPlayJoinController extends Controller
             ? Player::query()->findOrFail($validated['partner_player_id'])
             : null;
 
-        $result = $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
+        $result = $friendIds !== []
+            ? $this->registrationService->registerWithFriends(
+                $open_play,
+                $player,
+                Player::query()->whereIn('id', $friendIds)->get(),
+                $request->user()->id,
+            )
+            : $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
 
         if (is_string($result)) {
             Inertia::flash('toast', ['type' => 'error', 'message' => __($result)]);
@@ -264,7 +280,8 @@ class OpenPlayJoinController extends Controller
 
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,
-            'registration' => $registration,
+            'registration' => $registration->load('groupMembers.player.user:id,name'),
+            'fee' => ConvenienceFee::for($registration->amount),
             'qrPayment' => $pendingPayment ? [
                 'id' => $pendingPayment->id,
                 'qrCodeUrl' => $pendingPayment->qr_code_url,
@@ -312,7 +329,8 @@ class OpenPlayJoinController extends Controller
 
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,
-            'registration' => $registration,
+            'registration' => $registration->load('groupMembers.player.user:id,name'),
+            'fee' => ConvenienceFee::for($registration->amount),
             'qrPayment' => [
                 'id' => $payment->id,
                 'qrCodeUrl' => $payment->qr_code_url,
@@ -333,6 +351,7 @@ class OpenPlayJoinController extends Controller
         return OpenPlayRegistration::query()
             ->where('open_play_session_id', $open_play->id)
             ->where('player_id', $player->id)
+            ->whereNull('group_lead_id')
             ->where('payment_status', PaymentStatus::Unpaid)
             ->first();
     }
@@ -348,6 +367,7 @@ class OpenPlayJoinController extends Controller
         return OpenPlayRegistration::query()
             ->where('open_play_session_id', $open_play->id)
             ->where('player_id', $player->id)
+            ->whereNull('group_lead_id')
             ->latest()
             ->first();
     }

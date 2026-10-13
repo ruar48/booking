@@ -54,6 +54,8 @@ export type OpenPlayRegistration = {
     amount?: number | string | null;
     player?: Player;
     partner?: Player | null;
+    group_lead_id?: number | null;
+    group_members?: OpenPlayRegistration[];
     creator?: { id: number; name: string } | null;
     created_at?: string;
 };

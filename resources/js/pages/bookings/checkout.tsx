@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
 import checkoutActions from '@/routes/bookings/checkout';
 import type { ResourceBooking } from '@/types/booking';
+import type { ConvenienceFee } from '@/types/pos';
 
 type QrPayment = {
     id: number;
@@ -57,6 +58,7 @@ type Props = {
     // this one row.
     groupBookings?: ResourceBooking[] | null;
     groupTotalAmount?: number | null;
+    fee?: ConvenienceFee | null;
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -110,11 +112,12 @@ export default function BookingsCheckout({
     policies = [],
     groupBookings = null,
     groupTotalAmount = null,
+    fee = null,
 }: Props) {
     const isPaid = booking.payment_status === 'paid';
     const isCancelled = booking.status === 'cancelled';
     const isUnpaid = booking.payment_status === 'unpaid' && !isCancelled;
-    const amountDue = groupTotalAmount ?? booking.amount;
+    const amountDue = fee && fee.total > 0 ? fee.total : (groupTotalAmount ?? booking.amount);
 
     const [step, setStep] = useState<Step>(() => {
         if (isPaid) return 4;
@@ -202,6 +205,7 @@ export default function BookingsCheckout({
                                     booking={booking}
                                     groupBookings={groupBookings}
                                     groupTotalAmount={groupTotalAmount}
+                                    fee={fee}
                                     showDeadline={Boolean(paymentDeadline)}
                                     deadlineLabel={deadline.label}
                                     onContinue={() => setStep(2)}
@@ -257,6 +261,7 @@ function BookingDetailsCard({
     booking,
     groupBookings,
     groupTotalAmount,
+    fee,
     showDeadline,
     deadlineLabel,
     onContinue,
@@ -264,6 +269,7 @@ function BookingDetailsCard({
     booking: ResourceBooking;
     groupBookings?: ResourceBooking[] | null;
     groupTotalAmount?: number | null;
+    fee?: ConvenienceFee | null;
     showDeadline: boolean;
     deadlineLabel: string | null;
     onContinue: () => void;
@@ -316,6 +322,15 @@ function BookingDetailsCard({
                         </SummaryRow>
                     </div>
                 )}
+
+                {fee && fee.fee > 0 ? (
+                    <div>
+                        <SummaryRow label="Online payment convenience fee">{formatCurrency(fee.fee)}</SummaryRow>
+                        <SummaryRow label="Total to pay">
+                            <span className="font-semibold">{formatCurrency(fee.total)}</span>
+                        </SummaryRow>
+                    </div>
+                ) : null}
 
                 {showDeadline ? (
                     <div className="bg-amber-500/10 border-amber-500/20 rounded-md border p-2.5 text-xs">

@@ -3,6 +3,7 @@ import { BarChart3, ListOrdered, ShoppingCart } from 'lucide-react';
 import { FormEvent, useMemo, useState } from 'react';
 
 import { CartItemRow, type CartLine } from '@/components/pos/cart-item-row';
+import { CustomerCombobox } from '@/components/pos/customer-combobox';
 import { ProductGrid } from '@/components/pos/product-grid';
 import { PageHeader } from '@/components/page-header';
 import InputError from '@/components/input-error';
@@ -22,14 +23,15 @@ import { formatCurrency } from '@/lib/format';
 import { checkout as posCheckout, reports as posReports } from '@/routes/pos';
 import { index as posSalesIndex, store } from '@/routes/pos/sales';
 import type { Product } from '@/types/inventory';
-import type { PaymentMethodOption } from '@/types/pos';
+import type { CustomerOption, PaymentMethodOption } from '@/types/pos';
 
 type Props = {
     products: Product[];
+    customers: CustomerOption[];
     paymentMethods: PaymentMethodOption[];
 };
 
-export default function PosCheckout({ products, paymentMethods }: Props) {
+export default function PosCheckout({ products, customers, paymentMethods }: Props) {
     const [cart, setCart] = useState<CartLine[]>([]);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -247,12 +249,12 @@ export default function PosCheckout({ products, paymentMethods }: Props) {
                                 </div>
 
                                 <div className="grid gap-2">
-                                    <Label htmlFor="customer_id">Customer ID (optional)</Label>
-                                    <Input
+                                    <Label htmlFor="customer_id">Customer (optional)</Label>
+                                    <CustomerCombobox
                                         id="customer_id"
-                                        type="number"
+                                        customers={customers}
                                         value={data.customer_id}
-                                        onChange={(e) => setData('customer_id', e.target.value)}
+                                        onChange={(value) => setData('customer_id', value)}
                                     />
                                     <InputError message={errors.customer_id} />
                                 </div>

@@ -11,6 +11,7 @@ use App\Events\BookingFailed;
 use App\Events\MatchReminder;
 use App\Events\PaymentSuccessful;
 use App\Events\TournamentReminder;
+use App\Models\OpenPlayRegistration;
 use App\Models\User;
 use App\Notifications\AnnouncementPublishedNotification;
 use App\Notifications\BookingApprovedNotification;
@@ -18,6 +19,7 @@ use App\Notifications\BookingCancelledNotification;
 use App\Notifications\BookingCreatedNotification;
 use App\Notifications\BookingFailedNotification;
 use App\Notifications\MatchReminderNotification;
+use App\Notifications\OpenPlayPaidForYouNotification;
 use App\Notifications\PaymentSuccessfulNotification;
 use App\Notifications\TournamentReminderNotification;
 use App\Support\BookingNotificationSettings;
@@ -118,6 +120,24 @@ class EventServiceProvider extends ServiceProvider
             dispatch(function () use ($event, $config): void {
                 self::recipients($event->payment->user, $config)->each(
                     fn (User $user) => $user->notify(new PaymentSuccessfulNotification($event->payment)),
+                );
+            })->afterResponse();
+        });
+
+        // Friends whose Open Play spot was paid for by someone else get told
+        // who paid. Independent of the payer's receipt settings above.
+        Event::listen(PaymentSuccessful::class, function (PaymentSuccessful $event): void {
+            $registration = $event->payment->payable;
+
+            if (! $registration instanceof OpenPlayRegistration) {
+                return;
+            }
+
+            dispatch(function () use ($event, $registration): void {
+                $registration->groupMembers()->with('player.user')->get()->each(
+                    fn (OpenPlayRegistration $member) => $member->player?->user?->notify(
+                        new OpenPlayPaidForYouNotification($event->payment->user, $registration->openPlaySession),
+                    ),
                 );
             })->afterResponse();
         });

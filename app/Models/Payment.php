@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $payable_id
  * @property string $invoice_number
  * @property string $amount
+ * @property string $convenience_fee
  * @property string $currency
  * @property PaymentStatus $status
  * @property string|null $payment_method
@@ -37,6 +38,7 @@ use Illuminate\Support\Carbon;
     'payable_id',
     'invoice_number',
     'amount',
+    'convenience_fee',
     'currency',
     'status',
     'payment_method',
@@ -57,6 +59,7 @@ class Payment extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'convenience_fee' => 'decimal:2',
             'status' => PaymentStatus::class,
             'raw_response' => 'array',
             'qr_expires_at' => 'datetime',

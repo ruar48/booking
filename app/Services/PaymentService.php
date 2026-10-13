@@ -10,6 +10,7 @@ use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use App\Support\ConvenienceFee;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -52,10 +53,16 @@ class PaymentService
 
     private function createQrphPayment(Model $payable, User $user, string $amount, string $description): Payment
     {
+        // The customer shoulders PayMongo's fee: they are charged price + fee
+        // so the venue nets the full price. $amount arrives as the price only.
+        $charge = ConvenienceFee::for($amount);
+        $amount = number_format($charge['total'], 2, '.', '');
+
         $payment = $this->create(
             userId: $user->id,
             payable: $payable,
             amount: $amount,
+            convenienceFee: number_format($charge['fee'], 2, '.', ''),
             currency: 'PHP',
             paymentMethod: PaymentMethod::Qrph->value,
         );
@@ -156,14 +163,16 @@ class PaymentService
         string $currency = 'USD',
         ?string $paymentMethod = null,
         ?string $notes = null,
+        string $convenienceFee = '0',
     ): Payment {
-        return DB::transaction(function () use ($userId, $payable, $amount, $currency, $paymentMethod, $notes): Payment {
+        return DB::transaction(function () use ($userId, $payable, $amount, $currency, $paymentMethod, $notes, $convenienceFee): Payment {
             return Payment::query()->create([
                 'user_id' => $userId,
                 'payable_type' => $payable->getMorphClass(),
                 'payable_id' => $payable->getKey(),
                 'invoice_number' => $this->generateInvoiceNumber(),
                 'amount' => $amount,
+                'convenience_fee' => $convenienceFee,
                 'currency' => $currency,
                 'status' => PaymentStatus::Pending,
                 'payment_method' => $paymentMethod,
@@ -207,6 +216,7 @@ class PaymentService
                 }
 
                 if ($payable instanceof OpenPlayRegistration) {
+                    $this->openPlayRegistrations->markGroupPaid($payable);
                     $this->openPlayRegistrations->pairRandomly($payable->openPlaySession);
                 }
             }

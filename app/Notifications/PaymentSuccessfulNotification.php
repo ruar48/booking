@@ -33,7 +33,8 @@ class PaymentSuccessfulNotification extends Notification
                 $payable->starts_at?->toDayDateTimeString(),
             ],
             $payable instanceof OpenPlayRegistration => [
-                'Open Play registration'.($payable->openPlaySession ? ' — '.$payable->openPlaySession->title : ''),
+                'Open Play registration'.($payable->openPlaySession ? ' — '.$payable->openPlaySession->title : '')
+                    .($payable->groupMembers()->exists() ? ' ('.($payable->groupMembers()->count() + 1).' players)' : ''),
                 $payable->openPlaySession?->starts_at?->toDayDateTimeString(),
             ],
             default => ['Payment', null],
@@ -44,6 +45,9 @@ class PaymentSuccessfulNotification extends Notification
             ->view('emails.receipt', [
                 'venueName' => $this->venueName(),
                 'amount' => number_format((float) $this->payment->amount, 2),
+                'convenienceFee' => (float) $this->payment->convenience_fee > 0
+                    ? number_format((float) $this->payment->convenience_fee, 2)
+                    : null,
                 'currency' => $this->payment->currency,
                 'invoiceNumber' => $this->payment->invoice_number,
                 'paymentMethod' => $this->payment->payment_method

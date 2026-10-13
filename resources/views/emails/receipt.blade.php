@@ -31,6 +31,9 @@
         <td align="center" style="padding:28px 24px 20px;">
             <div style="color:#64748b; font-size:12px; text-transform:uppercase; letter-spacing:0.06em;">Amount paid</div>
             <div style="margin-top:6px; color:#0f172a; font-size:36px; font-weight:700;">{{ $currency }} {{ $amount }}</div>
+            @if (!empty($convenienceFee))
+                <div style="margin-top:6px; color:#64748b; font-size:12px;">Includes {{ $currency }} {{ $convenienceFee }} online payment convenience fee</div>
+            @endif
         </td>
     </tr>
 

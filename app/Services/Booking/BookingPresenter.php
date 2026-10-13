@@ -7,6 +7,7 @@ use App\Models\Policy;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Models\User;
+use App\Support\ConvenienceFee;
 
 /**
  * Builds the props the booking detail and checkout screens render from.
@@ -36,6 +37,7 @@ class BookingPresenter
             'policies' => $this->checkoutPolicies(),
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,
+            'fee' => ConvenienceFee::for($isGrouped ? $groupBookings->sum('amount') : $booking->amount),
             'paymentDeadline' => $this->paymentDeadline($booking),
             'venue' => $this->venueProfile(),
         ];

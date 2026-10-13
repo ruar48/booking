@@ -2,7 +2,7 @@ import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFo
 import sales from './sales'
 /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
 export const checkout = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -17,7 +17,7 @@ checkout.definition = {
 
 /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
 checkout.url = (options?: RouteQueryOptions) => {
@@ -26,7 +26,7 @@ checkout.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
 checkout.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -35,7 +35,7 @@ checkout.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
 checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -45,7 +45,7 @@ checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
     const checkoutForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -55,7 +55,7 @@ checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
         checkoutForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -64,7 +64,7 @@ checkout.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\Pos\PosController::checkout
- * @see app/Http/Controllers/Pos/PosController.php:28
+ * @see app/Http/Controllers/Pos/PosController.php:29
  * @route '/pos'
  */
         checkoutForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

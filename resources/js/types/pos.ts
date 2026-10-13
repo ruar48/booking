@@ -33,6 +33,12 @@ export type SaleItem = {
     updated_at?: string;
 };
 
+export type CustomerOption = {
+    id: number;
+    name: string;
+    email: string;
+};
+
 export type PaymentMethodOption = {
     value: 'cash' | 'card' | 'bank_transfer';
     label: string;
@@ -51,4 +57,11 @@ export type SalesReport = {
         date: string;
         revenue: number;
     }[];
+};
+
+/** Online-payment fee passed on to the customer (price + fee = total). */
+export type ConvenienceFee = {
+    base: number;
+    fee: number;
+    total: number;
 };

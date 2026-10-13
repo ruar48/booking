@@ -49,6 +49,10 @@ return [
         'secret_key' => env('PAYMONGO_SECRET_KEY'),
         'public_key' => env('PAYMONGO_PUBLIC_KEY'),
         'webhook_secret' => env('PAYMONGO_WEBHOOK_SECRET'),
+        // Convenience fee passed on to the customer so the venue nets the
+        // full price. Set to PayMongo's current QR Ph rate for your account.
+        'fee_percent' => (float) env('PAYMONGO_FEE_PERCENT', 1.5),
+        'fee_fixed' => (float) env('PAYMONGO_FEE_FIXED', 0),
     ],
 
 ];

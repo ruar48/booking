@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldCheck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
 import openPlayCheckout from '@/routes/open-play/checkout';
 import type { OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
+import type { ConvenienceFee } from '@/types/pos';
 
 type QrPayment = {
     id: number;
@@ -30,6 +31,7 @@ type Props = {
     registration: OpenPlayRegistration;
     qrPayment?: QrPayment | null;
     policies?: CheckoutPolicy[];
+    fee?: ConvenienceFee | null;
 };
 
 type Step = 1 | 2 | 3;
@@ -66,7 +68,7 @@ function useExpired(deadline: string | null | undefined) {
     return expired;
 }
 
-export default function OpenPlayCheckout({ session, registration, qrPayment = null, policies = [] }: Props) {
+export default function OpenPlayCheckout({ session, registration, qrPayment = null, policies = [], fee = null }: Props) {
     const isPaid = registration.payment_status === 'paid';
 
     const [step, setStep] = useState<Step>(() => {
@@ -83,6 +85,23 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
     const qrExpired = useExpired(qrPayment?.expiresAt) && Boolean(qrPayment);
 
     useOpenPlayPaymentChannel(isPaid ? null : registration.id);
+
+    // Fallback if the websocket is unavailable or the event is missed.
+    const { start: startPoll, stop: stopPoll } = usePoll(
+        5000,
+        { only: ['registration', 'qrPayment'] },
+        { autoStart: false },
+    );
+
+    useEffect(() => {
+        if (!isPaid && step === 2) {
+            startPoll();
+        } else {
+            stopPoll();
+        }
+
+        return stopPoll;
+    }, [isPaid, step]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         if (isPaid) {
@@ -129,6 +148,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                         <PaymentMethodCard
                             session={session}
                             registration={registration}
+                            fee={fee}
                             policies={policies}
                             agreed={agreed}
                             onAgreedChange={setAgreed}
@@ -137,7 +157,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                         />
                     ) : step === 2 ? (
                         <PayCard
-                            amount={registration.amount}
+                            amount={fee && fee.total > 0 ? fee.total : registration.amount}
                             qrPayment={qrPayment}
                             qrExpired={qrExpired}
                             generating={generating}
@@ -146,7 +166,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                             onGenerateNew={generateQr}
                         />
                     ) : (
-                        <ConfirmationCard session={session} registration={registration} />
+                        <ConfirmationCard session={session} registration={registration} fee={fee} />
                     )}
 
                     {step !== 3 ? (
@@ -180,6 +200,7 @@ OpenPlayCheckout.layout = {
 function PaymentMethodCard({
     session,
     registration,
+    fee,
     policies,
     agreed,
     onAgreedChange,
@@ -188,6 +209,7 @@ function PaymentMethodCard({
 }: {
     session: OpenPlaySession;
     registration: OpenPlayRegistration;
+    fee: ConvenienceFee | null;
     policies: { id: number; title: string; body: string }[];
     agreed: boolean;
     onAgreedChange: (value: boolean) => void;
@@ -222,10 +244,42 @@ function PaymentMethodCard({
                     </span>
                 </div>
 
+                {registration.group_members && registration.group_members.length > 0 ? (
+                    <div className="space-y-1 rounded-md border p-2.5 text-xs">
+                        <p className="font-semibold">
+                            Paying for {registration.group_members.length + 1} players
+                            {session.price_per_player != null ? ` × ${formatCurrency(session.price_per_player)}` : ''}
+                        </p>
+                        <ul className="text-muted-foreground list-inside list-disc">
+                            <li>You</li>
+                            {registration.group_members.map((member) => (
+                                <li key={member.id}>{member.player?.user?.name ?? `Player #${member.player_id}`}</li>
+                            ))}
+                        </ul>
+                    </div>
+                ) : null}
+
+                {fee && fee.fee > 0 ? (
+                    <div className="space-y-1 rounded-md border p-2.5 text-xs">
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span>{formatCurrency(fee.base)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-muted-foreground">Online payment convenience fee</span>
+                            <span>{formatCurrency(fee.fee)}</span>
+                        </div>
+                    </div>
+                ) : null}
+
                 <div className="bg-muted flex items-center justify-between rounded-md p-2.5 text-sm">
-                    <span className="text-muted-foreground">Amount due</span>
+                    <span className="text-muted-foreground">Total to pay</span>
                     <span className="font-semibold">
-                        {registration.amount != null ? formatCurrency(registration.amount) : '—'}
+                        {fee && fee.total > 0
+                            ? formatCurrency(fee.total)
+                            : registration.amount != null
+                              ? formatCurrency(registration.amount)
+                              : '—'}
                     </span>
                 </div>
 
@@ -359,18 +413,49 @@ function PayCard({
     );
 }
 
-function ConfirmationCard({ session, registration }: { session: OpenPlaySession; registration: OpenPlayRegistration }) {
+const REDIRECT_SECONDS = 5;
+
+function ConfirmationCard({
+    session,
+    registration,
+    fee,
+}: {
+    session: OpenPlaySession;
+    registration: OpenPlayRegistration;
+    fee: ConvenienceFee | null;
+}) {
+    const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
+
+    useEffect(() => {
+        if (secondsLeft <= 0) {
+            router.visit(openPlayJoin(session));
+
+            return;
+        }
+
+        const timeout = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+
+        return () => window.clearTimeout(timeout);
+    }, [secondsLeft, session]);
+
     return (
         <Card className="border-emerald-500/20">
             <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
                 <PartyPopper className="size-14 text-emerald-500" />
                 <p className="text-lg font-semibold">Payment Successful!</p>
                 <p className="text-muted-foreground text-sm">
-                    {registration.amount != null ? `${formatCurrency(registration.amount)} paid. ` : ''}
+                    {fee && fee.total > 0
+                        ? `${formatCurrency(fee.total)} paid. `
+                        : registration.amount != null
+                          ? `${formatCurrency(registration.amount)} paid. `
+                          : ''}
                     You&apos;re registered for {session.title} — see you on the court.
                 </p>
+                <p className="text-muted-foreground text-xs">
+                    A receipt has been sent to your email. Redirecting to your session details in {secondsLeft}s…
+                </p>
                 <Button asChild className="mt-2">
-                    <Link href={openPlayJoin(session)}>View session</Link>
+                    <Link href={openPlayJoin(session)}>View session now</Link>
                 </Button>
             </CardContent>
         </Card>

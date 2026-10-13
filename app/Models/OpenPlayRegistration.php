@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
@@ -14,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property int $open_play_session_id
  * @property int $player_id
  * @property int|null $partner_player_id
+ * @property int|null $group_lead_id
  * @property PaymentStatus $payment_status
  * @property string $amount
  * @property int|null $created_by
@@ -24,6 +26,7 @@ use Illuminate\Support\Carbon;
     'open_play_session_id',
     'player_id',
     'partner_player_id',
+    'group_lead_id',
     'payment_status',
     'amount',
     'created_by',
@@ -55,6 +58,16 @@ class OpenPlayRegistration extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Registrations for friends that this registration's payment also covers.
+     *
+     * @return HasMany<OpenPlayRegistration, $this>
+     */
+    public function groupMembers(): HasMany
+    {
+        return $this->hasMany(self::class, 'group_lead_id');
     }
 
     /**

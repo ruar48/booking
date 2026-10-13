@@ -1,9 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Clock, MapPin, TriangleAlert, Users, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { ReadOnlyBracketTree, ReadOnlyDoubleEliminationBracket } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
+import { PlayerCombobox } from '@/components/player-combobox';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -60,6 +61,7 @@ export default function OpenPlayJoin({
 
     const [partnerMode, setPartnerMode] = useState<'select' | 'random'>('select');
     const [partner, setPartner] = useState<Player | null>(null);
+    const [friends, setFriends] = useState<Player[]>([]);
     const [processing, setProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -79,6 +81,10 @@ export default function OpenPlayJoin({
             ? Math.min(Math.round((registrationsCount / session.max_players) * 100), 100)
             : null;
 
+    const partySize = 1 + friends.length;
+    const groupTotal = requiresPayment ? Number(session.price_per_player) * partySize : 0;
+    const exceedsSpots = spotsLeft !== null && partySize > spotsLeft;
+
     const register = () => {
         if (needsPartnerSelection && !partner) {
             return;
@@ -97,7 +103,10 @@ export default function OpenPlayJoin({
         // another random sign-up, or wait solo until someone else does.
         router.post(
             joinStore(session).url,
-            { partner_player_id: needsPartnerSelection ? partner?.id : null },
+            {
+                partner_player_id: needsPartnerSelection ? partner?.id : null,
+                friend_player_ids: isDoublesSession ? [] : friends.map((friend) => friend.id),
+            },
             {
                 preserveScroll: true,
                 onError: (errors) => setError(Object.values(errors)[0] as string),
@@ -316,12 +325,58 @@ export default function OpenPlayJoin({
                                         )}
                                     </div>
                                 )}
+                                {!isDoublesSession && (
+                                    <div className="space-y-2">
+                                        <p className="text-muted-foreground text-xs">
+                                            Add friends (optional) — pay for them too.
+                                        </p>
+                                        <PlayerCombobox
+                                            placeholder="Search a friend by name…"
+                                            onSelect={(player) => setFriends((prev) => [...prev, player])}
+                                            excludeIds={friends.map((friend) => friend.id)}
+                                        />
+                                        {friends.length > 0 && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {friends.map((friend) => (
+                                                    <Badge key={friend.id} variant="secondary" className="gap-1">
+                                                        {friend.user?.name ?? `Player #${friend.id}`}
+                                                        <button
+                                                            type="button"
+                                                            aria-label="Remove friend"
+                                                            onClick={() =>
+                                                                setFriends((prev) =>
+                                                                    prev.filter((p) => p.id !== friend.id),
+                                                                )
+                                                            }
+                                                        >
+                                                            <X className="size-3" />
+                                                        </button>
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {requiresPayment && friends.length > 0 && (
+                                            <div className="bg-muted flex items-center justify-between rounded-md p-2.5 text-sm">
+                                                <span className="text-muted-foreground">
+                                                    {partySize} players × {formatCurrency(session.price_per_player)}
+                                                </span>
+                                                <span className="font-semibold">{formatCurrency(groupTotal)}</span>
+                                            </div>
+                                        )}
+                                        {exceedsSpots && (
+                                            <p className="text-destructive text-xs">
+                                                Only {spotsLeft} spot{spotsLeft === 1 ? '' : 's'} left — remove a
+                                                friend.
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
                                 {error && <p className="text-destructive text-sm">{error}</p>}
                                 <Button
                                     size="lg"
                                     className="w-full bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
                                     onClick={register}
-                                    disabled={processing || (needsPartnerSelection && !partner)}
+                                    disabled={processing || exceedsSpots || (needsPartnerSelection && !partner)}
                                 >
                                     {requiresPayment ? 'Continue to Payment' : 'Register for this session'}
                                 </Button>
