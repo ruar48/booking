@@ -78,3 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+
+// Unknown URLs go through the web middleware (session, auth, shared props)
+// before 404ing, so the branded 404 page knows who the visitor is and can send
+// them to the right place. Laravel always matches fallbacks last.
+Route::fallback(fn () => abort(404));

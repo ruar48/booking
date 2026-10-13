@@ -48,14 +48,30 @@ return Application::configure(basePath: dirname(__DIR__))
             fn (Request $request) => $request->is('api/*'),
         );
 
-        // Inertia cannot render Laravel's plain 403 page: the visitor gets a
-        // raw error overlay with no way back. This happens in normal use
-        // whenever a page is acted on after the underlying record changed —
-        // permission flags are baked into props, so a button restored from
-        // history cache can stay clickable after the action stopped being
-        // allowed. Bounce them to the page they came from with the policy's
-        // reason instead. Non-Inertia requests keep the real 403.
+        // Laravel keeps only one respond() callback — a second call replaces
+        // the first — so every status is handled here.
         $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            // Branded 404 instead of Laravel's bare page. JSON callers keep a
+            // JSON 404. Unknown URLs reach this through the Route::fallback in
+            // web.php, so the session (and with it the signed-in user) is
+            // loaded and the page can point each visitor at the right place.
+            if ($response->getStatusCode() === 404) {
+                if ($request->expectsJson() && ! $request->hasHeader('X-Inertia')) {
+                    return $response;
+                }
+
+                return Inertia::render('errors/not-found')
+                    ->toResponse($request)
+                    ->setStatusCode(404);
+            }
+
+            // Inertia cannot render Laravel's plain 403 page: the visitor gets
+            // a raw error overlay with no way back. This happens in normal use
+            // whenever a page is acted on after the underlying record changed
+            // — permission flags are baked into props, so a button restored
+            // from history cache can stay clickable after the action stopped
+            // being allowed. Bounce them to the page they came from with the
+            // policy's reason instead. Non-Inertia requests keep the real 403.
             if ($response->getStatusCode() !== 403 || ! $request->hasHeader('X-Inertia')) {
                 return $response;
             }
