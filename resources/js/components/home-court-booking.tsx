@@ -324,13 +324,6 @@ export function BookYourCourt({
 }) {
     const dateLabel = format(parseISO(`${booking.selectedDate}T12:00:00`), 'EEEE, MMMM d, yyyy');
     const unit = sportUnit(booking.sport);
-    const chipClass = (active: boolean) =>
-        cn(
-            'rounded-full border px-4 py-2 text-sm font-semibold transition-colors sm:px-5',
-            active
-                ? 'border-emerald-700 bg-emerald-700 text-white shadow-sm'
-                : 'border-slate-200 bg-white text-brand-navy hover:border-emerald-600',
-        );
 
     return (
         <div>
@@ -402,28 +395,6 @@ export function BookYourCourt({
                     <ChevronRight className="size-4" />
                 </Button>
             </div>
-
-            {booking.sportCourts.length > 1 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                    <button
-                        type="button"
-                        onClick={() => booking.setCourtFilter('all')}
-                        className={chipClass(booking.courtFilter === 'all')}
-                    >
-                        All {sportUnit(booking.sport).replace(/^\w/, (c) => c.toUpperCase())}
-                    </button>
-                    {booking.sportCourts.map((court) => (
-                        <button
-                            key={court.id}
-                            type="button"
-                            onClick={() => booking.setCourtFilter(court.id)}
-                            className={chipClass(booking.courtFilter === court.id)}
-                        >
-                            {court.name}
-                        </button>
-                    ))}
-                </div>
-            )}
 
             {booking.sportCourts.length > 0 && (
                 <div className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(7rem,1fr))] gap-2">
