@@ -61,9 +61,9 @@ class GlobalSearchService
     {
         return Coach::query()
             ->with('user')
-            ->whereHas('user', fn ($q) => $q
+            ->where(fn ($q) => $q
                 ->where('name', 'like', $like)
-                ->orWhere('email', 'like', $like))
+                ->orWhereHas('user', fn ($q) => $q->where('email', 'like', $like)))
             ->limit(self::LIMIT_PER_TYPE)
             ->get();
     }

@@ -284,15 +284,50 @@ export type Ranking = {
     player?: Player;
 };
 
+/** day is JS/Carbon day-of-week (0 = Sunday); times are 24h "HH:mm". */
+export type CoachSlot = {
+    day: number;
+    start: string;
+    end: string;
+};
+
 export type Coach = {
     id: number;
-    user_id: number;
+    user_id: number | null;
+    name: string;
+    photo_url: string | null;
+    phone?: string | null;
     bio?: string | null;
+    years_experience: number;
+    rate_per_hour?: string | null;
     specialties?: string[] | null;
+    certifications?: string[] | null;
+    availability?: CoachSlot[] | null;
     is_active: boolean;
+    sort_order: number;
     user?: { id: number; name: string; email?: string };
     players?: Player[];
     training_sessions?: TrainingSession[];
+};
+
+/** A coach as shown on the public home page (built by CoachService). */
+export type PublicCoach = {
+    id: number;
+    name: string;
+    photo_url: string | null;
+    phone: string | null;
+    bio: string | null;
+    specialties: string[];
+    certifications: string[];
+    years_experience: number;
+    rate_per_hour: number | null;
+    schedule: {
+        day: number;
+        label: string;
+        slots: Pick<CoachSlot, 'start' | 'end'>[];
+    }[];
+    today_slots: Pick<CoachSlot, 'start' | 'end'>[];
+    next_available_day: string | null;
 };
 
 export type TrainingSession = {
@@ -438,6 +473,10 @@ export type VenueProfile = {
     country?: string | null;
     amenities?: string[] | null;
     gallery?: string[] | null;
+    // Social profile links; the home footer shows an icon only for those set.
+    facebook?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
 };
 
 export type UserSession = {

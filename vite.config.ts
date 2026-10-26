@@ -14,7 +14,11 @@ export default defineConfig({
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
-                    weights: [400, 500, 600],
+                    weights: [400, 500, 600, 700],
+                }),
+                // Brush-script accent for the "Play · Connect · Belong" tagline.
+                bunny('Kaushan Script', {
+                    weights: [400],
                 }),
             ],
         }),
@@ -74,6 +78,7 @@ export default defineConfig({
                 globIgnores: [
                     '**/node_modules/**',
                     'gallery-media/**',
+                    'coach-media/**',
                     'announcement-media/**',
                     'profile/**',
                     'storage/**',

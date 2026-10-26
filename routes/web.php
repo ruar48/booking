@@ -72,6 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         require __DIR__.'/pos.php';
         require __DIR__.'/rentals.php';
         require __DIR__.'/announcements.php';
+        require __DIR__.'/coaches.php';
         require __DIR__.'/open-play.php';
         require __DIR__.'/admin.php';
     });

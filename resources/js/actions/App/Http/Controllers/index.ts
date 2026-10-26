@@ -12,6 +12,7 @@ import ResourceController from './ResourceController'
 import Pos from './Pos'
 import ReportController from './ReportController'
 import AnnouncementController from './AnnouncementController'
+import CoachController from './CoachController'
 import Admin from './Admin'
 import Settings from './Settings'
 import SessionController from './SessionController'
@@ -30,6 +31,7 @@ ResourceController: Object.assign(ResourceController, ResourceController),
 Pos: Object.assign(Pos, Pos),
 ReportController: Object.assign(ReportController, ReportController),
 AnnouncementController: Object.assign(AnnouncementController, AnnouncementController),
+CoachController: Object.assign(CoachController, CoachController),
 Admin: Object.assign(Admin, Admin),
 Settings: Object.assign(Settings, Settings),
 SessionController: Object.assign(SessionController, SessionController),

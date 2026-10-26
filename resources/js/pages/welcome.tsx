@@ -2,33 +2,49 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { format, parseISO } from 'date-fns';
 import {
     ArrowRight,
+    Armchair,
     CalendarDays,
-    ChevronDown,
+    CircleCheck,
     Clock,
-    Globe,
+    CupSoda,
+    Facebook,
+    GraduationCap,
     Grid3x3,
+    Heart,
     ImageIcon,
-    Info,
+    Instagram,
+    LandPlot,
+    Lightbulb,
     Mail,
     MapPin,
     Megaphone,
+    Navigation,
+    Package,
     Phone,
+    ShowerHead,
+    SquareParking,
+    Toilet,
+    UserRound,
     Users,
+    UsersRound,
+    Wifi,
+    Youtube,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import type { LucideIcon, LucideProps } from 'lucide-react';
+import { useState } from 'react';
+import type { ComponentType } from 'react';
 
-import { CourtScheduleGrid } from '@/components/court-schedule-grid';
-import { BrandLogo } from '@/components/brand-logo';
+import { BookYourCourt, PanelTitle, useCourtBooking } from '@/components/home-court-booking';
 import { InstallAppButton } from '@/components/install-app-button';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { SupportWidget } from '@/components/support-widget';
-import { VenueMap, venueAddress } from '@/components/venue-map';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { venueAddress, venueMapUrls } from '@/components/venue-map';
 import { brand } from '@/lib/brand';
-import { formatCurrency, formatDate, formatTime } from '@/lib/format';
+import { formatClock, formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard, login, register } from '@/routes';
 import { index as bookingsIndex } from '@/routes/bookings';
@@ -43,6 +59,7 @@ import type {
     GallerySection,
     HourForecast,
     OpenPlaySession,
+    PublicCoach,
     Resource,
     VenueProfile,
 } from '@/types/booking';
@@ -51,6 +68,8 @@ type HomeStats = {
     courts: number;
     members: number;
     bookings_today: number;
+    available_slots_today: number;
+    open_play_this_week: number;
 };
 
 type Props = {
@@ -63,7 +82,25 @@ type Props = {
     dateOverrides?: DateOverride[];
     hourlyWeather?: Record<string, HourForecast>;
     gallery?: GallerySection[];
+    coaches?: PublicCoach[];
 };
+
+type ExploreTab = 'book' | 'open-play' | 'coaches' | 'photos';
+
+type NavKey = 'home' | ExploreTab;
+
+const heroImage = '/bg.webp';
+
+const fallbackDescription =
+    'A place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.';
+
+
+/** "Galaang-Ramos Pickleball" → ["Galaang-Ramos", "Pickleball"], for the two-tone wordmark. */
+function splitName(name: string): [string, string] {
+    const at = name.lastIndexOf(' ');
+
+    return at === -1 ? [name, ''] : [name.slice(0, at), name.slice(at + 1)];
+}
 
 function formatSkillLevel(level?: string): string {
     if (!level || level === 'all_levels') {
@@ -81,273 +118,637 @@ const courtGradients = [
     'from-brand-lime to-brand-court',
 ];
 
-function HeroLanding({
-    venue,
-    businessName,
-    stats,
-    onExplore,
-    onBook,
-}: {
-    venue?: VenueProfile | null;
-    businessName: string;
-    stats: HomeStats;
-    onExplore: () => void;
-    onBook: () => void;
-}) {
+// Lucide has no running figure, so this is drawn in its 24px / 2px-stroke
+// style to sit alongside the stock icons.
+function RunnerIcon({ className, ...props }: LucideProps) {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={className}
+            aria-hidden="true"
+            {...props}
+        >
+            <circle cx="15.5" cy="4" r="2" />
+            <path d="M13.5 8 11 13.5" />
+            <path d="m11 13.5-3 2-2.5 4.5" />
+            <path d="m11 13.5 3 2.5-1 5" />
+            <path d="m5 10.5 3.5-2.5h5l2 3 3.5 1" />
+        </svg>
+    );
+}
+
+const exploreTabs: { key: ExploreTab; label: string; icon: ComponentType<LucideProps> }[] = [
+    { key: 'book', label: 'Book a Court', icon: CalendarDays },
+    { key: 'open-play', label: 'Open Play', icon: RunnerIcon },
+    { key: 'coaches', label: 'Coaches', icon: GraduationCap },
+    { key: 'photos', label: 'Photos', icon: ImageIcon },
+];
+
+/** Lime brush stroke under the script taglines. */
+function Swoosh({ className }: { className?: string }) {
+    return (
+        <svg
+            viewBox="0 0 200 20"
+            fill="none"
+            className={className}
+            aria-hidden="true"
+        >
+            <path
+                d="M4 15C50 6 120 3 196 6"
+                stroke="currentColor"
+                strokeWidth="5"
+                strokeLinecap="round"
+            />
+        </svg>
+    );
+}
+
+function Wordmark({ size = 'md' }: { size?: 'md' | 'lg' }) {
+    const [first, last] = splitName(brand.name);
+
+    return (
+        <span
+            className={cn(
+                'flex flex-col text-left leading-[1.1] font-bold tracking-tight',
+                size === 'lg' ? 'text-lg' : 'text-base sm:text-lg',
+            )}
+        >
+            <span className="text-white">{first}</span>
+            {last && <span className="text-brand-lime">{last}</span>}
+        </span>
+    );
+}
+
+function amenityIcon(name: string): LucideIcon {
+    const n = name.toLowerCase();
+
+    if (/rest ?room|toilet|comfort|\bcr\b/.test(n)) {
+        return Toilet;
+    }
+
+    if (/shower/.test(n)) {
+        return ShowerHead;
+    }
+
+    if (/park/.test(n)) {
+        return SquareParking;
+    }
+
+    if (/snack|refresh|food|drink|cafe|coffee|canteen/.test(n)) {
+        return CupSoda;
+    }
+
+    if (/rent|equipment|paddle/.test(n)) {
+        return Package;
+    }
+
+    if (/wi-?fi|internet/.test(n)) {
+        return Wifi;
+    }
+
+    if (/light/.test(n)) {
+        return Lightbulb;
+    }
+
+    if (/seat|bench|lounge|waiting/.test(n)) {
+        return Armchair;
+    }
+
+    return CircleCheck;
+}
+
+function SiteHeader({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
     const { auth } = usePage().props;
     const accountHref = auth.user?.isVenueAdmin ? dashboard() : bookingsIndex();
 
+    const outlineClass =
+        'h-10 rounded-lg border-white/70 bg-transparent px-4 text-white shadow-none hover:bg-white/10 hover:text-white';
+
     return (
-        <section className="relative flex min-h-screen flex-col overflow-hidden bg-brand-navy text-white">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-navy via-brand-navy-light to-brand-court/80" />
-            <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute -top-20 -right-20 size-72 rounded-full bg-brand-lime/10 blur-3xl" />
-                <div className="absolute bottom-20 -left-16 size-56 rounded-full bg-brand-court/20 blur-2xl" />
-            </div>
-
-            <header className="relative z-10 border-b border-brand-lime/10 bg-brand-navy/80 backdrop-blur-md">
-                <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-                    <Link href="/">
-                        <BrandLogo
-                            imageClassName="size-11 sm:size-12"
-                            showName
-                            nameClassName="hidden text-white sm:inline"
-                        />
-                    </Link>
-
-                    <div className="flex items-center gap-2">
-                        <InstallAppButton
-                            variant="outline"
-                            iconOnly
-                            className="border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:hidden"
-                        />
-                        <InstallAppButton
-                            variant="outline"
-                            className="hidden border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:inline-flex"
-                        />
-                        {auth.user ? (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    onClick={onBook}
-                                    className="hidden border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white sm:inline-flex"
-                                >
-                                    Book a court
-                                </Button>
-                                <Button
-                                    asChild
-                                    className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
-                                >
-                                    <Link href={accountHref}>My account</Link>
-                                </Button>
-                            </>
-                        ) : (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                    className="border-2 border-white/70 bg-transparent text-white shadow-none hover:bg-white/10 hover:text-white"
-                                >
-                                    <Link href={login()}>Log in</Link>
-                                </Button>
-                                <Button
-                                    onClick={onBook}
-                                    className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
-                                >
-                                    Book a court
-                                </Button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </header>
-
-            <div className="relative z-10 mx-auto flex max-w-7xl flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:px-8">
-                <div className="grid items-center gap-12 lg:grid-cols-2">
-                    <div className="min-w-0">
-                        <Badge className="mb-6 border-brand-lime/40 bg-brand-lime/15 text-brand-lime">
-                            {brand.tagline} · Pickleball
-                        </Badge>
-                        <h1 className="text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-                            Welcome to{' '}
-                            <span className="text-brand-lime">
-                                {businessName}
-                            </span>
-                        </h1>
-                        <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/80">
-                            {venue?.description ??
-                                'Reserve a court online. Simple scheduling for open play and private sessions.'}
-                        </p>
-                        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                            <Button
-                                size="lg"
-                                onClick={onBook}
-                                className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
-                            >
-                                Book a court
-                                <ArrowRight className="ml-2 size-4" />
-                            </Button>
-                            {!auth.user && (
-                                <Button
-                                    size="lg"
-                                    variant="outline"
-                                    asChild
-                                    className="border-2 border-white/90 bg-transparent font-semibold text-white shadow-none hover:bg-white/15 hover:text-white"
-                                >
-                                    <Link href={login()}>Member login</Link>
-                                </Button>
-                            )}
-                        </div>
-                        {venue && venueAddress(venue) && (
-                            <p className="mt-6 flex items-center gap-2 text-sm text-white/60">
-                                <MapPin className="size-4 shrink-0 text-brand-lime" />
-                                {venueAddress(venue)}
-                            </p>
-                        )}
-                    </div>
-
-                    <div className="flex justify-center overflow-hidden">
-                        <img
-                            src={brand.logo}
-                            alt={businessName}
-                            className="size-48 max-w-full object-contain drop-shadow-2xl sm:size-64 lg:size-72"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                    {[
-                        { label: 'Pickleball courts', value: stats.courts },
-                        { label: 'Active members', value: stats.members },
-                        {
-                            label: 'Bookings today',
-                            value: stats.bookings_today,
-                        },
-                    ].map((stat) => (
-                        <div
-                            key={stat.label}
-                            className="rounded-2xl border border-brand-lime/20 bg-white/10 p-3 text-center backdrop-blur-sm sm:p-5"
-                        >
-                            <p className="text-2xl font-bold text-brand-lime sm:text-3xl">
-                                {stat.value}
-                            </p>
-                            <p className="mt-1 text-xs text-white/70 sm:text-sm">
-                                {stat.label}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-
+        <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-navy-dark/95 text-white backdrop-blur-md">
+            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-[4.5rem] sm:px-6 lg:px-8">
                 <button
                     type="button"
-                    onClick={onExplore}
-                    className="mt-12 flex flex-col items-center gap-2 self-center text-sm text-white/60 transition-colors hover:text-brand-lime"
-                    aria-label="Scroll to venue details"
+                    onClick={() => onNavigate('home')}
+                    className="flex min-w-0 items-center gap-3"
                 >
-                    <span>Explore our courts</span>
-                    <ChevronDown className="size-5 animate-bounce" />
+                    <img
+                        src={brand.logo}
+                        alt=""
+                        className="size-10 shrink-0 object-contain sm:size-12"
+                    />
+                    <span className="hidden sm:block">
+                        <Wordmark />
+                    </span>
                 </button>
+
+                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <InstallAppButton
+                        variant="outline"
+                        iconOnly
+                        className={cn(outlineClass, 'px-2.5 sm:hidden')}
+                    />
+                    <InstallAppButton
+                        variant="outline"
+                        className={cn(outlineClass, 'hidden sm:inline-flex')}
+                    />
+                    <Button variant="outline" asChild className={outlineClass}>
+                        <Link href={auth.user ? accountHref : login()}>
+                            <UserRound className="size-4" />
+                            <span className="hidden sm:inline">
+                                {auth.user ? 'My account' : 'Login'}
+                            </span>
+                        </Link>
+                    </Button>
+                    <Button
+                        onClick={() => onNavigate('book')}
+                        className="h-10 rounded-lg bg-brand-lime px-4 font-bold text-brand-navy hover:bg-brand-lime-dark"
+                    >
+                        <CalendarDays className="size-4" />
+                        <span className="hidden sm:inline">Book a Court</span>
+                        <span className="sm:hidden">Book</span>
+                    </Button>
+                </div>
+            </div>
+        </header>
+    );
+}
+
+function Hero({
+    venue,
+    onBook,
+    onOpenPlay,
+}: {
+    venue?: VenueProfile | null;
+    onBook: () => void;
+    onOpenPlay: () => void;
+}) {
+    const [first, last] = splitName(brand.name);
+    // The hero only has room for the opening paragraph; the About section has the rest.
+    const intro = (venue?.description ?? fallbackDescription).split('\n').find(Boolean);
+
+    return (
+        <section className="relative overflow-hidden bg-brand-navy-dark text-white">
+            <img
+                src={heroImage}
+                alt=""
+                className="absolute inset-0 size-full object-cover object-[70%_center]"
+                fetchPriority="high"
+            />
+            {/* Darken the left for the headline; let the paddle show through on the right. */}
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-navy-dark/95 via-brand-navy-dark/70 to-brand-navy-dark/5" />
+            <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-brand-navy-dark/60 to-transparent" />
+
+            <div className="pointer-events-none absolute top-8 right-6 hidden flex-col items-end md:flex lg:right-10">
+                <img
+                    src={brand.logo}
+                    alt=""
+                    className="size-36 object-contain drop-shadow-[0_16px_32px_rgba(0,0,0,0.55)] lg:size-44"
+                />
+                <div
+                    className="mt-3 mr-2 -rotate-12 text-right font-script text-2xl leading-tight text-brand-lime drop-shadow-lg lg:text-3xl"
+                    aria-hidden="true"
+                >
+                    <p className="mr-8">Play Hard</p>
+                    <p>Stay Connected</p>
+                </div>
+            </div>
+
+            <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-28 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16 lg:pb-32">
+                <div className="max-w-xl">
+                    <span className="inline-flex items-center rounded-full bg-brand-lime px-3.5 py-1 text-xs font-bold text-brand-navy sm:text-sm">
+                        Play • Connect • Belong
+                    </span>
+                    <h1 className="mt-5 text-4xl leading-[1.05] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+                        Welcome to
+                        <span className="block text-brand-lime">{first}</span>
+                        {last && <span className="block text-brand-lime">{last}</span>}
+                    </h1>
+                    <p className="mt-5 line-clamp-4 text-sm leading-relaxed text-white/85 sm:text-base">
+                        {intro}
+                    </p>
+                    <div className="mt-8 flex flex-wrap gap-3 sm:gap-4">
+                        <Button
+                            size="lg"
+                            onClick={onBook}
+                            className="h-12 rounded-xl bg-brand-lime px-6 font-bold text-brand-navy hover:bg-brand-lime-dark"
+                        >
+                            <CalendarDays className="size-4" />
+                            Book a Court
+                            <ArrowRight className="size-4" />
+                        </Button>
+                        <Button
+                            size="lg"
+                            variant="outline"
+                            onClick={onOpenPlay}
+                            className="h-12 rounded-xl border-white/70 bg-brand-navy-dark/30 px-6 font-semibold text-white shadow-none hover:bg-white/10 hover:text-white"
+                        >
+                            <UsersRound className="size-4" />
+                            Explore Open Play
+                        </Button>
+                    </div>
+                </div>
             </div>
         </section>
     );
 }
 
-function AboutTab({ venue }: { venue: VenueProfile }) {
-    const amenities = venue.amenities ?? [];
+function StatsBar({ items }: { items: { label: string; value: string | number; icon: LucideIcon }[] }) {
+    return (
+        <div className="relative z-10 mx-auto -mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-3 rounded-2xl border border-white/10 bg-brand-navy px-2 py-5 text-white shadow-xl sm:p-6">
+                {items.map(({ label, value, icon: Icon }, index) => (
+                    <div
+                        key={label}
+                        className={cn(
+                            'flex flex-col items-center gap-2 px-1 text-center sm:flex-row sm:justify-center sm:gap-4 sm:text-left',
+                            index > 0 && 'border-l border-white/15',
+                        )}
+                    >
+                        <span className="flex size-11 shrink-0 items-center justify-center rounded-full ring-2 ring-brand-lime/80 sm:size-14">
+                            <Icon className="size-5 text-brand-lime sm:size-7" />
+                        </span>
+                        <div className="min-w-0">
+                            <p className="text-xl leading-none font-bold sm:text-3xl">
+                                {value}
+                            </p>
+                            <p className="mt-1 text-[11px] leading-tight text-white/80 sm:text-sm">
+                                {label}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+const panelClass =
+    'rounded-2xl border border-slate-200 bg-white shadow-sm';
+
+function PanelHeading({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+    return (
+        <h2 className="flex items-center gap-2.5 text-base font-bold text-brand-navy">
+            <Icon className="size-5 shrink-0" />
+            {children}
+        </h2>
+    );
+}
+
+/** Today's hours, or the next date an admin has opened if today is closed. */
+function operatingHours(dateOverrides: DateOverride[]): string {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const next = dateOverrides
+        .filter((o) => !o.is_closed && o.open_time && o.close_time && o.date.slice(0, 10) >= today)
+        .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+    if (!next) {
+        return 'Schedule coming soon';
+    }
+
+    const day = next.date.slice(0, 10);
+    const hours = `${formatClock(next.open_time!.slice(0, 5))} – ${formatClock(next.close_time!.slice(0, 5))}`;
+
+    return day === today
+        ? `Open today · ${hours}`
+        : `Closed today · opens ${format(parseISO(`${day}T12:00:00`), 'EEE, MMM d')}, ${hours}`;
+}
+
+function LocationCard({
+    venue,
+    dateOverrides,
+}: {
+    venue?: VenueProfile | null;
+    dateOverrides: DateOverride[];
+}) {
+    const urls = venue ? venueMapUrls(venue) : null;
+    const details = [
+        { icon: MapPin, label: urls?.address ?? 'Address coming soon', href: null },
+        { icon: Clock, label: operatingHours(dateOverrides), href: null },
+        venue?.phone && {
+            icon: Phone,
+            label: venue.phone,
+            href: `tel:${venue.phone.replace(/[^\d+]/g, '')}`,
+        },
+        venue?.email && { icon: Mail, label: venue.email, href: `mailto:${venue.email}` },
+    ].filter(Boolean) as { icon: LucideIcon; label: string; href: string | null }[];
 
     return (
-        <div className="grid gap-4 lg:grid-cols-2">
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="flex flex-row items-center gap-2 pb-3">
-                    <Info className="size-5 text-brand-court" />
-                    <CardTitle className="text-base">About</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm leading-relaxed text-slate-600">
-                    {(venue.description ?? '')
-                        .split('\n')
-                        .map((paragraph, index) => (
-                            <p key={index}>{paragraph}</p>
+        <div className={cn(panelClass, 'overflow-hidden')}>
+            <div className="relative overflow-hidden bg-brand-navy-dark text-white">
+                <img
+                    src={heroImage}
+                    alt=""
+                    className="absolute inset-0 size-full object-cover object-[60%_30%] opacity-35"
+                    loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-brand-navy-dark/90 to-brand-navy-dark/60" />
+                <div className="relative p-4">
+                    <h2 className="flex items-center gap-2 text-sm font-bold">
+                        <MapPin className="size-4 text-brand-lime" />
+                        Our Club Location
+                    </h2>
+                    <ul className="mt-3 space-y-2 text-xs text-white/85">
+                        {details.map(({ icon: Icon, label, href }) => (
+                            <li key={label} className="flex items-start gap-2.5">
+                                <Icon className="mt-px size-3.5 shrink-0 text-brand-lime" />
+                                {href ? (
+                                    <a href={href} className="min-w-0 truncate hover:text-brand-lime">
+                                        {label}
+                                    </a>
+                                ) : (
+                                    <span className="min-w-0">{label}</span>
+                                )}
+                            </li>
                         ))}
-                </CardContent>
-            </Card>
-
-            <div className="space-y-4">
-                <Card className="border-slate-200 shadow-sm">
-                    <CardContent className="space-y-3 pt-6 text-sm">
-                        {venue.phone && (
-                            <div className="flex items-center gap-3">
-                                <Phone className="size-4 text-brand-court" />
-                                <a
-                                    href={`tel:${venue.phone}`}
-                                    className="hover:underline"
-                                >
-                                    {venue.phone}
-                                </a>
-                            </div>
-                        )}
-                        {venue.email && (
-                            <div className="flex items-center gap-3">
-                                <Mail className="size-4 text-brand-court" />
-                                <a
-                                    href={`mailto:${venue.email}`}
-                                    className="hover:underline"
-                                >
-                                    {venue.email}
-                                </a>
-                            </div>
-                        )}
-                        {venue.website && (
-                            <div className="flex items-center gap-3">
-                                <Globe className="size-4 text-brand-court" />
-                                <a
-                                    href={
-                                        /^https?:\/\//.test(venue.website)
-                                            ? venue.website
-                                            : `https://${venue.website}`
-                                    }
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="hover:underline"
-                                >
-                                    {venue.website}
-                                </a>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {venueAddress(venue) && (
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardContent className="pt-6">
-                            <VenueMap
-                                venue={venue}
-                                mapClassName="h-56 sm:h-64"
-                            />
-                        </CardContent>
-                    </Card>
-                )}
-
-                {amenities.length > 0 && (
-                    <Card className="border-slate-200 shadow-sm">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-base">
-                                Amenities
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="flex flex-wrap gap-2">
-                            {amenities.map((amenity) => (
-                                <Badge
-                                    key={amenity}
-                                    variant="secondary"
-                                    className="bg-slate-100 text-slate-600"
-                                >
-                                    {amenity}
-                                </Badge>
-                            ))}
-                        </CardContent>
-                    </Card>
-                )}
+                    </ul>
+                </div>
             </div>
+
+            {urls && (
+                <div className="space-y-3 p-3">
+                    <iframe
+                        title={`Map of ${urls.address}`}
+                        src={urls.embedUrl}
+                        className="h-36 w-full rounded-xl border-0 bg-slate-100"
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        allowFullScreen
+                    />
+                    <Button
+                        asChild
+                        className="h-11 w-full rounded-xl bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
+                    >
+                        <a href={urls.directionsUrl} target="_blank" rel="noopener noreferrer">
+                            <Navigation className="size-4" />
+                            Get Directions
+                            <ArrowRight className="size-4" />
+                        </a>
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function NewsCard({ announcements }: { announcements: Announcement[] }) {
+    const [openId, setOpenId] = useState<Announcement['id'] | null>(null);
+
+    return (
+        <div className={cn(panelClass, 'p-5')}>
+            <PanelHeading icon={Megaphone}>News &amp; Announcements</PanelHeading>
+
+            {announcements.length === 0 ? (
+                <p className="mt-3 text-xs text-slate-500">
+                    No announcements right now. Check back soon.
+                </p>
+            ) : (
+                <ul className="mt-2">
+                    {announcements.slice(0, 3).map((announcement) => {
+                        const isOpen = openId === announcement.id;
+
+                        return (
+                            <li key={announcement.id} className="border-b border-slate-100 last:border-0">
+                                <button
+                                    type="button"
+                                    onClick={() => setOpenId(isOpen ? null : announcement.id)}
+                                    aria-expanded={isOpen}
+                                    className="flex w-full items-start gap-3 py-3 text-left"
+                                >
+                                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-emerald-500" />
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-xs font-bold text-brand-navy">
+                                            {announcement.title}
+                                        </span>
+                                        <span
+                                            className={cn(
+                                                'mt-0.5 block text-xs leading-relaxed text-slate-500',
+                                                !isOpen && 'line-clamp-1',
+                                            )}
+                                        >
+                                            {announcement.content}
+                                        </span>
+                                        {announcement.published_at && (
+                                            <span className="mt-1 block text-[11px] text-slate-400">
+                                                {formatDate(announcement.published_at)}
+                                            </span>
+                                        )}
+                                    </span>
+                                </button>
+                            </li>
+                        );
+                    })}
+                </ul>
+            )}
+        </div>
+    );
+}
+
+function PromoCard({ onClick }: { onClick: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="group relative block h-48 w-full overflow-hidden rounded-2xl bg-brand-navy-dark text-left shadow-sm"
+            aria-label="Explore Open Play"
+        >
+            {/* The ball-and-paddle corner of the hero photo. */}
+            <div
+                className="absolute inset-0 bg-cover transition-transform duration-500 group-hover:scale-105"
+                style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: '78% 75%', backgroundSize: '260%' }}
+                aria-hidden="true"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-brand-navy-dark/90 via-brand-navy-dark/50 to-transparent" />
+            <div className="absolute right-4 bottom-5 -rotate-6 text-right font-script text-2xl leading-tight text-white drop-shadow-lg">
+                <p className="mr-6">More Plays</p>
+                <p className="mr-3">More Friends</p>
+                <p>
+                    More <span className="text-brand-lime">Pickleball</span>
+                </p>
+                <Swoosh className="-mt-1 ml-auto w-32 text-brand-lime" />
+            </div>
+        </button>
+    );
+}
+
+const slotRange = (slots: { start: string; end: string }[]) =>
+    slots.map((slot) => `${formatClock(slot.start)} – ${formatClock(slot.end)}`).join(', ');
+
+function CoachAvailability({ coach }: { coach: PublicCoach }) {
+    if (coach.today_slots.length > 0) {
+        return (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-lime px-2.5 py-1 text-xs font-bold text-brand-navy">
+                <span className="size-1.5 rounded-full bg-emerald-600" />
+                Available today · {slotRange(coach.today_slots)}
+            </span>
+        );
+    }
+
+    return (
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+            <Clock className="size-3.5" />
+            {coach.next_available_day ? `Next available: ${coach.next_available_day}` : 'By appointment'}
+        </span>
+    );
+}
+
+function CoachCard({ coach }: { coach: PublicCoach }) {
+    const initials = coach.name
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('');
+    const workingDays = coach.schedule.filter((day) => day.slots.length > 0);
+
+    return (
+        <article className={cn(panelClass, 'flex flex-col overflow-hidden')}>
+            <div className="relative bg-gradient-to-br from-brand-navy to-brand-navy-light p-5 text-white">
+                <div
+                    className="pointer-events-none absolute inset-y-0 -right-6 w-24 -skew-x-[20deg] bg-brand-lime/15"
+                    aria-hidden="true"
+                />
+                <div className="relative flex items-center gap-4">
+                    {coach.photo_url ? (
+                        <img
+                            src={coach.photo_url}
+                            alt={coach.name}
+                            className="size-20 shrink-0 rounded-full object-cover ring-4 ring-brand-lime/70"
+                            loading="lazy"
+                        />
+                    ) : (
+                        <span className="flex size-20 shrink-0 items-center justify-center rounded-full bg-white/10 text-2xl font-bold text-brand-lime ring-4 ring-brand-lime/70">
+                            {initials}
+                        </span>
+                    )}
+                    <div className="min-w-0 space-y-1.5">
+                        <h3 className="truncate text-lg font-bold">{coach.name}</h3>
+                        <p className="text-xs text-white/75">
+                            {coach.years_experience > 0
+                                ? `${coach.years_experience} ${coach.years_experience === 1 ? 'year' : 'years'} coaching`
+                                : 'Pickleball coach'}
+                        </p>
+                        <CoachAvailability coach={coach} />
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-4 p-5">
+                {coach.specialties.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {coach.specialties.map((specialty) => (
+                            <span
+                                key={specialty}
+                                className="rounded-full bg-lime-50 px-2.5 py-1 text-xs font-medium text-brand-navy ring-1 ring-lime-200"
+                            >
+                                {specialty}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
+                {coach.bio && (
+                    <p className="line-clamp-3 text-sm leading-relaxed text-brand-navy-light">
+                        {coach.bio}
+                    </p>
+                )}
+
+                {coach.certifications.length > 0 && (
+                    <p className="flex items-start gap-2 text-xs text-brand-navy-light">
+                        <CircleCheck className="mt-px size-3.5 shrink-0 text-emerald-600" />
+                        {coach.certifications.join(' · ')}
+                    </p>
+                )}
+
+                <div>
+                    <div className="grid grid-cols-7 gap-1" aria-hidden="true">
+                        {coach.schedule.map((day) => (
+                            <span
+                                key={day.day}
+                                className={cn(
+                                    'rounded-md py-1 text-center text-[0.65rem] font-semibold',
+                                    day.slots.length > 0
+                                        ? 'bg-brand-navy text-brand-lime'
+                                        : 'bg-slate-100 text-slate-400',
+                                )}
+                            >
+                                {day.label}
+                            </span>
+                        ))}
+                    </div>
+                    {workingDays.length > 0 ? (
+                        <ul className="mt-2 space-y-0.5 text-xs text-brand-navy-light">
+                            {workingDays.map((day) => (
+                                <li key={day.day}>
+                                    <span className="inline-block w-9 font-semibold text-brand-navy">
+                                        {day.label}
+                                    </span>
+                                    {slotRange(day.slots)}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="mt-2 text-xs text-slate-500">
+                            Schedule on request — ask at the front desk.
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                    <p className="text-sm text-brand-navy-light">
+                        {coach.rate_per_hour != null ? (
+                            <>
+                                <span className="text-lg font-bold text-brand-navy">
+                                    {formatCurrency(coach.rate_per_hour)}
+                                </span>{' '}
+                                / hour
+                            </>
+                        ) : (
+                            'Rate on request'
+                        )}
+                    </p>
+                    {coach.phone && (
+                        <Button
+                            asChild
+                            size="sm"
+                            className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
+                        >
+                            <a href={`tel:${coach.phone.replace(/[^\d+]/g, '')}`}>
+                                <Phone className="size-4" />
+                                Call coach
+                            </a>
+                        </Button>
+                    )}
+                </div>
+            </div>
+        </article>
+    );
+}
+
+function CoachesTab({ coaches }: { coaches: PublicCoach[] }) {
+    if (coaches.length === 0) {
+        return (
+            <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 px-4 py-12 text-center">
+                <span className="flex size-12 items-center justify-center rounded-full bg-brand-lime/25">
+                    <GraduationCap className="size-6 text-emerald-700" />
+                </span>
+                <p className="text-sm font-semibold text-brand-navy">Coaches coming soon</p>
+                <p className="max-w-sm text-xs text-slate-500">
+                    We&apos;re lining up coaches for private and group lessons. Ask at the front desk in the meantime.
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid gap-5 md:grid-cols-2">
+            {coaches.map((coach) => (
+                <CoachCard key={coach.id} coach={coach} />
+            ))}
         </div>
     );
 }
@@ -364,6 +765,7 @@ function OpenPlayTab({
             const day = session.starts_at.split('T')[0];
             acc[day] = acc[day] ?? [];
             acc[day].push(session);
+
             return acc;
         },
         {},
@@ -507,30 +909,6 @@ function OpenPlayTab({
     );
 }
 
-function BookCourtTab({
-    courts,
-    bookedSlots,
-    dateOverrides,
-    isAuthenticated,
-    hourlyWeather,
-}: {
-    courts: Resource[];
-    bookedSlots: BookedSlot[];
-    dateOverrides: DateOverride[];
-    isAuthenticated: boolean;
-    hourlyWeather: Record<string, HourForecast>;
-}) {
-    return (
-        <CourtScheduleGrid
-            courts={courts}
-            bookedSlots={bookedSlots}
-            dateOverrides={dateOverrides}
-            isAuthenticated={isAuthenticated}
-            hourlyWeather={hourlyWeather}
-        />
-    );
-}
-
 function PhotosTab({
     courts,
     sections = [],
@@ -564,7 +942,7 @@ function PhotosTab({
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                     {section.photos.map((photo, i) => (
                                         <button
                                             key={photo.id}
@@ -609,93 +987,144 @@ function PhotosTab({
 
     // Nothing uploaded yet: placeholders built from the courts list.
     return (
-        <div className="space-y-6">
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="flex flex-row items-center gap-2 pb-3">
-                    <ImageIcon className="size-5 text-brand-court" />
-                    <CardTitle className="text-base">Gallery</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                        {courts.map((court, index) => (
-                            <div
-                                key={court.id}
-                                className={cn(
-                                    'flex aspect-video items-end rounded-lg bg-gradient-to-br p-4',
-                                    courtGradients[index % 2],
-                                )}
-                            >
-                                <span className="font-semibold text-white">
-                                    {court.name} — {court.surface_type}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card className="border-slate-200 shadow-sm">
-                <CardHeader className="flex flex-row items-center gap-2 pb-3">
-                    <Grid3x3 className="size-5 text-brand-court" />
-                    <CardTitle className="text-base">Our courts</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        {courts.map((court, index) => (
-                            <div
-                                key={court.id}
-                                className="overflow-hidden rounded-xl border border-slate-200"
-                            >
-                                <div
-                                    className={cn(
-                                        'relative flex aspect-[4/3] items-end justify-center bg-gradient-to-br p-4',
-                                        courtGradients[index % 2],
-                                    )}
-                                >
-                                    <span className="rounded-full bg-black/40 px-4 py-1 text-sm font-semibold text-white">
-                                        {court.name}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+        <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center gap-2 pb-3">
+                <Grid3x3 className="size-5 text-brand-court" />
+                <CardTitle className="text-base">Our courts</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {courts.map((court, index) => (
+                        <div
+                            key={court.id}
+                            className={cn(
+                                'flex aspect-video items-end rounded-lg bg-gradient-to-br p-4',
+                                courtGradients[index % 2],
+                            )}
+                        >
+                            <span className="font-semibold text-white">
+                                {court.name} — {court.surface_type}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
     );
 }
 
-function NewsList({ announcements }: { announcements: Announcement[] }) {
+/** The site footer doubles as the About section — the "About" nav link lands here. */
+function SiteFooter({ venue }: { venue?: VenueProfile | null }) {
+    const socials = [
+        { href: venue?.facebook, icon: Facebook, label: 'Facebook' },
+        { href: venue?.instagram, icon: Instagram, label: 'Instagram' },
+        { href: venue?.youtube, icon: Youtube, label: 'YouTube' },
+    ].filter((social): social is { href: string; icon: LucideIcon; label: string } =>
+        Boolean(social.href),
+    );
+    const highlights: { icon: LucideIcon | typeof RunnerIcon; label: string }[] = [
+        { icon: UsersRound, label: 'All skill levels welcome' },
+        { icon: Heart, label: 'Fun & friendly community' },
+        { icon: RunnerIcon, label: 'Stay active & healthy' },
+    ];
+    const paragraphs = (venue?.description ?? fallbackDescription)
+        .split('\n')
+        .filter(Boolean);
+    const amenities = venue?.amenities ?? [];
+    const address = venue ? venueAddress(venue) : '';
+    const headingClass = 'text-xs font-bold tracking-widest text-brand-lime uppercase';
+
     return (
-        <div className="space-y-4">
-            {announcements.map((announcement) => (
-                <Card
-                    key={announcement.id}
-                    className="border-slate-200 shadow-sm"
-                >
-                    <CardHeader className="pb-2">
-                        <div className="flex items-start gap-2">
-                            <Megaphone className="mt-0.5 size-4 shrink-0 text-brand-court" />
-                            <div>
-                                <CardTitle className="text-base">
-                                    {announcement.title}
-                                </CardTitle>
-                                {announcement.published_at && (
-                                    <p className="mt-1 text-xs text-muted-foreground">
-                                        {formatDate(announcement.published_at)}
-                                    </p>
-                                )}
-                            </div>
+        <footer id="about" className="scroll-mt-32 bg-brand-navy-dark text-white">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="grid gap-10 py-12 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr] lg:gap-12">
+                    <div className="md:col-span-2 lg:col-span-1">
+                        <div className="flex items-center gap-3">
+                            <img src={brand.logo} alt="" className="size-14 object-contain" />
+                            <Wordmark size="lg" />
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-sm leading-relaxed text-slate-600">
-                            {announcement.content}
+                        <h2 className="mt-6 text-lg font-bold">About Our Club</h2>
+                        <p className="mt-0.5 text-xs text-white/60">
+                            A growing community of players who love the game.
                         </p>
-                    </CardContent>
-                </Card>
-            ))}
-        </div>
+                        <div className="mt-3 space-y-3 text-sm leading-relaxed text-white/80">
+                            {paragraphs.map((paragraph, index) => (
+                                <p key={index}>{paragraph}</p>
+                            ))}
+                        </div>
+                        {socials.length > 0 && (
+                            <div className="mt-6 flex items-center gap-3">
+                                {socials.map(({ href, icon: Icon, label }) => (
+                                    <a
+                                        key={label}
+                                        href={href}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        aria-label={label}
+                                        className="flex size-9 items-center justify-center rounded-full bg-white/10 transition-colors hover:bg-brand-lime hover:text-brand-navy"
+                                    >
+                                        <Icon className="size-4" />
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div>
+                        <h3 className={headingClass}>Why play with us</h3>
+                        <ul className="mt-4 space-y-3">
+                            {highlights.map(({ icon: Icon, label }) => (
+                                <li key={label} className="flex items-center gap-3 text-sm text-white/85">
+                                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full ring-1 ring-brand-lime/60">
+                                        <Icon className="size-4 text-brand-lime" />
+                                    </span>
+                                    {label}
+                                </li>
+                            ))}
+                        </ul>
+                        <p className="mt-8 font-script text-3xl text-white">
+                            Play · Connect · Belong
+                        </p>
+                        <Swoosh className="-mt-1 w-48 text-brand-lime" />
+                    </div>
+
+                    <div>
+                        {amenities.length > 0 && (
+                            <>
+                                <h3 className={headingClass}>Amenities</h3>
+                                <div className="mt-4 flex flex-wrap gap-2">
+                                    {amenities.map((amenity) => {
+                                        const Icon = amenityIcon(amenity);
+
+                                        return (
+                                            <span
+                                                key={amenity}
+                                                className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white/85"
+                                            >
+                                                <Icon className="size-3.5 text-brand-lime" />
+                                                {amenity}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            </>
+                        )}
+                        {address && (
+                            <>
+                                <h3 className={cn(headingClass, amenities.length > 0 && 'mt-8')}>Visit us</h3>
+                                <p className="mt-4 flex items-start gap-2.5 text-sm leading-relaxed text-white/80">
+                                    <MapPin className="mt-0.5 size-4 shrink-0 text-brand-lime" />
+                                    {address}
+                                </p>
+                            </>
+                        )}
+                    </div>
+                </div>
+                <p className="border-t border-white/10 py-5 text-center text-xs text-white/60">
+                    &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
+                </p>
+            </div>
+        </footer>
     );
 }
 
@@ -709,6 +1138,7 @@ export default function Welcome({
     dateOverrides = [],
     hourlyWeather = {},
     gallery = [],
+    coaches = [],
 }: Props) {
     const { auth } = usePage().props;
     const businessName = brand.name;
@@ -742,38 +1172,36 @@ export default function Welcome({
               }
             : {}),
     };
-    const [activeTab, setActiveTab] = useState('about');
-    const venueSection = useRef<HTMLElement>(null);
-    const [venueVisible, setVenueVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState<ExploreTab>('book');
+    const booking = useCourtBooking({
+        courts,
+        bookedSlots,
+        dateOverrides,
+        isAuthenticated: !!auth.user,
+    });
 
-    useEffect(() => {
-        const element = venueSection.current;
-        if (!element) {
+    const navigate = (key: NavKey) => {
+        if (exploreTabs.some((tab) => tab.key === key)) {
+            setActiveTab(key as ExploreTab);
+            document
+                .getElementById('explore')
+                ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
             return;
         }
 
-        const observer = new IntersectionObserver(
-            ([entry]) => {
-                if (entry.isIntersecting) {
-                    setVenueVisible(true);
-                    observer.disconnect();
-                }
-            },
-            { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
-        );
+        if (key === 'home') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        observer.observe(element);
+            return;
+        }
 
-        return () => observer.disconnect();
-    }, []);
-
-    const scrollToVenue = (tab = 'about') => {
-        setActiveTab(tab);
-        venueSection.current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-        });
+        document
+            .getElementById(key)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
+
+    const pickleballCourts = courts.filter((court) => court.sport === 'pickleball').length;
 
     return (
         <>
@@ -789,139 +1217,107 @@ export default function Welcome({
                 <meta name="twitter:title" content={businessName} />
                 <meta name="twitter:description" content={metaDescription} />
                 <meta name="twitter:image" content={ogImage} />
+                <link rel="preload" as="image" href={heroImage} />
                 <script type="application/ld+json">
                     {JSON.stringify(structuredData)}
                 </script>
             </Head>
 
-            <div className="overflow-x-hidden bg-slate-100 text-brand-navy">
-                <HeroLanding
+            <div className="min-h-screen overflow-x-hidden bg-slate-100 text-brand-navy">
+                <SiteHeader onNavigate={navigate} />
+
+                <Hero
                     venue={venue}
-                    businessName={businessName}
-                    stats={stats}
-                    onExplore={() => scrollToVenue('about')}
-                    onBook={() => scrollToVenue('book')}
+                    onBook={() => navigate('book')}
+                    onOpenPlay={() => navigate('open-play')}
                 />
 
-                <section
-                    ref={venueSection}
-                    id="venue"
-                    className={cn(
-                        'relative overflow-hidden px-4 py-16 transition-all duration-700 ease-out sm:py-20',
-                        venueVisible
-                            ? 'animate-venue-boom opacity-100'
-                            : 'translate-y-16 opacity-0',
-                    )}
-                >
-                    <main className="mx-auto max-w-4xl">
-                        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
-                            <div className="flex flex-col items-center px-6 pt-8 pb-6 text-center">
-                                <div className="mb-4 overflow-hidden rounded-full border-4 border-slate-100 bg-white shadow-md">
-                                    <img
-                                        src={brand.logo}
-                                        alt={businessName}
-                                        className="size-20 object-contain p-2 sm:size-24"
-                                    />
-                                </div>
-                                <h2 className="text-2xl font-extrabold text-brand-navy">
-                                    {businessName}
-                                </h2>
-                            </div>
+                <StatsBar
+                    items={[
+                        { label: 'Pickleball Courts', value: pickleballCourts, icon: LandPlot },
+                        { label: 'Available Slots Today', value: stats.available_slots_today, icon: CalendarDays },
+                        { label: 'Active Members', value: stats.members, icon: UsersRound },
+                    ]}
+                />
 
+                <main className="mx-auto max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
+                    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+                        <section
+                            id="explore"
+                            className={cn(panelClass, 'scroll-mt-32 overflow-hidden')}
+                        >
                             <Tabs
                                 value={activeTab}
-                                onValueChange={setActiveTab}
+                                onValueChange={(value) => {
+                                    setActiveTab(value as ExploreTab);
+                                }}
                                 className="gap-0"
                             >
-                                <div className="border-y border-slate-200 bg-slate-50 px-2 py-2 sm:px-4">
-                                    <TabsList className="grid h-auto w-full grid-cols-4 gap-1 bg-transparent p-0">
+                                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-slate-50 p-1.5 [scrollbar-width:none] sm:p-2">
+                                    {exploreTabs.map(({ key, label, icon: Icon }) => (
                                         <TabsTrigger
-                                            value="about"
-                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
+                                            key={key}
+                                            value={key}
+                                            className="flex-1 shrink-0 gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-500 data-[state=active]:bg-brand-navy data-[state=active]:text-white data-[state=active]:shadow-sm sm:text-sm"
                                         >
-                                            About
+                                            <Icon
+                                                className={cn(
+                                                    'size-4',
+                                                    activeTab === key && 'text-brand-lime',
+                                                )}
+                                            />
+                                            {label}
                                         </TabsTrigger>
-                                        <TabsTrigger
-                                            value="open-play"
-                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
-                                        >
-                                            Open play
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="book"
-                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
-                                        >
-                                            Book a court
-                                        </TabsTrigger>
-                                        <TabsTrigger
-                                            value="photos"
-                                            className="rounded-lg border border-transparent px-3 py-2.5 text-xs font-semibold data-[state=active]:border-brand-lime data-[state=active]:bg-white data-[state=active]:text-brand-navy sm:text-sm"
-                                        >
-                                            Photos
-                                        </TabsTrigger>
-                                    </TabsList>
-                                </div>
+                                    ))}
+                                </TabsList>
 
                                 <div className="p-4 sm:p-6">
-                                    <TabsContent value="about" className="mt-0">
-                                        {venue ? (
-                                            <AboutTab venue={venue} />
-                                        ) : (
-                                            <p className="text-sm text-slate-500">
-                                                Venue information is not
-                                                available.
-                                            </p>
-                                        )}
+                                    <TabsContent value="book" className="mt-0">
+                                        <BookYourCourt booking={booking} hourlyWeather={hourlyWeather} />
                                     </TabsContent>
 
-                                    <TabsContent
-                                        value="open-play"
-                                        className="mt-0"
-                                    >
+                                    <TabsContent value="open-play" className="mt-0 space-y-5">
+                                        <PanelTitle
+                                            icon={RunnerIcon}
+                                            title="Open Play"
+                                            subtitle="Join a scheduled session, meet new players, and enjoy the game."
+                                        />
                                         <OpenPlayTab
                                             sessions={openPlaySessions}
                                             isAuthenticated={!!auth.user}
                                         />
                                     </TabsContent>
 
-                                    <TabsContent value="book" className="mt-0">
-                                        <BookCourtTab
-                                            courts={courts}
-                                            bookedSlots={bookedSlots}
-                                            dateOverrides={dateOverrides}
-                                            isAuthenticated={!!auth.user}
-                                            hourlyWeather={hourlyWeather}
+                                    <TabsContent value="coaches" className="mt-0 space-y-5">
+                                        <PanelTitle
+                                            icon={GraduationCap}
+                                            title="Train with our Coaches"
+                                            subtitle="Private and group lessons for every level — from your first dink to tournament play."
                                         />
+                                        <CoachesTab coaches={coaches} />
                                     </TabsContent>
 
-                                    <TabsContent
-                                        value="photos"
-                                        className="mt-0"
-                                    >
-                                        <PhotosTab
-                                            courts={courts}
-                                            sections={gallery}
+                                    <TabsContent value="photos" className="mt-0 space-y-5">
+                                        <PanelTitle
+                                            icon={ImageIcon}
+                                            title="Photos"
+                                            subtitle="A look around our courts and community."
                                         />
+                                        <PhotosTab courts={courts} sections={gallery} />
                                     </TabsContent>
                                 </div>
                             </Tabs>
+                        </section>
+
+                        <div className="grid items-start gap-5 md:grid-cols-2 lg:grid-cols-1">
+                            <LocationCard venue={venue} dateOverrides={dateOverrides} />
+                            <NewsCard announcements={announcements} />
+                            <PromoCard onClick={() => navigate('open-play')} />
                         </div>
+                    </div>
+                </main>
 
-                        {announcements.length > 0 && (
-                            <section className="mt-8">
-                                <h2 className="mb-4 flex items-center gap-2 text-xl font-extrabold text-brand-navy">
-                                    <Megaphone className="size-5 text-brand-court" />
-                                    News &amp; announcements
-                                </h2>
-                                <NewsList announcements={announcements} />
-                            </section>
-                        )}
-                    </main>
-                </section>
-
-                <footer className="border-t border-slate-200 bg-white py-6 text-center text-sm text-slate-500">
-                    &copy; {new Date().getFullYear()} {businessName}
-                </footer>
+                <SiteFooter venue={venue} />
             </div>
 
             <SupportWidget avoidBottomNav={false} />

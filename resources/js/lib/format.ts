@@ -24,6 +24,15 @@ export function formatTime(value?: string | null): string {
     return format(parseISO(value), 'h:mm a');
 }
 
+/** A bare 24h wall-clock time ("07:00", "18:30") as "7 AM" / "6:30 PM". */
+export function formatClock(value: string): string {
+    const [hours, minutes] = value.split(':').map(Number);
+    const suffix = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+
+    return minutes ? `${hour12}:${String(minutes).padStart(2, '0')} ${suffix}` : `${hour12} ${suffix}`;
+}
+
 export function formatRelative(value?: string | null): string {
     if (!value) {
         return '—';

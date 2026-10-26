@@ -10,6 +10,31 @@ export function venueAddress(venue: VenueProfile): string {
         .join(', ');
 }
 
+export function venueMapUrls(
+    venue: VenueProfile,
+): { address: string; directionsUrl: string; embedUrl: string } | null {
+    const address = venueAddress(venue);
+
+    if (!address) {
+        return null;
+    }
+
+    // An exact pin beats geocoding the address, which can land on the wrong
+    // spot for rural barangays.
+    const hasPin =
+        String(venue.latitude ?? '').trim() !== '' &&
+        String(venue.longitude ?? '').trim() !== '';
+    const destination = encodeURIComponent(
+        hasPin ? `${venue.latitude},${venue.longitude}` : address,
+    );
+
+    return {
+        address,
+        directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${destination}`,
+        embedUrl: `https://maps.google.com/maps?q=${destination}&z=15&output=embed`,
+    };
+}
+
 /**
  * Where the venue is, with a link out to the route.
  *
@@ -27,22 +52,13 @@ export function VenueMap({
     className?: string;
     mapClassName?: string;
 }) {
-    const address = venueAddress(venue);
+    const urls = venueMapUrls(venue);
 
-    if (!address) {
+    if (!urls) {
         return null;
     }
 
-    // An exact pin beats geocoding the address, which can land on the wrong
-    // spot for rural barangays.
-    const hasPin =
-        String(venue.latitude ?? '').trim() !== '' &&
-        String(venue.longitude ?? '').trim() !== '';
-    const destination = encodeURIComponent(
-        hasPin ? `${venue.latitude},${venue.longitude}` : address,
-    );
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-    const embedUrl = `https://maps.google.com/maps?q=${destination}&z=15&output=embed`;
+    const { address, directionsUrl, embedUrl } = urls;
 
     return (
         <div className={cn('space-y-3', className)}>

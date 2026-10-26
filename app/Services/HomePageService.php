@@ -4,12 +4,15 @@ namespace App\Services;
 
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\ResourceStatus;
 use App\Models\DateOverride;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -32,6 +35,7 @@ class HomePageService
         private readonly ResourceBookingService $resourceBookingService,
         private readonly WeatherService $weatherService,
         private readonly GalleryService $galleryService,
+        private readonly CoachService $coachService,
     ) {}
 
     /**
@@ -94,12 +98,67 @@ class HomePageService
             'hourlyWeather' => $this->weatherService->hourlyForecast(),
             'venue' => $this->venueProfile(),
             'gallery' => $this->galleryService->publicSections(),
+            'coaches' => $this->coachService->publicProfiles(),
             'stats' => [
                 'courts' => $courts->count(),
                 'members' => Player::query()->where('is_active', true)->count(),
                 'bookings_today' => $bookingsToday,
+                'available_slots_today' => $this->availableSlotsToday(
+                    $courts,
+                    $bookedSlots,
+                    $dateOverrides->first(fn (DateOverride $override) => $override->date->isToday()),
+                ),
+                'open_play_this_week' => OpenPlaySession::query()
+                    ->whereBetween('starts_at', [now()->startOfWeek(), now()->endOfWeek()])
+                    ->count(),
             ],
         ]), true);
+    }
+
+    /**
+     * Hourly slots still bookable today: not started, on an available court,
+     * and not overlapping a booking or Open Play session. Mirrors the grid's
+     * slot stepping (hourly from the day's opening time).
+     *
+     * @param  Collection<int, \App\Models\Resource>  $courts
+     * @param  Collection<int, mixed>  $bookedSlots  ResourceBooking models and Open Play arrays
+     */
+    private function availableSlotsToday(Collection $courts, Collection $bookedSlots, ?DateOverride $today): int
+    {
+        // Dates are closed unless an admin has explicitly opened them with hours.
+        if ($today === null || $today->is_closed || ! $today->open_time || ! $today->close_time) {
+            return 0;
+        }
+
+        $open = today()->setTimeFromTimeString($today->open_time);
+        $close = today()->setTimeFromTimeString($today->close_time);
+
+        $blocked = $bookedSlots->map(fn ($slot): array => [
+            'resource_id' => (int) data_get($slot, 'resource_id'),
+            'starts_at' => Carbon::parse(data_get($slot, 'starts_at')),
+            'ends_at' => Carbon::parse(data_get($slot, 'ends_at')),
+        ]);
+
+        $count = 0;
+
+        foreach ($courts->where('status', ResourceStatus::Available) as $court) {
+            // Dates are immutable here (AppServiceProvider), so each step reassigns.
+            for ($slot = $open; $slot->addHour()->lte($close); $slot = $slot->addHour()) {
+                $slotEnd = $slot->addHour();
+
+                $taken = $blocked->contains(
+                    fn (array $b): bool => $b['resource_id'] === $court->id
+                        && $b['starts_at']->lt($slotEnd)
+                        && $b['ends_at']->gt($slot),
+                );
+
+                if (! $taken && $slot->isFuture()) {
+                    $count++;
+                }
+            }
+        }
+
+        return $count;
     }
 
     /**

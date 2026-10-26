@@ -81,6 +81,15 @@ return [
             'report' => false,
         ],
 
+        'coaches' => [
+            'driver' => 'local',
+            'root' => public_path('coach-media'),
+            'url' => '/coach-media',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         'announcements' => [
             'driver' => 'local',
             'root' => public_path('announcement-media'),

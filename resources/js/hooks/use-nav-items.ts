@@ -6,6 +6,7 @@ import {
     CreditCard,
     Dumbbell,
     FileText,
+    GraduationCap,
     ImageIcon,
     LayoutGrid,
     MapPin,
@@ -24,6 +25,7 @@ import { index as adminPoliciesIndex } from '@/routes/admin/policies';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
+import { index as coachesIndex } from '@/routes/coaches';
 import { browse as openPlayBrowse, index as openPlayIndex } from '@/routes/open-play';
 import { index as paymentsIndex } from '@/routes/payments';
 import { index as playersIndex } from '@/routes/players';
@@ -66,6 +68,7 @@ export function useNavItems(): NavItems {
               { title: 'POS', href: posCheckout(), icon: Receipt },
               { title: 'Rentals', href: rentalItemsIndex(), icon: Dumbbell },
               { title: 'Members', href: playersIndex(), icon: Users },
+              { title: 'Coaches', href: coachesIndex(), icon: GraduationCap },
               { title: 'Open play', href: openPlayIndex(), icon: CalendarClock },
               { title: 'Announcements', href: announcementsIndex(), icon: Megaphone },
               { title: 'Payments', href: paymentsIndex(), icon: CreditCard },

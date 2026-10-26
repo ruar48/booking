@@ -16,12 +16,24 @@ class CoachFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'name' => fake()->name(),
             'certifications' => [fake()->words(2, true).' Certification'],
             'years_experience' => fake()->numberBetween(1, 30),
             'bio' => fake()->paragraph(),
+            'specialties' => ['Beginners'],
+            'rate_per_hour' => 500,
             'availability' => null,
             'is_active' => true,
         ];
+    }
+
+    public function withAccount(): static
+    {
+        return $this->state(fn (): array => ['user_id' => User::factory()]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (): array => ['is_active' => false]);
     }
 }
