@@ -1179,8 +1179,8 @@ export default function Welcome({
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
     const ogImage =
         typeof window !== 'undefined'
-            ? `${window.location.origin}${brand.logo}`
-            : brand.logo;
+            ? `${window.location.origin}${brand.shareImage}`
+            : brand.shareImage;
     const metaDescription = seo.description;
     const [activeTab, setActiveTab] = useState<ExploreTab>('book');
     const booking = useCourtBooking({

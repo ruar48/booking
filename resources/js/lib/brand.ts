@@ -1,9 +1,11 @@
 export const brand = {
     name: 'Galaang-Ramos Pickleball',
     tagline: 'Est. 2026',
-    // 512px copy of public/logos.png (290 KB vs 1.7 MB); the logo is never
-    // shown larger than ~290px. logos.png itself stays for og:image shares.
-    logo: '/pwa-512.png',
+    // 384px WebP of public/logos.png (43 KB vs 1.7 MB): sharp at 2x for the
+    // largest place it's shown (~192px). Link previews use shareImage, a PNG,
+    // since not every social crawler reads WebP.
+    logo: '/logo.webp',
+    shareImage: '/pwa-512.png',
     colors: {
         navy: '#0f2847',
         navyLight: '#1a3a5c',

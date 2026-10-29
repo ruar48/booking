@@ -199,8 +199,12 @@
 /*
  * "backwards", not "forwards": a transform left on the wrapper after the
  * animation would become the containing block for any position: fixed child.
+ *
+ * Only after the first in-app navigation (app.tsx sets data-navigated): on a
+ * fresh page load the content should paint at once, not fade in from
+ * invisible. That fade cost the first paint and the Speed Index score.
  */
-.animate-page-enter {
+html[data-navigated] .animate-page-enter {
     animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 

@@ -1,18 +1,27 @@
 import { createInertiaApp, router } from '@inertiajs/react';
+import { lazy, Suspense } from 'react';
+import { registerSW } from 'virtual:pwa-register';
 import { NavigationLoader } from '@/components/navigation-loader';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
-import AppLayout from '@/layouts/app-layout';
-import AuthLayout from '@/layouts/auth-layout';
 import { brand } from '@/lib/brand';
-import SettingsLayout from '@/layouts/settings/layout';
-import { registerSW } from 'virtual:pwa-register';
 
 // From the brand, not VITE_APP_NAME: the env default is "Laravel", and a stale
 // build-time value would put that in every browser tab.
 const appName = brand.name;
+
+// The layouts carry the signed-in shell: sidebar, menus, live notifications
+// (pusher-js + laravel-echo). The public home page uses none of it, so it is
+// split out of the entry bundle and fetched the first time an app or auth page
+// renders, instead of on every visit to the home page.
+const loadAppLayout = () => import('@/layouts/app-layout');
+const loadAuthLayout = () => import('@/layouts/auth-layout');
+const loadSettingsLayout = () => import('@/layouts/settings/layout');
+const AppLayout = lazy(loadAppLayout);
+const AuthLayout = lazy(loadAuthLayout);
+const SettingsLayout = lazy(loadSettingsLayout);
 
 createInertiaApp({
     // A title that already names the venue (the home page's SEO title) is used as-is.
@@ -34,7 +43,8 @@ createInertiaApp({
     withApp(app) {
         return (
             <TooltipProvider delayDuration={0}>
-                {app}
+                {/* Covers the one-time fetch of a layout chunk; a blank screen, not a spinner, since it's brief. */}
+                <Suspense fallback={<div className="min-h-svh" />}>{app}</Suspense>
                 <Toaster />
                 <PwaInstallPrompt />
                 <NavigationLoader />
@@ -59,6 +69,26 @@ router.on('finish', (event) => {
         router.flushAll();
     }
 });
+
+// Page-enter animations play between pages, never on the first load (see app.css).
+router.on('start', () => document.documentElement.setAttribute('data-navigated', ''));
+
+// Warm the layout chunks once the page has finished loading and the browser is
+// idle, so the first click into the app doesn't wait on them, without competing
+// with the first paint for bandwidth.
+window.addEventListener(
+    'load',
+    () => {
+        const warm = () => void Promise.all([loadAppLayout(), loadAuthLayout(), loadSettingsLayout()]);
+
+        if ('requestIdleCallback' in window) {
+            window.requestIdleCallback(warm, { timeout: 5000 });
+        } else {
+            setTimeout(warm, 2000);
+        }
+    },
+    { once: true },
+);
 
 // This will set light / dark mode on load...
 initializeTheme();

@@ -75,6 +75,12 @@
             <meta name="twitter:description" content="{{ $seoDescription }}" data-inertia>
             <meta name="twitter:image" content="{{ asset('logos.png') }}" data-inertia>
 
+            {{-- The hero photo (heroImage in pages/welcome.tsx) is the largest thing on
+                 the first screen; without this the browser only finds it once React runs. --}}
+            @if (($page['component'] ?? null) === 'welcome')
+                <link rel="preload" as="image" href="/bg.webp" fetchpriority="high" data-inertia>
+            @endif
+
             @isset($seo['structured_data'])
                 <script type="application/ld+json" data-inertia>@json($seo['structured_data'], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG)</script>
             @endisset
