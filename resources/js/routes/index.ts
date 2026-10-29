@@ -212,7 +212,7 @@ register.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     register.form = registerForm
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
 export const home = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -227,7 +227,7 @@ home.definition = {
 
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
 home.url = (options?: RouteQueryOptions) => {
@@ -236,7 +236,7 @@ home.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
 home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -245,7 +245,7 @@ home.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
 home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -255,7 +255,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
     const homeForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -265,7 +265,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
         homeForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -274,7 +274,7 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\HomeController::home
- * @see app/Http/Controllers/HomeController.php:15
+ * @see app/Http/Controllers/HomeController.php:16
  * @route '/'
  */
         homeForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -359,6 +359,84 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
     
     sitemap.form = sitemapForm
+/**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+export const llms = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: llms.url(options),
+    method: 'get',
+})
+
+llms.definition = {
+    methods: ["get","head"],
+    url: '/llms.txt',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+llms.url = (options?: RouteQueryOptions) => {
+    return llms.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+llms.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: llms.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+llms.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: llms.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+    const llmsForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: llms.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+        llmsForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: llms.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\HomeController::llms
+ * @see app/Http/Controllers/HomeController.php:28
+ * @route '/llms.txt'
+ */
+        llmsForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: llms.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    llms.form = llmsForm
 /**
 * @see \App\Http\Controllers\DashboardController::dashboard
  * @see app/Http/Controllers/DashboardController.php:16

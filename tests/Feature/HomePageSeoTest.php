@@ -42,7 +42,7 @@ it('puts the town and province in the title and description the server sends', f
     $html = $this->get(route('home'))->assertOk()->getContent();
 
     expect(headMatches($html, '#<title[^>]*>(.*?)</title>#s'))
-        ->toBe([e(config('app.name')).' | Pickleball Courts in Binalonan, Pangasinan'])
+        ->toBe([e(config('app.name')).': Courts in Binalonan, Pangasinan'])
         ->and(headMatches($html, '#<meta name="description" content="([^"]*)"#'))
         ->toHaveCount(1)
         ->{0}->toStartWith('Pickleball courts, billiards and table tennis in Santa Maria Norte, Binalonan, Pangasinan.');
@@ -54,7 +54,7 @@ it('sends the same tags from the Blade fallback when SSR is down', function () {
     $html = $this->get(route('home'))->assertOk()->getContent();
 
     expect(headMatches($html, '#<title[^>]*>(.*?)</title>#s'))
-        ->toBe([e(config('app.name')).' | Pickleball Courts in Binalonan, Pangasinan'])
+        ->toBe([e(config('app.name')).': Courts in Binalonan, Pangasinan'])
         ->and(headMatches($html, '#<meta name="description" content="([^"]*)"#'))
         ->toBe(['Pickleball courts, billiards and table tennis in Santa Maria Norte, Binalonan, Pangasinan. Book courts online, join open play and rent paddles.'])
         ->and(headMatches($html, '#<script type="application/ld\+json"[^>]*>(.*?)</script>#s'))
@@ -81,7 +81,7 @@ it('hands the same metadata to the page', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('seo.location', 'Santa Maria Norte, Binalonan, Pangasinan')
-            ->where('seo.title', config('app.name').' | Pickleball Courts in Binalonan, Pangasinan'));
+            ->where('seo.title', config('app.name').': Courts in Binalonan, Pangasinan'));
 });
 
 it('falls back to a generic title when no address is set', function () {
@@ -91,7 +91,35 @@ it('falls back to a generic title when no address is set', function () {
     $this->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
             ->where('seo.location', null)
-            ->where('seo.title', config('app.name').' | Pickleball Courts & Billiards'));
+            ->where('seo.title', config('app.name').': Courts & Billiards'));
+});
+
+it('sends readable page content for crawlers that skip JavaScript', function () {
+    config(['inertia.ssr.enabled' => false]);
+
+    $body = strstr($this->get(route('home'))->getContent(), '<body');
+
+    expect($body)
+        ->toMatch('#<div id="app">\s*<div class="min-h-screen#')
+        ->toContain('<h1')
+        ->toContain('Pickleball courts &amp; billiards in Santa Maria Norte, Binalonan, Pangasinan')
+        ->toContain('href="tel:+639507370338"')
+        ->toContain('href="'.route('login').'"');
+});
+
+it('leaves other pages to React alone', function () {
+    config(['inertia.ssr.enabled' => false]);
+
+    expect($this->get(route('login'))->getContent())->toMatch('#<div id="app"></div>#');
+});
+
+it('serves a plain-text venue summary at llms.txt', function () {
+    $this->get('/llms.txt')
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=utf-8')
+        ->assertSee('# '.config('app.name'), false)
+        ->assertSee('Address: Santa Maria Norte, Binalonan, Pangasinan, 2436, Philippines', false)
+        ->assertSee('Phone: +639507370338', false);
 });
 
 it('keeps venue data off other pages', function () {

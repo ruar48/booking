@@ -88,6 +88,12 @@
         </x-inertia::head>
     </head>
     <body class="font-sans antialiased">
-        <x-inertia::app />
+        {{-- Inertia's app root, plus real HTML for the home page when it isn't
+             server-rendered (App\View\Components\InertiaApp). --}}
+        <x-inertia-app>
+            @if (($page['component'] ?? null) === 'welcome')
+                @include('partials.home-shell')
+            @endif
+        </x-inertia-app>
     </body>
 </html>

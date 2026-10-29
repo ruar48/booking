@@ -52,6 +52,8 @@ Route::get('/sitemap.xml', function () {
         ->header('Content-Type', 'text/xml');
 })->name('sitemap');
 
+Route::get('/llms.txt', [HomeController::class, 'llms'])->name('llms');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     require __DIR__.'/bookings.php';
     require __DIR__.'/open-play-join.php';

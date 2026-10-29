@@ -32,9 +32,12 @@ class HomeSeoService
             $venue['state'] ?? null,
         ]);
 
+        // Under 60 characters so Google shows it whole, and "Pickleball" only once
+        // (the venue name already has it). Must contain the full venue name, or
+        // app.tsx's title callback appends it a second time.
         $title = $area
-            ? "{$name} | Pickleball Courts in {$area}"
-            : "{$name} | Pickleball Courts & Billiards";
+            ? "{$name}: Courts in {$area}"
+            : "{$name}: Courts & Billiards";
 
         // Google shows about 160 characters; cut on a word boundary if a long address overruns.
         $description = Str::limit(

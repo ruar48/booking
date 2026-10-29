@@ -251,9 +251,10 @@ function SiteHeader({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
                     onClick={() => onNavigate('home')}
                     className="flex min-w-0 items-center gap-3"
                 >
+                    {/* Named: on phones the wordmark is hidden and this is the button's only content. */}
                     <img
                         src={brand.logo}
-                        alt=""
+                        alt={brand.name}
                         className="size-10 shrink-0 object-contain sm:size-12"
                     />
                     <span className="hidden sm:block">
