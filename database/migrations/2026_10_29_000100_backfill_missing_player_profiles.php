@@ -16,12 +16,15 @@ return new class extends Migration
     {
         $userIds = DB::table('model_has_roles')
             ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            // Role rows can outlive a deleted account; only backfill real users.
+            ->join('users', 'users.id', '=', 'model_has_roles.model_id')
             ->where('roles.name', Role::Player->value)
             ->where('model_has_roles.model_type', (new User)->getMorphClass())
             ->whereNotExists(fn ($query) => $query
                 ->from('players')
                 ->whereColumn('players.user_id', 'model_has_roles.model_id'))
-            ->pluck('model_has_roles.model_id');
+            ->distinct()
+            ->pluck('users.id');
 
         $now = now();
 
