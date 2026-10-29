@@ -100,6 +100,10 @@ type ExploreTab = 'book' | 'open-play' | 'coaches' | 'photos';
 type NavKey = 'home' | ExploreTab;
 
 const heroImage = '/bg.webp';
+// The hero spans the full width, so the browser picks by screen width: phones
+// take the 1080px copy (45 KB) instead of the full 1672px photo (100 KB).
+// Keep in sync with the preload in resources/views/app.blade.php.
+const heroSrcSet = '/bg-1080.webp 1080w, /bg.webp 1672w';
 
 const fallbackDescription =
     'A place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.';
@@ -308,6 +312,8 @@ function Hero({
         <section className="relative overflow-hidden bg-brand-navy-dark text-white">
             <img
                 src={heroImage}
+                srcSet={heroSrcSet}
+                sizes="100vw"
                 alt=""
                 className="absolute inset-0 size-full object-cover object-[70%_center]"
                 fetchPriority="high"
@@ -1227,7 +1233,7 @@ export default function Welcome({
                 <meta name="twitter:title" content={seo.title} />
                 <meta name="twitter:description" content={metaDescription} />
                 <meta name="twitter:image" content={ogImage} />
-                <link rel="preload" as="image" href={heroImage} />
+                <link rel="preload" as="image" href={heroImage} imageSrcSet={heroSrcSet} imageSizes="100vw" fetchPriority="high" />
                 <script type="application/ld+json">
                     {JSON.stringify(seo.structured_data)}
                 </script>

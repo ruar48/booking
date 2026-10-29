@@ -75,10 +75,11 @@
             <meta name="twitter:description" content="{{ $seoDescription }}" data-inertia>
             <meta name="twitter:image" content="{{ asset('logos.png') }}" data-inertia>
 
-            {{-- The hero photo (heroImage in pages/welcome.tsx) is the largest thing on
-                 the first screen; without this the browser only finds it once React runs. --}}
+            {{-- The hero photo (heroImage / heroSrcSet in pages/welcome.tsx) is the largest
+                 thing on the first screen; without this the browser only finds it once
+                 React runs. The srcset lets phones fetch the smaller copy. --}}
             @if (($page['component'] ?? null) === 'welcome')
-                <link rel="preload" as="image" href="/bg.webp" fetchpriority="high" data-inertia>
+                <link rel="preload" as="image" href="/bg.webp" imagesrcset="/bg-1080.webp 1080w, /bg.webp 1672w" imagesizes="100vw" fetchpriority="high" data-inertia>
             @endif
 
             @isset($seo['structured_data'])

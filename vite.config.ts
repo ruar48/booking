@@ -13,13 +13,15 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             refresh: true,
             fonts: [
-                // Latin only (covers English and Filipino, ñ included): the
-                // latin-ext files doubled every download. Preload just the two
-                // weights the first screen paints with; the rest load on use.
+                // Latin only (covers English and Filipino, ñ included). Not
+                // preloaded: on a slow phone connection the preloads competed
+                // with the JavaScript nothing can paint without. Text paints
+                // right away in the metric-matched fallback (optimizedFallbacks,
+                // on by default) and swaps without shifting the layout.
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600, 700],
                     subsets: ['latin'],
-                    preload: [{ weight: 400 }, { weight: 700 }],
+                    preload: false,
                 }),
                 // Brush-script accent for the "Play · Connect · Belong" tagline.
                 // Decorative, so never preloaded: it swaps in when ready.

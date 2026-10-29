@@ -11,48 +11,7 @@
       "kaushan-script": "--font-kaushan-script: \"Kaushan Script\", \"Kaushan Script fallback\";"
     }
   },
-  "preloads": [
-    {
-      "alias": "instrument-sans",
-      "family": "Instrument Sans",
-      "weight": 400,
-      "style": "normal",
-      "file": "assets/instrument-sans-400-normal-DRC__1Mx.woff2",
-      "as": "font",
-      "type": "font/woff2",
-      "crossorigin": "anonymous"
-    },
-    {
-      "alias": "instrument-sans",
-      "family": "Instrument Sans",
-      "weight": 400,
-      "style": "normal",
-      "file": "assets/instrument-sans-400-normal-Q_nF8v4l.woff2",
-      "as": "font",
-      "type": "font/woff2",
-      "crossorigin": "anonymous"
-    },
-    {
-      "alias": "instrument-sans",
-      "family": "Instrument Sans",
-      "weight": 700,
-      "style": "normal",
-      "file": "assets/instrument-sans-700-normal-CYfAanHo.woff2",
-      "as": "font",
-      "type": "font/woff2",
-      "crossorigin": "anonymous"
-    },
-    {
-      "alias": "instrument-sans",
-      "family": "Instrument Sans",
-      "weight": 700,
-      "style": "normal",
-      "file": "assets/instrument-sans-700-normal-ClYbKGw-.woff2",
-      "as": "font",
-      "type": "font/woff2",
-      "crossorigin": "anonymous"
-    }
-  ],
+  "preloads": [],
   "families": {
     "instrument-sans": {
       "family": "Instrument Sans",
