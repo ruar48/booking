@@ -83,6 +83,8 @@ export type BookedSlot = {
     starts_at: string;
     ends_at: string;
     resource?: Pick<Resource, 'id' | 'name'>;
+    /** Set while the slot is held by an unpaid booking: when it opens up again if nobody pays. */
+    held_until?: string | null;
 };
 
 /** A backend-provided dropdown option, so the UI can't drift from validation. */

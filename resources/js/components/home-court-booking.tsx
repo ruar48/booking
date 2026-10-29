@@ -7,6 +7,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Circle,
+    Hourglass,
     Info,
     LandPlot,
     Lock,
@@ -19,11 +20,13 @@ import type { ComponentType } from 'react';
 import { BookingCalendar, SlotWeather } from '@/components/court-schedule-grid';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useHoldReleaseRefresh } from '@/hooks/use-hold-release-refresh';
 import {
     buildBookingRuns,
     findBookedSlot,
     formatSlotRange,
     generateTimeSlots,
+    pendingPaymentInfo,
     isOpenPlaySlot,
     nearestOpenDate,
     openPlaySessionId,
@@ -62,6 +65,8 @@ export function useCourtBooking({
     const [submitting, setSubmitting] = useState(false);
     const [datePickerOpen, setDatePickerOpen] = useState(false);
     const [courtFilter, setCourtFilter] = useState<number | 'all'>('all');
+
+    useHoldReleaseRefresh(bookedSlots);
 
     // Only sports the venue has resources for get a tab, in enum order.
     const sports = useMemo(
@@ -202,7 +207,7 @@ export function useCourtBooking({
 
 export type CourtBooking = ReturnType<typeof useCourtBooking>;
 
-type CellState = 'available' | 'selected' | 'passed' | 'booked' | 'open-play' | 'unavailable';
+type CellState = 'available' | 'selected' | 'passed' | 'booked' | 'awaiting-payment' | 'open-play' | 'unavailable';
 
 const cellStyles: Record<CellState, { label: string; icon: LucideIcon; className: string }> = {
     available: {
@@ -224,6 +229,11 @@ const cellStyles: Record<CellState, { label: string; icon: LucideIcon; className
         label: 'Booked',
         icon: Lock,
         className: 'cursor-not-allowed bg-slate-100 text-slate-500 ring-slate-200',
+    },
+    'awaiting-payment': {
+        label: 'Awaiting payment',
+        icon: Hourglass,
+        className: 'cursor-not-allowed border border-dashed border-orange-300 bg-orange-50 text-orange-700 ring-0',
     },
     'open-play': {
         label: 'Open Play',
@@ -248,10 +258,13 @@ function SlotCell({
 }) {
     const bookedSlot = findBookedSlot(court.id, booking.selectedDate, slot, booking.bookedSlots);
     const sessionId = openPlaySessionId(bookedSlot);
+    const pending = pendingPaymentInfo(bookedSlot);
     const state: CellState = bookedSlot
         ? isOpenPlaySlot(bookedSlot)
             ? 'open-play'
-            : 'booked'
+            : pending
+              ? 'awaiting-payment'
+              : 'booked'
         : court.status !== 'available'
           ? 'unavailable'
           : slotIsPast(booking.selectedDate, slot)
@@ -264,12 +277,21 @@ function SlotCell({
         'flex w-full items-center justify-center gap-1 rounded-md px-1.5 py-2 text-[11px] font-semibold whitespace-nowrap ring-1 transition-colors',
         className,
     );
-    const content = (
-        <>
-            <Icon className="size-3 shrink-0" />
-            {label}
-        </>
-    );
+    const content =
+        state === 'awaiting-payment' && pending ? (
+            <span className="flex flex-col items-center leading-tight">
+                <span className="flex items-center gap-1">
+                    <Icon className="size-3 shrink-0" />
+                    {label}
+                </span>
+                <span className="text-[10px] font-medium opacity-80">{pending.short}</span>
+            </span>
+        ) : (
+            <>
+                <Icon className="size-3 shrink-0" />
+                {label}
+            </>
+        );
 
     if (state === 'open-play' && sessionId) {
         return (
@@ -285,7 +307,8 @@ function SlotCell({
             disabled={state !== 'available' && state !== 'selected'}
             onClick={() => booking.toggleSlot(court, slot)}
             aria-pressed={state === 'selected'}
-            aria-label={`${court.name}, ${formatSlotRange(slot)}: ${label}`}
+            aria-label={`${court.name}, ${formatSlotRange(slot)}: ${pending ? pending.explanation : label}`}
+            title={pending?.explanation}
             className={classes}
         >
             {content}
@@ -490,7 +513,8 @@ export function BookYourCourt({
 
             <p className="mt-4 flex items-center gap-2.5 rounded-xl bg-lime-50 px-4 py-3 text-xs text-brand-navy ring-1 ring-lime-100">
                 <Info className="size-4 shrink-0 text-emerald-600" />
-                Time slots are based on court availability. Book early to get your preferred time!
+                &ldquo;Awaiting payment&rdquo; means another customer is still paying for that slot. If they
+                don&apos;t finish in time, it becomes available at the time shown.
             </p>
         </div>
     );

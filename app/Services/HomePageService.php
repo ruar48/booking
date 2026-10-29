@@ -45,11 +45,9 @@ class HomePageService
      */
     public function props(): array
     {
-        // Released holds must stop showing as "Booked" right away, not after
-        // the cache expires — and even if the scheduler isn't running.
-        if ($this->releaseUnpaid->executeThrottled() > 0) {
-            self::forget();
-        }
+        // Released holds must stop showing as taken even if the scheduler isn't
+        // running; a release also clears this page's cache.
+        $this->releaseUnpaid->executeThrottled();
 
         return Cache::remember(self::CACHE_KEY, self::CACHE_SECONDS, fn (): array => $this->build());
     }
@@ -81,12 +79,13 @@ class HomePageService
             ->orderBy('starts_at')
             ->get();
 
-        $bookedSlots = ResourceBooking::query()
-            ->where('starts_at', '>=', now()->startOfDay())
-            ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
-            ->with('resource:id,name')
-            ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
-            ->concat($this->resourceBookingService->getOpenPlayBookedSlots());
+        $bookedSlots = $this->releaseUnpaid->asBookedSlots(
+            ResourceBooking::query()
+                ->where('starts_at', '>=', now()->startOfDay())
+                ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
+                ->with('resource:id,name')
+                ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'status', 'payment_status', 'created_at', 'booking_group_id']),
+        )->concat($this->resourceBookingService->getOpenPlayBookedSlots());
 
         $dateOverrides = DateOverride::query()
             ->where('date', '>=', now()->toDateString())

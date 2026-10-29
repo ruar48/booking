@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -679,4 +680,42 @@ it('runs the scheduled tasks after a page request when the server has no cron', 
     $this->travel(61)->seconds();
     $this->get(route('login'));
     expect($next->fresh()->status)->toBe(BookingStatus::Cancelled);
+});
+
+it('shows other customers when an unpaid hold opens, and plain "booked" once paid', function () {
+    $this->freezeSecond();
+    Setting::query()->updateOrCreate(['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'], ['value' => 60]);
+
+    $held = secBooking(attributes: ['created_at' => now()->subMinutes(20)]);
+    $paid = secBooking(attributes: ['payment_status' => PaymentStatus::Paid, 'status' => BookingStatus::Approved]);
+
+    $slots = collect(
+        $this->actingAs(secUser())->get(route('bookings.create'))->viewData('page')['props']['bookedSlots'],
+    )->keyBy('id');
+
+    // Opens 60 minutes after it was made: 40 minutes from now.
+    expect($slots[$held->id]['held_until'])->toBe(now()->addMinutes(40)->toJSON())
+        ->and($slots[$paid->id]['held_until'])->toBeNull()
+        // Nothing about who holds it.
+        ->and($slots[$held->id])->not->toHaveKeys(['user_id', 'user', 'amount', 'status']);
+});
+
+it('shows the extended time while the holder is mid-scan, matching when it actually releases', function () {
+    $this->freezeSecond();
+    Setting::query()->updateOrCreate(['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'], ['value' => 60]);
+
+    // Deadline in 5 minutes; their QR lasts 30, so the hold runs to the 15-minute grace cap.
+    $booking = secBooking(attributes: ['created_at' => now()->subMinutes(55)]);
+    secPendingPayment($booking, 'pi_scan', ['qr_expires_at' => now()->addMinutes(30)]);
+
+    $heldUntil = app(ReleaseUnpaidBookings::class)->heldUntil(collect([$booking->fresh()]));
+    expect($heldUntil[$booking->id]->toJSON())->toBe(now()->addMinutes(20)->toJSON());
+
+    $this->travel(19)->minutes();
+    $this->artisan('bookings:cancel-unpaid');
+    expect($booking->fresh()->status)->toBe(BookingStatus::Pending);
+
+    $this->travel(1)->minutes();
+    $this->artisan('bookings:cancel-unpaid');
+    expect($booking->fresh()->status)->toBe(BookingStatus::Cancelled);
 });

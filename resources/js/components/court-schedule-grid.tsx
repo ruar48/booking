@@ -19,13 +19,15 @@ import { useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { WeatherIcon } from '@/components/weather-icon';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { WeatherIcon } from '@/components/weather-icon';
+import { useHoldReleaseRefresh } from '@/hooks/use-hold-release-refresh';
 import {
     buildBookingRuns,
     findBookedSlot,
     formatSlotRange,
     generateTimeSlots,
+    pendingPaymentInfo,
     isOpenPlaySlot,
     minutesToSlot,
     nearestOpenDate,
@@ -245,6 +247,7 @@ export function CourtScheduleGrid({
 
     const today = format(new Date(), 'yyyy-MM-dd');
     const [selectedDate, setSelectedDate] = useState(() => nearestOpenDate(dateOverrides, today));
+    useHoldReleaseRefresh(bookedSlots);
     const [selections, setSelections] = useState<SlotSelection[]>([]);
     const [submitting, setSubmitting] = useState(false);
     // Only sports the venue has resources for get a tab, in enum order.
@@ -265,9 +268,11 @@ export function CourtScheduleGrid({
 
     const overridesByDate = useMemo(() => {
         const map = new Map<string, DateOverride>();
+
         for (const override of dateOverrides) {
             map.set(override.date.split('T')[0], override);
         }
+
         return map;
     }, [dateOverrides]);
 
@@ -307,6 +312,7 @@ export function CourtScheduleGrid({
 
             if (alreadySelected) {
                 setSelections([]);
+
                 return;
             }
 
@@ -328,6 +334,7 @@ export function CourtScheduleGrid({
             }
 
             setSelections(run);
+
             return;
         }
 
@@ -336,6 +343,7 @@ export function CourtScheduleGrid({
             const exists = current.some(
                 (s) => selectionKey(s.courtId, s.slot) === key,
             );
+
             if (exists) {
                 return current.filter(
                     (s) => selectionKey(s.courtId, s.slot) !== key,
@@ -374,6 +382,7 @@ export function CourtScheduleGrid({
     const submitBookings = () => {
         if (!isAuthenticated) {
             router.visit(register());
+
             return;
         }
 
@@ -390,6 +399,7 @@ export function CourtScheduleGrid({
 
         if (onSubmit) {
             onSubmit(bookings[0], requestOptions);
+
             return;
         }
 
@@ -399,6 +409,7 @@ export function CourtScheduleGrid({
                 { bookings, customer, mark_paid: markPaid },
                 requestOptions,
             );
+
             return;
         }
 
@@ -483,6 +494,10 @@ export function CourtScheduleGrid({
                     Booked
                 </span>
                 <span className="flex items-center gap-2">
+                    <span className="size-4 rounded border border-dashed border-orange-300 bg-orange-50" />
+                    Awaiting payment (free at the time shown if unpaid)
+                </span>
+                <span className="flex items-center gap-2">
                     <span className="size-4 rounded border border-violet-200 bg-violet-100" />
                     Open Play
                 </span>
@@ -505,6 +520,7 @@ export function CourtScheduleGrid({
                         if (!value) {
                             return;
                         }
+
                         setSelectedSport(value as Resource['sport']);
                         setSelections([]);
                     }}
@@ -597,6 +613,8 @@ export function CourtScheduleGrid({
                                         );
                                         const booked = !!bookedSlot;
                                         const openPlay = isOpenPlaySlot(bookedSlot);
+                                        const pending = openPlay ? null : pendingPaymentInfo(bookedSlot);
+                                        const awaitingPayment = booked && pending !== null;
                                         const sessionId = openPlaySessionId(bookedSlot);
                                         const past = slotIsPast(selectedDate, slot);
                                         const selected = selectedKeys.has(
@@ -607,7 +625,9 @@ export function CourtScheduleGrid({
                                         const cellLabel = booked
                                             ? openPlay
                                                 ? 'Open Play'
-                                                : 'Booked'
+                                                : awaitingPayment
+                                                  ? 'Awaiting payment'
+                                                  : 'Booked'
                                             : unavailable
                                               ? 'Unavailable'
                                               : past
@@ -623,7 +643,10 @@ export function CourtScheduleGrid({
                                                 'bg-violet-100 text-violet-700 hover:bg-violet-200',
                                             booked &&
                                                 !openPlay &&
+                                                !awaitingPayment &&
                                                 'bg-slate-200 text-slate-500',
+                                            awaitingPayment &&
+                                                'border border-dashed border-orange-300 bg-orange-50 text-orange-700',
                                             !booked &&
                                                 unavailable &&
                                                 'border border-amber-200 bg-amber-50 text-amber-600',
@@ -658,9 +681,16 @@ export function CourtScheduleGrid({
                                                         onClick={() =>
                                                             toggleSlot(court, slot)
                                                         }
+                                                        title={pending?.explanation}
+                                                        aria-label={pending?.explanation}
                                                         className={cellClassName}
                                                     >
                                                         {cellLabel}
+                                                        {awaitingPayment && pending && (
+                                                            <span className="block text-[10px] font-medium opacity-80">
+                                                                {pending.short}
+                                                            </span>
+                                                        )}
                                                     </button>
                                                 )}
                                             </td>

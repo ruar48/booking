@@ -42,13 +42,14 @@ class BookingScheduleService
         // Expired holds must not show as "Booked", even if cron is down.
         $this->releaseUnpaid->executeThrottled();
 
-        $bookedSlots = ResourceBooking::query()
-            ->where('starts_at', '>=', now()->startOfDay())
-            ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
-            ->when($excludeBookingId, fn ($query) => $query->where('id', '!=', $excludeBookingId))
-            ->with('resource:id,name')
-            ->get(['id', 'resource_id', 'starts_at', 'ends_at'])
-            ->concat($this->bookingService->getOpenPlayBookedSlots());
+        $bookedSlots = $this->releaseUnpaid->asBookedSlots(
+            ResourceBooking::query()
+                ->where('starts_at', '>=', now()->startOfDay())
+                ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
+                ->when($excludeBookingId, fn ($query) => $query->where('id', '!=', $excludeBookingId))
+                ->with('resource:id,name')
+                ->get(['id', 'resource_id', 'starts_at', 'ends_at', 'status', 'payment_status', 'created_at', 'booking_group_id']),
+        )->concat($this->bookingService->getOpenPlayBookedSlots());
 
         return [
             'resources' => Resource::query()->orderBy('resource_number')->get(),

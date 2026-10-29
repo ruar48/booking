@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { type ColumnDef } from '@tanstack/react-table';
+import type {ColumnDef} from '@tanstack/react-table';
 import { AlertTriangle, CreditCard, Eye } from 'lucide-react';
 
 import { DataTable } from '@/components/data-table';

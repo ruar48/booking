@@ -1,6 +1,6 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
-import { FormEvent } from 'react';
+import type { FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { index as paymentsIndex, markPaid, markRefunded } from '@/routes/payments';
 import { formatCurrency, formatDateTime } from '@/lib/format';
+import { index as paymentsIndex, markPaid, markRefunded } from '@/routes/payments';
 import type { Payment } from '@/types/booking';
 
 type Props = {

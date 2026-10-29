@@ -148,6 +148,40 @@ export function openPlaySessionId(bookedSlot: BookedSlot | undefined): number | 
     return match ? Number(match[1]) : null;
 }
 
+export type PendingPaymentInfo = {
+    /** Short second line for the cell, e.g. "Free at 3:45 PM if unpaid". */
+    short: string;
+    /** Full sentence for the tooltip / screen readers. */
+    explanation: string;
+};
+
+/**
+ * What to tell other customers about a slot another customer is still paying
+ * for — null when the slot is genuinely booked. Once the time has passed it
+ * reads "Opening shortly": the release runs on a one-minute cycle.
+ */
+export function pendingPaymentInfo(bookedSlot: BookedSlot | undefined): PendingPaymentInfo | null {
+    if (!bookedSlot?.held_until) {
+        return null;
+    }
+
+    const opensAt = parseISO(bookedSlot.held_until);
+
+    if (opensAt <= new Date()) {
+        return {
+            short: 'Opening shortly',
+            explanation: 'Payment time is up for this slot — it becomes available again in a moment.',
+        };
+    }
+
+    const time = format(opensAt, 'h:mm a');
+
+    return {
+        short: `Free at ${time} if unpaid`,
+        explanation: `Another customer is completing payment for this slot. If they don't pay, it becomes available at ${time}.`,
+    };
+}
+
 export function slotIsPast(date: string, slot: string): boolean {
     const slotStart = new Date(`${date}T${slot}:00`);
 
