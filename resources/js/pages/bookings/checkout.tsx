@@ -68,17 +68,6 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
     const [remainingMs, setRemainingMs] = useState(() => (target ? target - Date.now() : null));
 
     useEffect(() => {
-        if (deadline) {
-            console.log('[checkout] deadline received', {
-                raw: deadline,
-                parsed: new Date(deadline).toISOString(),
-                now: new Date().toISOString(),
-                remainingMs: target ? target - Date.now() : null,
-            });
-        }
-    }, [deadline, target]);
-
-    useEffect(() => {
         if (!target) {
             return;
         }

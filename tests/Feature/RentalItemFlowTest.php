@@ -181,6 +181,31 @@ test('a member rental lowers availability', function () {
     expect($item->refresh()->available_quantity)->toBe(9);
 });
 
+test('a member cannot rent out more than their share of the stock', function () {
+    $member = User::factory()->create();
+    $member->assignRole(Role::Player->value);
+    $item = makeRentalItem(['total_quantity' => 50, 'available_quantity' => 50]);
+
+    // One request for the whole shelf is refused outright.
+    $this->actingAs($member)
+        ->post(route('rentals.rent'), ['rental_item_id' => $item->id, 'quantity' => 50, 'duration_type' => 'daily'])
+        ->assertSessionHasErrors('quantity');
+
+    // So is chipping away at it across several requests, reservations included.
+    $this->post(route('rentals.rent'), ['rental_item_id' => $item->id, 'quantity' => 6, 'duration_type' => 'daily'])
+        ->assertSessionHasNoErrors();
+    $this->post(route('rentals.rent'), [
+        'rental_item_id' => $item->id,
+        'quantity' => 4,
+        'duration_type' => 'daily',
+        'reserved_for' => now()->addDays(3)->toDateString(),
+    ])->assertSessionHasNoErrors();
+    $this->post(route('rentals.rent'), ['rental_item_id' => $item->id, 'quantity' => 1, 'duration_type' => 'daily'])
+        ->assertSessionHasErrors('quantity');
+
+    expect($item->refresh()->available_quantity)->toBe(44);
+});
+
 test('re-running the rental seeder keeps admin edits and rented-out availability', function () {
     $this->seed(RentalItemSeeder::class);
 

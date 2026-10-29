@@ -41,17 +41,6 @@ function useExpired(deadline: string | null | undefined) {
     const [expired, setExpired] = useState(() => (target ? target - Date.now() <= 0 : false));
 
     useEffect(() => {
-        if (deadline) {
-            console.log('[checkout] deadline received', {
-                raw: deadline,
-                parsed: new Date(deadline).toISOString(),
-                now: new Date().toISOString(),
-                remainingMs: target ? target - Date.now() : null,
-            });
-        }
-    }, [deadline, target]);
-
-    useEffect(() => {
         if (!target) {
             setExpired(false);
             return;

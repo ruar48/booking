@@ -100,7 +100,6 @@ class OpenPlayRegistrationService
         if ($event->team_size === TeamSize::Doubles) {
             return 'Paying for friends is only available for singles sessions.';
         }
-
         $friends = $friends->unique('id')->values();
 
         if ($friends->contains(fn (Player $friend) => $friend->id === $lead->id)) {

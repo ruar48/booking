@@ -1,29 +1,31 @@
 <?php
 
 use App\Enums\BracketGenerationMode;
+use App\Enums\BracketSide;
+use App\Enums\MatchStatus;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
-use App\Models\ClubEvent;
-use App\Models\ClubEventMatch;
-use App\Models\ClubEventRegistration;
+use App\Models\OpenPlayMatch;
+use App\Models\OpenPlayRegistration;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Services\OpenPlayBracketService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function registerEntries(ClubEvent $event, int $count): void
+function registerEntries(OpenPlaySession $event, int $count): void
 {
     for ($i = 0; $i < $count; $i++) {
-        ClubEventRegistration::query()->create([
-            'club_event_id' => $event->id,
+        OpenPlayRegistration::query()->create([
+            'open_play_session_id' => $event->id,
             'player_id' => Player::factory()->create()->id,
             'partner_player_id' => null,
         ]);
     }
 }
 
-function playMatch(ClubEventMatch $match, OpenPlayBracketService $service, string $winnerSlot = 'entry1_id'): void
+function playMatch(OpenPlayMatch $match, OpenPlayBracketService $service, string $winnerSlot = 'entry1_id'): void
 {
     $match->refresh();
 
@@ -33,14 +35,14 @@ function playMatch(ClubEventMatch $match, OpenPlayBracketService $service, strin
         'entry1_score' => $winnerSlot === 'entry1_id' ? 11 : 5,
         'entry2_score' => $winnerSlot === 'entry1_id' ? 5 : 11,
         'winner_registration_id' => $winnerId,
-        'status' => \App\Enums\MatchStatus::Completed,
+        'status' => MatchStatus::Completed,
     ]);
 
     $service->advanceWinner($match);
 }
 
 it('generates a full double elimination bracket skeleton for 5 entries', function () {
-    $event = ClubEvent::factory()->create([
+    $event = OpenPlaySession::factory()->create([
         'bracket_format' => TournamentFormat::DoubleElimination,
         'bracket_generation' => BracketGenerationMode::Automatic,
         'team_size' => TeamSize::Singles,
@@ -76,7 +78,7 @@ it('generates a full double elimination bracket skeleton for 5 entries', functio
 });
 
 it('plays out a full 5-entry double elimination tournament to a champion', function () {
-    $event = ClubEvent::factory()->create([
+    $event = OpenPlaySession::factory()->create([
         'bracket_format' => TournamentFormat::DoubleElimination,
         'bracket_generation' => BracketGenerationMode::Automatic,
         'team_size' => TeamSize::Singles,
@@ -95,7 +97,7 @@ it('plays out a full 5-entry double elimination tournament to a champion', funct
             $progressed = false;
 
             $playable = $event->matches()
-                ->where('status', '!=', \App\Enums\MatchStatus::Completed)
+                ->where('status', '!=', MatchStatus::Completed)
                 ->whereNotNull('entry1_id')
                 ->whereNotNull('entry2_id')
                 ->get();
@@ -117,14 +119,14 @@ it('plays out a full 5-entry double elimination tournament to a champion', funct
 
     $lastFinal = $finalMatches->last();
 
-    expect($lastFinal->status)->toBe(\App\Enums\MatchStatus::Completed)
+    expect($lastFinal->status)->toBe(MatchStatus::Completed)
         ->and($lastFinal->winner_registration_id)->not->toBeNull()
         ->and($lastFinal->winner_registration_id)->toBe($lastFinal->entry1_id);
 
     // No losers-bracket or winners-bracket match should be left unplayed
     // with both slots filled.
     $stuck = $event->matches()
-        ->where('status', '!=', \App\Enums\MatchStatus::Completed)
+        ->where('status', '!=', MatchStatus::Completed)
         ->whereNotNull('entry1_id')
         ->whereNotNull('entry2_id')
         ->count();
@@ -133,7 +135,7 @@ it('plays out a full 5-entry double elimination tournament to a champion', funct
 });
 
 it('creates a bracket reset match when the losers-bracket entrant wins the first grand final', function () {
-    $event = ClubEvent::factory()->create([
+    $event = OpenPlaySession::factory()->create([
         'bracket_format' => TournamentFormat::DoubleElimination,
         'bracket_generation' => BracketGenerationMode::Automatic,
         'team_size' => TeamSize::Singles,
@@ -153,13 +155,13 @@ it('creates a bracket reset match when the losers-bracket entrant wins the first
         $progressed = false;
 
         $playable = $event->matches()
-            ->where('status', '!=', \App\Enums\MatchStatus::Completed)
+            ->where('status', '!=', MatchStatus::Completed)
             ->whereNotNull('entry1_id')
             ->whereNotNull('entry2_id')
             ->get();
 
         foreach ($playable as $match) {
-            $slot = ($match->bracket_side === \App\Enums\BracketSide::Final && $match->round === 1)
+            $slot = ($match->bracket_side === BracketSide::Final && $match->round === 1)
                 ? 'entry2_id'
                 : 'entry1_id';
             playMatch($match, $service, $slot);

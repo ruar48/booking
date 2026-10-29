@@ -6,12 +6,12 @@ use App\Contracts\Repositories\RentalRepositoryInterface;
 use App\Enums\RentalItemStatus;
 use App\Exceptions\InsufficientRentalStockException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Rental\RentItemRequest;
 use App\Models\RentalItem;
 use App\Models\RentalTransaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -46,15 +46,9 @@ class RentalMemberController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(RentItemRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'rental_item_id' => ['required', 'integer', Rule::exists(RentalItem::class, 'id')],
-            'quantity' => ['required', 'integer', 'min:1'],
-            'duration_type' => ['required', Rule::in(['daily', 'hourly'])],
-            'duration_hours' => ['required_if:duration_type,hourly', 'nullable', 'integer', 'min:1', 'max:12'],
-            'reserved_for' => ['nullable', 'date', 'after_or_equal:today'],
-        ]);
+        $validated = $request->validated();
 
         $user = $request->user();
         $rentalItem = RentalItem::query()->findOrFail($validated['rental_item_id']);
