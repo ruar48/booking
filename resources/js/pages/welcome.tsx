@@ -84,6 +84,15 @@ type Props = {
     hourlyWeather?: Record<string, HourForecast>;
     gallery?: GallerySection[];
     coaches?: PublicCoach[];
+    // Built server-side (HomeSeoService) and also printed by the Blade root view.
+    seo: HomeSeo;
+};
+
+type HomeSeo = {
+    title: string;
+    description: string;
+    location: string | null;
+    structured_data: Record<string, unknown>;
 };
 
 type ExploreTab = 'book' | 'open-play' | 'coaches' | 'photos';
@@ -282,10 +291,12 @@ function SiteHeader({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
 
 function Hero({
     venue,
+    location,
     onBook,
     onOpenPlay,
 }: {
     venue?: VenueProfile | null;
+    location: string | null;
     onBook: () => void;
     onOpenPlay: () => void;
 }) {
@@ -340,6 +351,13 @@ function Hero({
                         <span className="block text-brand-lime">{first}</span>
                         {last && <span className="block text-brand-lime">{last}</span>}
                     </h1>
+                    {/* Plain text naming the town and province: what local searches match on. */}
+                    {location && (
+                        <p className="mt-4 flex items-start gap-1.5 text-sm font-semibold text-white sm:text-base">
+                            <MapPin className="mt-0.5 size-4 shrink-0 text-brand-lime sm:mt-1" aria-hidden="true" />
+                            Pickleball courts &amp; billiards in {location}
+                        </p>
+                    )}
                     <p className="mt-5 line-clamp-4 text-sm leading-relaxed text-white/85 sm:text-base">
                         {intro}
                     </p>
@@ -1155,39 +1173,15 @@ export default function Welcome({
     hourlyWeather = {},
     gallery = [],
     coaches = [],
+    seo,
 }: Props) {
     const { auth } = usePage().props;
-    const businessName = brand.name;
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
     const ogImage =
         typeof window !== 'undefined'
             ? `${window.location.origin}${brand.logo}`
             : brand.logo;
-    const metaDescription = venue?.description
-        ? venue.description.replace(/\s+/g, ' ').trim().slice(0, 155)
-        : `Book pickleball courts, billiard and table tennis tables online at ${businessName}. Real-time availability, instant confirmation, open play sessions.`;
-    const structuredData = {
-        '@context': 'https://schema.org',
-        '@type': 'SportsActivityLocation',
-        name: businessName,
-        description: metaDescription,
-        image: ogImage,
-        url: pageUrl,
-        ...(venue?.phone ? { telephone: venue.phone } : {}),
-        ...(venue?.email ? { email: venue.email } : {}),
-        ...(venue && venueAddress(venue)
-            ? {
-                  address: {
-                      '@type': 'PostalAddress',
-                      streetAddress: venue.address_line_1 ?? undefined,
-                      addressLocality: venue.city ?? undefined,
-                      addressRegion: venue.state ?? undefined,
-                      postalCode: venue.postal_code ?? undefined,
-                      addressCountry: venue.country ?? undefined,
-                  },
-              }
-            : {}),
-    };
+    const metaDescription = seo.description;
     const [activeTab, setActiveTab] = useState<ExploreTab>('book');
     const booking = useCourtBooking({
         courts,
@@ -1221,21 +1215,21 @@ export default function Welcome({
 
     return (
         <>
-            <Head title={businessName}>
+            <Head title={seo.title}>
                 <meta name="description" content={metaDescription} />
                 {pageUrl && <link rel="canonical" href={pageUrl} />}
                 <meta property="og:type" content="website" />
-                <meta property="og:title" content={businessName} />
+                <meta property="og:title" content={seo.title} />
                 <meta property="og:description" content={metaDescription} />
                 <meta property="og:image" content={ogImage} />
                 {pageUrl && <meta property="og:url" content={pageUrl} />}
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={businessName} />
+                <meta name="twitter:title" content={seo.title} />
                 <meta name="twitter:description" content={metaDescription} />
                 <meta name="twitter:image" content={ogImage} />
                 <link rel="preload" as="image" href={heroImage} />
                 <script type="application/ld+json">
-                    {JSON.stringify(structuredData)}
+                    {JSON.stringify(seo.structured_data)}
                 </script>
             </Head>
 
@@ -1246,6 +1240,7 @@ export default function Welcome({
 
                 <Hero
                     venue={venue}
+                    location={seo.location}
                     onBook={() => navigate('book')}
                     onOpenPlay={() => navigate('open-play')}
                 />

@@ -15,7 +15,8 @@ import { registerSW } from 'virtual:pwa-register';
 const appName = brand.name;
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    // A title that already names the venue (the home page's SEO title) is used as-is.
+    title: (title) => (!title ? appName : title.includes(appName) ? title : `${title} - ${appName}`),
     layout: (name) => {
         switch (true) {
             case name === 'welcome':

@@ -14,4 +14,4 @@ Disallow: /open-play
 Disallow: /admin
 Disallow: /settings
 
-Sitemap: /sitemap.xml
+Sitemap: https://galaangramospickleball.com/sitemap.xml

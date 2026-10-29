@@ -38,6 +38,7 @@ class HomePageService
         private readonly GalleryService $galleryService,
         private readonly CoachService $coachService,
         private readonly ReleaseUnpaidBookings $releaseUnpaid,
+        private readonly HomeSeoService $seo,
     ) {}
 
     /**
@@ -96,6 +97,8 @@ class HomePageService
             ->whereIn('status', [BookingStatus::Pending, BookingStatus::Approved])
             ->count();
 
+        $venue = $this->venueProfile();
+
         return json_decode(json_encode([
             'courts' => $courts,
             'announcements' => $announcements,
@@ -103,7 +106,8 @@ class HomePageService
             'bookedSlots' => $bookedSlots,
             'dateOverrides' => $dateOverrides,
             'hourlyWeather' => $this->weatherService->hourlyForecast(),
-            'venue' => $this->venueProfile(),
+            'venue' => $venue,
+            'seo' => $this->seo->forVenue($venue),
             'gallery' => $this->galleryService->publicSections(),
             'coaches' => $this->coachService->publicProfiles(),
             'stats' => [

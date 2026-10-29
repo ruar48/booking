@@ -14,6 +14,9 @@ class HomeController extends Controller
 
     public function index(): Response
     {
-        return Inertia::render('welcome', $this->homePage->props());
+        $props = $this->homePage->props();
+
+        // The root Blade view prints the SEO tags too, so crawlers get them in the HTML itself.
+        return Inertia::render('welcome', $props)->withViewData(['seo' => $props['seo']]);
     }
 }
