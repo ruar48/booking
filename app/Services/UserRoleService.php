@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Role;
+use App\Models\Player;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -58,7 +59,24 @@ class UserRoleService
         DB::transaction(function () use ($user, $role, $previous) {
             $user->syncRoles([$role->value]);
 
+            if ($role === Role::Player) {
+                $this->ensurePlayerProfile($user);
+            }
+
             $this->auditLog->log('role_changed', $user, ['roles' => $previous], ['roles' => [$role->value]]);
         });
+    }
+
+    /**
+     * A Player-role account must appear on the Players list, so give it a
+     * profile (or bring back the one it had) when the role is granted.
+     */
+    private function ensurePlayerProfile(User $user): void
+    {
+        $player = Player::withTrashed()->firstOrCreate(['user_id' => $user->id]);
+
+        if ($player->trashed()) {
+            $player->restore();
+        }
     }
 }

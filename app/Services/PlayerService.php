@@ -6,6 +6,7 @@ use App\Contracts\Repositories\PlayerRepositoryInterface;
 use App\Models\Player;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -21,6 +22,19 @@ class PlayerService
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return $this->playerRepository->paginate($filters, $perPage);
+    }
+
+    /**
+     * Accounts that can still be given a player profile (one profile per user).
+     *
+     * @return Collection<int, User>
+     */
+    public function usersWithoutProfile(): Collection
+    {
+        return User::query()
+            ->whereDoesntHave('players', fn ($query) => $query->withTrashed())
+            ->orderBy('name')
+            ->get(['id', 'name', 'email']);
     }
 
     public function find(int $id, array $relations = []): ?Player

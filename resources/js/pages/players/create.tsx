@@ -1,11 +1,21 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { FormEvent } from 'react';
+import { ChevronsUpDown } from 'lucide-react';
+import { FormEvent, useState } from 'react';
 
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,7 +28,10 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { create, index as playersIndex, store } from '@/routes/players';
 
-export default function PlayersCreate() {
+type MemberOption = { id: number; name: string; email: string };
+
+export default function PlayersCreate({ users }: { users: MemberOption[] }) {
+    const [userPickerOpen, setUserPickerOpen] = useState(false);
     const { data, setData, post, processing, errors } = useForm({
         user_id: '',
         experience_level: 'beginner',
@@ -32,6 +45,8 @@ export default function PlayersCreate() {
         bio: '',
         is_active: true,
     });
+
+    const selectedUser = users.find((user) => String(user.id) === data.user_id);
 
     const submit = (event: FormEvent) => {
         event.preventDefault();
@@ -53,14 +68,55 @@ export default function PlayersCreate() {
                         </CardHeader>
                         <CardContent className="grid gap-4 sm:grid-cols-2">
                             <div className="grid gap-2">
-                                <Label htmlFor="user_id">User ID</Label>
-                                <Input
-                                    id="user_id"
-                                    type="number"
-                                    value={data.user_id}
-                                    onChange={(e) => setData('user_id', e.target.value)}
-                                    required
-                                />
+                                <Label htmlFor="user_id">Member account</Label>
+                                <Popover open={userPickerOpen} onOpenChange={setUserPickerOpen}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            id="user_id"
+                                            type="button"
+                                            variant="outline"
+                                            role="combobox"
+                                            aria-expanded={userPickerOpen}
+                                            className="w-full justify-between font-normal"
+                                        >
+                                            <span className={selectedUser ? '' : 'text-muted-foreground'}>
+                                                {selectedUser?.name ?? 'Select a member…'}
+                                            </span>
+                                            <ChevronsUpDown className="size-4 opacity-50" />
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
+                                        <Command>
+                                            <CommandInput placeholder="Search name or email…" />
+                                            <CommandList>
+                                                <CommandEmpty>
+                                                    {users.length === 0
+                                                        ? 'Every member already has a player profile.'
+                                                        : 'No members found.'}
+                                                </CommandEmpty>
+                                                <CommandGroup>
+                                                    {users.map((user) => (
+                                                        <CommandItem
+                                                            key={user.id}
+                                                            value={`${user.name} ${user.email}`}
+                                                            onSelect={() => {
+                                                                setData('user_id', String(user.id));
+                                                                setUserPickerOpen(false);
+                                                            }}
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span>{user.name}</span>
+                                                                <span className="text-muted-foreground text-xs">
+                                                                    {user.email}
+                                                                </span>
+                                                            </div>
+                                                        </CommandItem>
+                                                    ))}
+                                                </CommandGroup>
+                                            </CommandList>
+                                        </Command>
+                                    </PopoverContent>
+                                </Popover>
                                 <InputError message={errors.user_id} />
                             </div>
                             <div className="grid gap-2">

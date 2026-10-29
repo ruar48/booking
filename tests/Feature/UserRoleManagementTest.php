@@ -86,3 +86,30 @@ it('rejects an unknown role', function () {
         ->patch(route('admin.users.update-role', $member), ['role' => 'owner'])
         ->assertSessionHasErrors('role');
 });
+
+it('gives a member a player profile when they are made a player', function () {
+    $admin = roleUser(RoleEnum::SuperAdmin);
+    $member = roleUser(RoleEnum::Coach);
+
+    $this->actingAs($admin)
+        ->patch(route('admin.users.update-role', $member), ['role' => RoleEnum::Player->value])
+        ->assertRedirect();
+
+    expect($member->players()->count())->toBe(1);
+});
+
+it('offers only accounts without a player profile on the create player page', function () {
+    $admin = roleUser(RoleEnum::SuperAdmin);
+    $withProfile = roleUser(RoleEnum::Player);
+    $withProfile->players()->create();
+    $withoutProfile = roleUser(RoleEnum::Player);
+
+    $this->withoutVite()
+        ->actingAs($admin)
+        ->get(route('players.create'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('players/create')
+            ->where('users', fn ($users) => collect($users)->pluck('id')->contains($withoutProfile->id)
+                && ! collect($users)->pluck('id')->contains($withProfile->id)));
+});

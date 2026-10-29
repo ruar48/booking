@@ -6,6 +6,7 @@ use App\Contracts\Repositories\PlayerRepositoryInterface;
 use App\Http\Requests\StorePlayerRequest;
 use App\Http\Requests\UpdatePlayerRequest;
 use App\Models\Player;
+use App\Services\PlayerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -15,6 +16,7 @@ class PlayerController extends Controller
 {
     public function __construct(
         private readonly PlayerRepositoryInterface $playerRepository,
+        private readonly PlayerService $playerService,
     ) {}
 
     public function index(Request $request): Response
@@ -31,7 +33,9 @@ class PlayerController extends Controller
     {
         $this->authorize('create', Player::class);
 
-        return Inertia::render('players/create');
+        return Inertia::render('players/create', [
+            'users' => $this->playerService->usersWithoutProfile(),
+        ]);
     }
 
     public function store(StorePlayerRequest $request): RedirectResponse
