@@ -88,7 +88,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
 
     // Fallback if the websocket is unavailable or the event is missed.
     const { start: startPoll, stop: stopPoll } = usePoll(
-        5000,
+        3000,
         { only: ['registration', 'qrPayment'] },
         { autoStart: false },
     );
@@ -413,7 +413,7 @@ function PayCard({
     );
 }
 
-const REDIRECT_SECONDS = 5;
+const REDIRECT_SECONDS = 3;
 
 function ConfirmationCard({
     session,

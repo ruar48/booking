@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import {
     Check,
     CheckCircle2,
@@ -135,6 +135,23 @@ export default function BookingsCheckout({
     const qrExpired = qrPayment ? qrExpiry.expired : false;
 
     useBookingPaymentChannel(isUnpaid ? booking.id : null);
+
+    // Fallback if the websocket is unavailable or the event is missed.
+    const { start: startPoll, stop: stopPoll } = usePoll(
+        3000,
+        { only: ['booking', 'qrPayment'] },
+        { autoStart: false },
+    );
+
+    useEffect(() => {
+        if (isUnpaid && step === 3) {
+            startPoll();
+        } else {
+            stopPoll();
+        }
+
+        return stopPoll;
+    }, [isUnpaid, step]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Whatever step the customer is on, a confirmed payment always throws them to
     // the confirmation step — same as PayMongo/GCash's own hosted flow.
@@ -636,7 +653,23 @@ function PaymentPanel({
     );
 }
 
+const REDIRECT_SECONDS = 3;
+
 function ConfirmationPanel({ booking, amount }: { booking: ResourceBooking; amount?: number | null }) {
+    const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
+
+    useEffect(() => {
+        if (secondsLeft <= 0) {
+            router.visit(bookingsShow(booking));
+
+            return;
+        }
+
+        const timeout = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+
+        return () => window.clearTimeout(timeout);
+    }, [secondsLeft, booking]);
+
     return (
         <Card className="border-emerald-500/20">
             <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
@@ -646,8 +679,11 @@ function ConfirmationPanel({ booking, amount }: { booking: ResourceBooking; amou
                     {amount != null ? `${formatCurrency(amount)} paid. ` : ''}
                     Your reservation is confirmed — see you on the court.
                 </p>
+                <p className="text-muted-foreground text-xs">
+                    Redirecting to your booking in {secondsLeft}s…
+                </p>
                 <Button asChild className="mt-2">
-                    <Link href={bookingsShow(booking)}>View booking</Link>
+                    <Link href={bookingsShow(booking)}>View booking now</Link>
                 </Button>
             </CardContent>
         </Card>
