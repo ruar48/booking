@@ -3,7 +3,7 @@ import { ArrowLeft, Calendar, CalendarClock, CalendarDays, Dumbbell, Home, Layou
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { PaddleRally } from '@/components/paddle-rally';
+import { PaddleDuel } from '@/components/paddle-duel';
 import { Button } from '@/components/ui/button';
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { brand } from '@/lib/brand';
@@ -93,7 +93,7 @@ export default function NotFound() {
                 <div className="w-full max-w-md text-center">
                     <img src={brand.logo} alt={brand.name} className="mx-auto mb-2 size-16 rounded-full bg-white/10 p-1" />
 
-                    <PaddleRally className="mx-auto max-w-xs" label="A paddle driving the ball out of bounds" />
+                    <PaddleDuel className="mx-auto max-w-md" bigCheers label="Two players playing a point of pickleball" />
 
                     <p className="text-brand-lime -mt-2 text-7xl font-extrabold tracking-tight sm:text-8xl">404</p>
                     <h1 className="mt-3 text-2xl font-bold sm:text-3xl">That shot went out of bounds</h1>

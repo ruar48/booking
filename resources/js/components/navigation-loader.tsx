@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 
-import { PaddleRally } from '@/components/paddle-rally';
+import { PaddleDuel } from '@/components/paddle-duel';
 
 // Fast visits only get the thin progress bar; the rally waits until a load is
 // slow enough that the visitor would otherwise wonder whether anything happened.
@@ -51,7 +51,7 @@ export function NavigationLoader() {
             aria-live="polite"
             className="animate-page-enter fixed inset-0 z-[100] flex flex-col items-center justify-center gap-2 bg-brand-navy-dark/85 text-white backdrop-blur-sm"
         >
-            <PaddleRally className="w-72 max-w-[80vw]" label="Loading" />
+            <PaddleDuel className="w-[28rem] max-w-[90vw]" bigCheers label="Loading" />
             <p className="text-sm font-medium text-white/80">Loading…</p>
         </div>
     );

@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 
 const WIDTH = 800;
 const GROUND = 140;
-const GRAVITY = 900; // scene units / s², same as PaddleRally
+const GRAVITY = 900; // scene units / s²
 const SHOT = 1.2; // seconds per rally shot
 /** Length of one stroke timeline (ready, swing, recover), as paddleAngle runs it. */
 const STROKE = 2.4;
@@ -381,7 +381,8 @@ const STILL_FRAME = 5.2;
 function Cheer({ name, big }: { name: string; big: boolean }) {
     return (
         <g data-part={`${name}Cheer`} opacity={0}>
-            <g transform={big ? 'scale(1.5)' : undefined}>
+            {/* Enlarged cheers sit a little higher so they clear the paddle heads. */}
+            <g transform={big ? 'translate(0 -16) scale(1.5)' : undefined}>
                 <g
                     stroke="#d4ed2a"
                     strokeWidth={2}
@@ -438,7 +439,7 @@ export function PaddleDuel({
     return (
         <svg
             ref={svgRef}
-            viewBox={`0 -30 ${WIDTH} 190`}
+            viewBox={`0 -46 ${WIDTH} 206`}
             role="img"
             aria-label={label}
             className={cn('block h-auto w-full', className)}
