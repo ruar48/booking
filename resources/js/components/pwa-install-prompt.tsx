@@ -1,23 +1,61 @@
+import { Download, Share, SquarePlus, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
 import { cn } from '@/lib/utils';
-import { Download, Share, SquarePlus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 const DISMISSED_KEY = 'pwa-install-dismissed-at';
 const DISMISS_SNOOZE_DAYS = 14;
 
 function wasRecentlyDismissed(): boolean {
     const dismissedAt = localStorage.getItem(DISMISSED_KEY);
-    if (!dismissedAt) return false;
+
+    if (!dismissedAt) {
+return false;
+}
 
     const daysSince = (Date.now() - Number(dismissedAt)) / (1000 * 60 * 60 * 24);
+
     return daysSince < DISMISS_SNOOZE_DAYS;
+}
+
+// Never show the offer in the first few seconds, even if the visitor scrolls
+// straight away: they should see the page before being asked to install it.
+const MIN_DELAY_MS = 3000;
+
+/**
+ * Resolves true once the visitor has engaged with the page (scrolled, tapped,
+ * clicked or typed) and MIN_DELAY_MS has passed. Appearing on load instead slid
+ * a card over the first screen just as it finished painting, which covered the
+ * stats bar and cost the Speed Index score.
+ */
+function useHasEngaged(): boolean {
+    const [engaged, setEngaged] = useState(false);
+
+    useEffect(() => {
+        const events = ['scroll', 'pointerdown', 'keydown'] as const;
+        let timer: number | undefined;
+
+        const onEngage = () => {
+            events.forEach((event) => window.removeEventListener(event, onEngage));
+            timer = window.setTimeout(() => setEngaged(true), Math.max(0, MIN_DELAY_MS - performance.now()));
+        };
+
+        events.forEach((event) => window.addEventListener(event, onEngage, { passive: true }));
+
+        return () => {
+            events.forEach((event) => window.removeEventListener(event, onEngage));
+            window.clearTimeout(timer);
+        };
+    }, []);
+
+    return engaged;
 }
 
 export function PwaInstallPrompt() {
     const { canInstall, isIos, promptInstall } = usePwaInstall();
     const [dismissed, setDismissed] = useState(true);
+    const engaged = useHasEngaged();
 
     useEffect(() => {
         setDismissed(wasRecentlyDismissed());
@@ -33,7 +71,9 @@ export function PwaInstallPrompt() {
         dismiss();
     };
 
-    if (!canInstall || dismissed) return null;
+    if (!canInstall || dismissed || !engaged) {
+return null;
+}
 
     return (
         <div
