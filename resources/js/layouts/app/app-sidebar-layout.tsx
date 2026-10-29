@@ -6,6 +6,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { BottomNav } from '@/components/bottom-nav';
 import { InertiaEffects } from '@/components/inertia-effects';
+import { PageTransition } from '@/components/page-transition';
 import { SupportWidget } from '@/components/support-widget';
 import type { AppLayoutProps } from '@/types';
 
@@ -24,7 +25,7 @@ export default function AppSidebarLayout({
                 className="overflow-x-hidden pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0"
             >
                 <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                {children}
+                <PageTransition className="flex flex-1 flex-col">{children}</PageTransition>
             </AppContent>
             <BottomNav />
             <SupportWidget />
