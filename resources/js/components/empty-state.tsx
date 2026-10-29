@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { PaddleRally } from '@/components/paddle-rally';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +27,9 @@ export function EmptyState({
                 className,
             )}
         >
-            <div className="bg-muted text-muted-foreground mb-4 rounded-full p-3">
+            {/* The rally for most visitors; the plain icon for anyone who has asked for less motion. */}
+            <PaddleRally className="text-muted-foreground mb-2 w-48 motion-reduce:hidden" label={title} />
+            <div className="bg-muted text-muted-foreground mb-4 hidden rounded-full p-3 motion-reduce:block">
                 <Icon className="size-6" />
             </div>
             <h3 className="text-lg font-medium">{title}</h3>

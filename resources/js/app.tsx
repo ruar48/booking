@@ -1,4 +1,5 @@
 import { createInertiaApp, router } from '@inertiajs/react';
+import { NavigationLoader } from '@/components/navigation-loader';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -35,6 +36,7 @@ createInertiaApp({
                 {app}
                 <Toaster />
                 <PwaInstallPrompt />
+                <NavigationLoader />
             </TooltipProvider>
         );
     },

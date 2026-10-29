@@ -36,6 +36,7 @@ import type { ComponentType } from 'react';
 
 import { BookYourCourt, PanelTitle, useCourtBooking } from '@/components/home-court-booking';
 import { InstallAppButton } from '@/components/install-app-button';
+import { PaddleDuel } from '@/components/paddle-duel';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { SupportWidget } from '@/components/support-widget';
 import { Badge } from '@/components/ui/badge';
@@ -319,6 +320,16 @@ function Hero({
                 </div>
             </div>
 
+            {/*
+              * Right half of the hero, just above the stats card that overlaps the
+              * hero's bottom edge (-mt-16). A soft navy wash keeps the rally readable
+              * over the busy photo without boxing it in. xl+ only: below that it
+              * would run into the headline's buttons.
+              */}
+            <div className="pointer-events-none absolute right-4 bottom-[4.5rem] hidden w-[48vw] max-w-[900px] bg-[radial-gradient(ellipse_at_center,rgba(10,28,48,0.8)_0%,rgba(10,28,48,0.55)_45%,transparent_72%)] text-white xl:block">
+                <PaddleDuel />
+            </div>
+
             <div className="relative mx-auto max-w-7xl px-4 pt-10 pb-28 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16 lg:pb-32">
                 <div className="max-w-xl">
                     <span className="inline-flex items-center rounded-full bg-brand-lime px-3.5 py-1 text-xs font-bold text-brand-navy sm:text-sm">
@@ -351,6 +362,11 @@ function Hero({
                             <UsersRound className="size-4" />
                             Explore Open Play
                         </Button>
+                    </div>
+
+                    {/* Below xl there's no room beside the headline, so the rally sits under the buttons. */}
+                    <div className="pointer-events-none mt-6 bg-[radial-gradient(ellipse_at_center,rgba(10,28,48,0.7)_0%,rgba(10,28,48,0.4)_45%,transparent_72%)] text-white xl:hidden">
+                        <PaddleDuel bigCheers />
                     </div>
                 </div>
             </div>

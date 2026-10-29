@@ -3,6 +3,7 @@ import { ArrowLeft, Calendar, CalendarClock, CalendarDays, Dumbbell, Home, Layou
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { PaddleRally } from '@/components/paddle-rally';
 import { Button } from '@/components/ui/button';
 import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { brand } from '@/lib/brand';
@@ -90,9 +91,11 @@ export default function NotFound() {
             <Head title="Page not found" />
             <main className="from-brand-navy flex min-h-svh items-center justify-center bg-gradient-to-br to-slate-900 px-4 py-12 text-white">
                 <div className="w-full max-w-md text-center">
-                    <img src={brand.logo} alt={brand.name} className="mx-auto mb-6 size-20 rounded-full bg-white/10 p-1" />
+                    <img src={brand.logo} alt={brand.name} className="mx-auto mb-2 size-16 rounded-full bg-white/10 p-1" />
 
-                    <p className="text-brand-lime text-7xl font-extrabold tracking-tight sm:text-8xl">404</p>
+                    <PaddleRally className="mx-auto max-w-xs" label="A paddle driving the ball out of bounds" />
+
+                    <p className="text-brand-lime -mt-2 text-7xl font-extrabold tracking-tight sm:text-8xl">404</p>
                     <h1 className="mt-3 text-2xl font-bold sm:text-3xl">That shot went out of bounds</h1>
                     <p className="mt-2 text-sm text-white/70">
                         The page you&apos;re looking for doesn&apos;t exist or has moved. Let&apos;s get you back on
