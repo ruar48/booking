@@ -1,6 +1,6 @@
 import { format, parseISO } from 'date-fns';
 
-import type { BookedSlot } from '@/types/booking';
+import type { BookedSlot, DateOverride } from '@/types/booking';
 
 // Pure slot math shared by the booking grid and the home page booking panel.
 
@@ -152,6 +152,27 @@ export function slotIsPast(date: string, slot: string): boolean {
     const slotStart = new Date(`${date}T${slot}:00`);
 
     return slotStart <= new Date();
+}
+
+/**
+ * The first date from `today` on that an admin has opened and that still has
+ * a bookable slot left — so the picker lands on something useful instead of
+ * a "closed" message. Falls back to `today` when nothing ahead is open.
+ */
+export function nearestOpenDate(dateOverrides: DateOverride[], today: string): string {
+    const openDates = dateOverrides
+        .filter((override) => override.is_closed === false && override.open_time && override.close_time)
+        .map((override) => ({ ...override, day: override.date.split('T')[0] }))
+        .filter((override) => override.day >= today)
+        .sort((a, b) => a.day.localeCompare(b.day));
+
+    const match = openDates.find((override) =>
+        generateTimeSlots(override.open_time!.slice(0, 5), override.close_time!.slice(0, 5)).some(
+            (slot) => !slotIsPast(override.day, slot),
+        ),
+    );
+
+    return match?.day ?? today;
 }
 
 export function formatSlotRange(slot: string): string {

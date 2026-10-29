@@ -28,6 +28,7 @@ import {
     generateTimeSlots,
     isOpenPlaySlot,
     minutesToSlot,
+    nearestOpenDate,
     openPlaySessionId,
     selectionKey,
     slotIsPast,
@@ -243,7 +244,7 @@ export function CourtScheduleGrid({
     const effectiveErrors = errors ?? pageErrors;
 
     const today = format(new Date(), 'yyyy-MM-dd');
-    const [selectedDate, setSelectedDate] = useState(today);
+    const [selectedDate, setSelectedDate] = useState(() => nearestOpenDate(dateOverrides, today));
     const [selections, setSelections] = useState<SlotSelection[]>([]);
     const [submitting, setSubmitting] = useState(false);
     // Only sports the venue has resources for get a tab, in enum order.

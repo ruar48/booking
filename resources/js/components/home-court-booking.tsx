@@ -25,6 +25,7 @@ import {
     formatSlotRange,
     generateTimeSlots,
     isOpenPlaySlot,
+    nearestOpenDate,
     openPlaySessionId,
     selectionKey,
     slotIsPast,
@@ -56,7 +57,7 @@ export function useCourtBooking({
     isAuthenticated: boolean;
 }) {
     const today = format(new Date(), 'yyyy-MM-dd');
-    const [selectedDate, setSelectedDate] = useState(today);
+    const [selectedDate, setSelectedDate] = useState(() => nearestOpenDate(dateOverrides, today));
     const [selections, setSelections] = useState<SlotSelection[]>([]);
     const [submitting, setSubmitting] = useState(false);
     const [datePickerOpen, setDatePickerOpen] = useState(false);
