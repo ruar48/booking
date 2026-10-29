@@ -1,0 +1,15 @@
+# Hostinger's Git deployment publishes the whole repository into public_html,
+# so the web root is the project root instead of public/. Route every request
+# into public/, where Laravel's index.php and the built assets live.
+#
+# This also keeps .env, vendor/, storage/ and the rest of the project out of
+# reach: a request for /.env is looked up as public/.env, which doesn't exist.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Belt and braces in case mod_rewrite is ever off: never list directories.
+Options -Indexes

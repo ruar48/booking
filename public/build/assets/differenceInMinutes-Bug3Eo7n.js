@@ -1,0 +1,1 @@
+import{f as e}from"./parseISO-C9Lbqbiv.js";import{c as t,l as n}from"./format-CH_H7QEz.js";function r(r,i,a){let o=n(r,i)/e;return t(a?.roundingMethod)(o)}export{r as t};

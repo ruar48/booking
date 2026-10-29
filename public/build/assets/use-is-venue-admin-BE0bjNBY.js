@@ -1,0 +1,1 @@
+import{p as e}from"./utils-CLnU-Yw-.js";function t(){let{auth:t}=e().props;return t.user?.isVenueAdmin===!0}export{t};

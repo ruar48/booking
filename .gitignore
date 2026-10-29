@@ -1,7 +1,9 @@
 /.phpunit.cache
 /bootstrap/ssr
 /node_modules
-/public/build
+# public/build is committed on purpose: Hostinger's Git deployment only runs
+# `composer install`, never `npm run build`, so the built assets have to be in
+# the repository. Run `npm run build` before every commit you deploy.
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
