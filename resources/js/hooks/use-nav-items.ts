@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import {
     Calendar,
     CalendarClock,
@@ -14,6 +15,7 @@ import {
     Package,
     Receipt,
     Settings,
+    UserCog,
     Users,
 } from 'lucide-react';
 
@@ -23,6 +25,7 @@ import { index as adminAnalyticsIndex } from '@/routes/admin/analytics';
 import { index as adminGalleryIndex } from '@/routes/admin/gallery';
 import { index as adminPoliciesIndex } from '@/routes/admin/policies';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
+import { index as adminUsersIndex } from '@/routes/admin/users';
 import { index as announcementsIndex } from '@/routes/announcements';
 import { calendar as bookingsCalendar, create as createBooking, index as bookingsIndex } from '@/routes/bookings';
 import { index as coachesIndex } from '@/routes/coaches';
@@ -45,6 +48,7 @@ export type NavItems = {
 
 export function useNavItems(): NavItems {
     const isVenueAdmin = useIsVenueAdmin();
+    const isSuperAdmin = usePage().props.auth.user?.roles.includes('super_admin') === true;
 
     const homeHref = isVenueAdmin ? dashboard() : bookingsIndex();
 
@@ -81,6 +85,7 @@ export function useNavItems(): NavItems {
               { title: 'Venue Settings', href: adminSettingsIndex(), icon: Settings },
               { title: 'Gallery', href: adminGalleryIndex(), icon: ImageIcon },
               { title: 'Policies', href: adminPoliciesIndex(), icon: FileText },
+              ...(isSuperAdmin ? [{ title: 'Users & Roles', href: adminUsersIndex(), icon: UserCog }] : []),
           ]
         : [];
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\GalleryCategoryController;
 use App\Http\Controllers\Admin\GalleryPhotoController;
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -15,6 +16,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::put('settings/notifications', [SettingController::class, 'updateNotifications'])->name('settings.update-notifications');
     Route::get('audit-logs', [AuditLogController::class, 'index'])->name('audit-logs.index');
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.update-role');
 
     Route::get('policies', [PolicyController::class, 'index'])->name('policies.index');
     Route::get('policies/create', [PolicyController::class, 'create'])->name('policies.create');

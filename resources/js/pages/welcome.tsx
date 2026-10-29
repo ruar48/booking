@@ -1223,7 +1223,9 @@ export default function Welcome({
                 </script>
             </Head>
 
-            <div className="min-h-screen overflow-x-hidden bg-slate-100 text-brand-navy">
+            {/* overflow-x-clip, not -hidden: "hidden" turns this div into a scroll
+                container, and the sticky header would stick to it instead of the window. */}
+            <div className="min-h-screen overflow-x-clip bg-slate-100 text-brand-navy">
                 <SiteHeader onNavigate={navigate} />
 
                 <Hero
