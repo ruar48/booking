@@ -23,7 +23,7 @@ class BookingPresenter
      */
     public function showProps(ResourceBooking $booking, User $viewer): array
     {
-        $booking->load(['resource', 'user', 'approver']);
+        $booking->load(['resource', 'user', 'approver:id,name']);
 
         // Siblings from the same bulk submission, so checkout can show and
         // charge the whole group instead of this one row. Null when the

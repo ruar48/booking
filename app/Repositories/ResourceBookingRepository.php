@@ -7,6 +7,7 @@ use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -23,7 +24,7 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return ResourceBooking::query()
-            ->with(['resource', 'user', 'approver'])
+            ->with(['resource', 'user', 'approver:id,name'])
             ->latest('starts_at')
             ->paginate($perPage);
     }
@@ -31,7 +32,7 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
     public function paginateForUser(User $user, array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         return ResourceBooking::query()
-            ->with(['resource', 'user', 'approver'])
+            ->with(['resource', 'user', 'approver:id,name'])
             ->when(
                 ! $user->isVenueAdmin(),
                 fn ($query) => $query->where('user_id', $user->id),
@@ -88,8 +89,8 @@ class ResourceBookingRepository implements ResourceBookingRepositoryInterface
 
     public function getConflicts(
         int $resourceId,
-        Carbon $startsAt,
-        Carbon $endsAt,
+        CarbonInterface $startsAt,
+        CarbonInterface $endsAt,
         ?int $excludeBookingId = null,
     ): Collection {
         return ResourceBooking::query()

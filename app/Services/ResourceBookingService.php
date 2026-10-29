@@ -15,6 +15,7 @@ use App\Models\OpenPlaySession;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -142,6 +143,40 @@ class ResourceBookingService
         }
     }
 
+    /**
+     * A QR scanned just before an auto-cancel can still be paid just after it.
+     * The customer's money is real, so give them the booking back — but only
+     * if every slot in the group is still in the future and nobody else has
+     * taken it since. Returns false (leaving the group cancelled) otherwise,
+     * and the caller flags the payment for a refund.
+     */
+    public function reinstatePaidGroup(ResourceBooking $booking): bool
+    {
+        $group = $booking->groupBookings();
+
+        foreach ($group as $sibling) {
+            if ($sibling->starts_at->isPast()) {
+                return false;
+            }
+
+            try {
+                $this->assertBookable($sibling->resource_id, $sibling->starts_at, $sibling->ends_at, $sibling->id);
+            } catch (BookingConflictException) {
+                return false;
+            }
+        }
+
+        foreach ($group as $sibling) {
+            $this->bookingRepository->update($sibling, [
+                'status' => BookingStatus::Approved,
+                'payment_status' => PaymentStatus::Paid,
+                'cancellation_reason' => null,
+            ]);
+        }
+
+        return true;
+    }
+
     public function getForCalendar(
         ?Carbon $start = null,
         ?Carbon $end = null,
@@ -172,10 +207,12 @@ class ResourceBookingService
             ]));
     }
 
+    // Model dates are CarbonImmutable while parsed input is a mutable Carbon,
+    // so accept either.
     private function assertBookable(
         int $resourceId,
-        Carbon $startsAt,
-        Carbon $endsAt,
+        CarbonInterface $startsAt,
+        CarbonInterface $endsAt,
         ?int $excludeBookingId = null,
     ): void {
         $resource = Resource::query()->find($resourceId);

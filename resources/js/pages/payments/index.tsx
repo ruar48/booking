@@ -1,10 +1,11 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { type ColumnDef } from '@tanstack/react-table';
-import { CreditCard, Eye } from 'lucide-react';
+import { AlertTriangle, CreditCard, Eye } from 'lucide-react';
 
 import { DataTable } from '@/components/data-table';
 import { PageHeader } from '@/components/page-header';
 import { StatusBadge } from '@/components/status-badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -20,9 +21,10 @@ import type { Paginated, Payment } from '@/types/booking';
 type Props = {
     payments: Paginated<Payment>;
     filters: { status?: string };
+    flaggedCount: number;
 };
 
-export default function PaymentsIndex({ payments, filters }: Props) {
+export default function PaymentsIndex({ payments, filters, flaggedCount }: Props) {
     const handleFilter = (value: string) => {
         router.get(
             paymentsIndex().url,
@@ -56,7 +58,17 @@ export default function PaymentsIndex({ payments, filters }: Props) {
         {
             accessorKey: 'status',
             header: 'Status',
-            cell: ({ row }) => <StatusBadge status={row.original.status} />,
+            cell: ({ row }) => (
+                <div className="flex items-center gap-1.5">
+                    <StatusBadge status={row.original.status} />
+                    {row.original.flagged_at ? (
+                        <Badge variant="destructive" className="gap-1">
+                            <AlertTriangle className="size-3" />
+                            Needs refund / review
+                        </Badge>
+                    ) : null}
+                </div>
+            ),
         },
         {
             accessorKey: 'paid_at',
@@ -85,15 +97,27 @@ export default function PaymentsIndex({ payments, filters }: Props) {
                     description="Track and manage payment records"
                 />
 
+                {flaggedCount > 0 && filters.status !== 'flagged' ? (
+                    <button
+                        type="button"
+                        onClick={() => handleFilter('flagged')}
+                        className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-left text-sm text-destructive"
+                    >
+                        <AlertTriangle className="size-4 shrink-0" />
+                        {flaggedCount} {flaggedCount === 1 ? 'payment needs' : 'payments need'} a refund or review — show them
+                    </button>
+                ) : null}
+
                 <Select
                     value={filters.status ?? 'all'}
                     onValueChange={handleFilter}
                 >
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-50">
                         <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All statuses</SelectItem>
+                        <SelectItem value="flagged">Needs refund / review</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
                         <SelectItem value="paid">Paid</SelectItem>
                         <SelectItem value="failed">Failed</SelectItem>

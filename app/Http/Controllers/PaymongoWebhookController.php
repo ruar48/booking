@@ -2,13 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentMethod;
-use App\Enums\PaymentStatus;
-use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PaymongoWebhookController extends Controller
@@ -45,31 +41,13 @@ class PaymongoWebhookController extends Controller
             'payment_intent_id' => $paymentIntentId,
         ]);
 
-        if ($paymentIntentId) {
-            DB::transaction(function () use ($paymentIntentId): void {
-                $payment = Payment::query()
-                    ->where('paymongo_payment_intent_id', $paymentIntentId)
-                    ->lockForUpdate()
-                    ->first();
+        if (is_string($paymentIntentId) && $paymentIntentId !== '') {
+            $amount = $request->input('data.attributes.data.attributes.amount');
 
-                if (! $payment) {
-                    Log::warning('paymongo.webhook.payment_not_found', ['payment_intent_id' => $paymentIntentId]);
-
-                    return;
-                }
-
-                if ($payment->status !== PaymentStatus::Paid) {
-                    $this->paymentService->markPaid($payment, PaymentMethod::Qrph->value);
-
-                    Log::info('paymongo.webhook.marked_paid', [
-                        'payment_id' => $payment->id,
-                        'payable_type' => $payment->payable_type,
-                        'payable_id' => $payment->payable_id,
-                    ]);
-                } else {
-                    Log::info('paymongo.webhook.already_paid', ['payment_id' => $payment->id]);
-                }
-            });
+            $this->paymentService->confirmGatewayPayment(
+                $paymentIntentId,
+                is_numeric($amount) ? (int) $amount : null,
+            );
         }
 
         return response('OK', 200);
@@ -124,7 +102,10 @@ class PaymongoWebhookController extends Controller
         }
 
         $expected = hash_hmac('sha256', $parts['t'].'.'.$request->getContent(), $secret);
-        $matches = hash_equals($expected, $parts['te']) || (! empty($parts['li']) && hash_equals($expected, $parts['li']));
+        // A header may omit te= or li= entirely, not just leave it empty —
+        // hash_equals() on null is a TypeError (a 500) rather than a reject.
+        $matches = (! empty($parts['te']) && hash_equals($expected, (string) $parts['te']))
+            || (! empty($parts['li']) && hash_equals($expected, (string) $parts['li']));
 
         return $matches ? null : 'hmac_mismatch';
     }

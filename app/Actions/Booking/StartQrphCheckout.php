@@ -2,10 +2,14 @@
 
 namespace App\Actions\Booking;
 
+use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\PaymentUnavailableException;
 use App\Models\ResourceBooking;
 use App\Models\User;
+use App\Services\Booking\BookingPresenter;
 use App\Services\PaymentService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -16,15 +20,30 @@ class StartQrphCheckout
 {
     public function __construct(
         private readonly PaymentService $paymentService,
+        private readonly BookingPresenter $presenter,
     ) {}
 
     /**
      * @return array<string, mixed>|null Null when the booking is already paid.
+     *
+     * @throws PaymentUnavailableException
      */
     public function execute(ResourceBooking $booking, User $payer): ?array
     {
         if ($booking->payment_status === PaymentStatus::Paid) {
             return null;
+        }
+
+        // Taking money for a slot that has been (or is about to be) released
+        // would leave the customer paying for nothing.
+        if (in_array($booking->status, [BookingStatus::Cancelled, BookingStatus::Rejected], true)) {
+            throw new PaymentUnavailableException(__('This booking can no longer be paid for.'));
+        }
+
+        $deadline = $this->presenter->paymentDeadline($booking);
+
+        if ($deadline !== null && Carbon::parse($deadline)->isPast()) {
+            throw new PaymentUnavailableException(__('The payment window for this booking has closed.'));
         }
 
         // A bulk submission may have split into several bookings sharing a

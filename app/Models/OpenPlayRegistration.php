@@ -71,6 +71,14 @@ class OpenPlayRegistration extends Model
     }
 
     /**
+     * @return BelongsTo<self, $this>
+     */
+    public function groupLead(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'group_lead_id');
+    }
+
+    /**
      * @return MorphMany<Payment, $this>
      */
     public function payments(): MorphMany

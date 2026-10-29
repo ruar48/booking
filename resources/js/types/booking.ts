@@ -387,6 +387,7 @@ export type Payment = {
     status: string;
     payment_method?: string | null;
     paid_at?: string | null;
+    flagged_at?: string | null;
     notes?: string | null;
     user?: { id: number; name: string; email: string };
     payable?: ResourceBooking | Tournament | Record<string, unknown>;

@@ -177,7 +177,13 @@ export default function BookingsCheckout({
             {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => setStep(3),
+                // A refused checkout redirects back with a toast and no QR —
+                // stay put rather than show the pay step with nothing to scan.
+                onSuccess: (page) => {
+                    if (page.props.qrPayment) {
+                        setStep(3);
+                    }
+                },
                 onFinish: () => setGenerating(false),
             },
         );

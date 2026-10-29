@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PaymentStatus;
 use Database\Factories\PaymentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $qr_expires_at
  * @property array<string, mixed>|null $raw_response
  * @property Carbon|null $paid_at
+ * @property Carbon|null $flagged_at
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -48,8 +50,12 @@ use Illuminate\Support\Carbon;
     'qr_expires_at',
     'raw_response',
     'paid_at',
+    'flagged_at',
     'notes',
 ])]
+// Gateway internals (the intent's client key, billing details) never need to
+// reach a page; nothing on the frontend reads them.
+#[Hidden(['raw_response', 'paymongo_payment_intent_id', 'paymongo_payment_method_id'])]
 class Payment extends Model
 {
     /** @use HasFactory<PaymentFactory> */
@@ -64,6 +70,7 @@ class Payment extends Model
             'raw_response' => 'array',
             'qr_expires_at' => 'datetime',
             'paid_at' => 'datetime',
+            'flagged_at' => 'datetime',
         ];
     }
 

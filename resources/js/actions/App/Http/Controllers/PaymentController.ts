@@ -1,7 +1,7 @@
 import { queryParams, type RouteQueryOptions, type RouteDefinition, type RouteFormDefinition, applyUrlDefaults } from './../../../../wayfinder'
 /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
 export const index = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -16,7 +16,7 @@ index.definition = {
 
 /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
 index.url = (options?: RouteQueryOptions) => {
@@ -25,7 +25,7 @@ index.url = (options?: RouteQueryOptions) => {
 
 /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
 index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -34,7 +34,7 @@ index.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
 })
 /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
 index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -44,7 +44,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
     /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
     const indexForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -54,7 +54,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 
             /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
         indexForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -63,7 +63,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
         })
             /**
 * @see \App\Http\Controllers\PaymentController::index
- * @see app/Http/Controllers/PaymentController.php:16
+ * @see app/Http/Controllers/PaymentController.php:21
  * @route '/payments'
  */
         indexForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -79,7 +79,7 @@ index.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     index.form = indexForm
 /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
 export const show = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -94,7 +94,7 @@ show.definition = {
 
 /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
 show.url = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -127,7 +127,7 @@ show.url = (args: { payment: number | { id: number } } | [payment: number | { id
 
 /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
 show.get = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -136,7 +136,7 @@ show.get = (args: { payment: number | { id: number } } | [payment: number | { id
 })
 /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
 show.head = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -146,7 +146,7 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
 
     /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
     const showForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -156,7 +156,7 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
 
             /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
         showForm.get = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -165,7 +165,7 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
         })
             /**
 * @see \App\Http\Controllers\PaymentController::show
- * @see app/Http/Controllers/PaymentController.php:35
+ * @see app/Http/Controllers/PaymentController.php:48
  * @route '/payments/{payment}'
  */
         showForm.head = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -181,7 +181,7 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
     show.form = showForm
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:46
+ * @see app/Http/Controllers/PaymentController.php:60
  * @route '/payments/{payment}/mark-paid'
  */
 export const markPaid = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -196,7 +196,7 @@ markPaid.definition = {
 
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:46
+ * @see app/Http/Controllers/PaymentController.php:60
  * @route '/payments/{payment}/mark-paid'
  */
 markPaid.url = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -229,7 +229,7 @@ markPaid.url = (args: { payment: number | { id: number } } | [payment: number | 
 
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:46
+ * @see app/Http/Controllers/PaymentController.php:60
  * @route '/payments/{payment}/mark-paid'
  */
 markPaid.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -239,7 +239,7 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
 
     /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:46
+ * @see app/Http/Controllers/PaymentController.php:60
  * @route '/payments/{payment}/mark-paid'
  */
     const markPaidForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -254,7 +254,7 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
 
             /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:46
+ * @see app/Http/Controllers/PaymentController.php:60
  * @route '/payments/{payment}/mark-paid'
  */
         markPaidForm.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -268,6 +268,95 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
         })
     
     markPaid.form = markPaidForm
-const PaymentController = { index, show, markPaid }
+/**
+* @see \App\Http\Controllers\PaymentController::markRefunded
+ * @see app/Http/Controllers/PaymentController.php:88
+ * @route '/payments/{payment}/mark-refunded'
+ */
+export const markRefunded = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: markRefunded.url(args, options),
+    method: 'patch',
+})
+
+markRefunded.definition = {
+    methods: ["patch"],
+    url: '/payments/{payment}/mark-refunded',
+} satisfies RouteDefinition<["patch"]>
+
+/**
+* @see \App\Http\Controllers\PaymentController::markRefunded
+ * @see app/Http/Controllers/PaymentController.php:88
+ * @route '/payments/{payment}/mark-refunded'
+ */
+markRefunded.url = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
+    if (typeof args === 'string' || typeof args === 'number') {
+        args = { payment: args }
+    }
+
+            if (typeof args === 'object' && !Array.isArray(args) && 'id' in args) {
+            args = { payment: args.id }
+        }
+    
+    if (Array.isArray(args)) {
+        args = {
+                    payment: args[0],
+                }
+    }
+
+    args = applyUrlDefaults(args)
+
+    const parsedArgs = {
+                        payment: typeof args.payment === 'object'
+                ? args.payment.id
+                : args.payment,
+                }
+
+    return markRefunded.definition.url
+            .replace('{payment}', parsedArgs.payment.toString())
+            .replace(/\/+$/, '') + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\PaymentController::markRefunded
+ * @see app/Http/Controllers/PaymentController.php:88
+ * @route '/payments/{payment}/mark-refunded'
+ */
+markRefunded.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
+    url: markRefunded.url(args, options),
+    method: 'patch',
+})
+
+    /**
+* @see \App\Http\Controllers\PaymentController::markRefunded
+ * @see app/Http/Controllers/PaymentController.php:88
+ * @route '/payments/{payment}/mark-refunded'
+ */
+    const markRefundedForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+        action: markRefunded.url(args, {
+                    [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                        _method: 'PATCH',
+                        ...(options?.query ?? options?.mergeQuery ?? {}),
+                    }
+                }),
+        method: 'post',
+    })
+
+            /**
+* @see \App\Http\Controllers\PaymentController::markRefunded
+ * @see app/Http/Controllers/PaymentController.php:88
+ * @route '/payments/{payment}/mark-refunded'
+ */
+        markRefundedForm.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
+            action: markRefunded.url(args, {
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'PATCH',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'post',
+        })
+    
+    markRefunded.form = markRefundedForm
+const PaymentController = { index, show, markPaid, markRefunded }
 
 export default PaymentController

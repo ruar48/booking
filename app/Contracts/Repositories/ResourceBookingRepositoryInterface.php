@@ -4,6 +4,7 @@ namespace App\Contracts\Repositories;
 
 use App\Models\ResourceBooking;
 use App\Models\User;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -24,8 +25,8 @@ interface ResourceBookingRepositoryInterface
 
     public function getConflicts(
         int $resourceId,
-        Carbon $startsAt,
-        Carbon $endsAt,
+        CarbonInterface $startsAt,
+        CarbonInterface $endsAt,
         ?int $excludeBookingId = null,
     ): Collection;
 

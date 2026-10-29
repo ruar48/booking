@@ -4,8 +4,9 @@ namespace App\Services;
 
 use App\Enums\PaymentStatus;
 use App\Enums\TeamSize;
-use App\Models\OpenPlaySession;
+use App\Exceptions\PaymentUnavailableException;
 use App\Models\OpenPlayRegistration;
+use App\Models\OpenPlaySession;
 use App\Models\Player;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,10 @@ class OpenPlayRegistrationService
      */
     public function register(OpenPlaySession $event, Player $player, ?Player $partner, int $createdBy): OpenPlayRegistration|string
     {
+        if (! $this->releaseFromUnpaidGroup($event, $player)) {
+            return 'Another player is paying for you in this session right now. Try again in a few minutes.';
+        }
+
         if ($this->isRegistered($event, $player)) {
             return 'This player is already registered for this session.';
         }
@@ -103,6 +108,10 @@ class OpenPlayRegistrationService
         }
 
         foreach ([$lead, ...$friends->all()] as $player) {
+            if (! $this->releaseFromUnpaidGroup($event, $player)) {
+                return 'Someone in your group is being paid for by another player right now. Try again in a few minutes.';
+            }
+
             if ($this->isRegistered($event, $player)) {
                 return $player->id === $lead->id
                     ? 'This player is already registered for this session.'
@@ -141,6 +150,50 @@ class OpenPlayRegistrationService
     /**
      * Cascade a paid lead registration to the friends it covers.
      */
+    /**
+     * An unpaid registration holds no roster slot, so by the time the payer
+     * reaches checkout the session may have started or filled up with paid
+     * players. Taking their money then would seat more players than allowed
+     * (or charge for a session that is already over).
+     *
+     * @throws PaymentUnavailableException
+     */
+    public function assertPayable(OpenPlayRegistration $lead): void
+    {
+        $session = $lead->openPlaySession;
+
+        if ($session->starts_at !== null && $session->starts_at->isPast()) {
+            throw new PaymentUnavailableException(__('This session has already started, so it can no longer be paid for.'));
+        }
+
+        // Someone named in this group may since have registered and paid on
+        // their own; charging for them again would seat them twice.
+        $partyIds = collect([$lead->player_id, $lead->partner_player_id])
+            ->merge($lead->groupMembers()->pluck('player_id'))
+            ->filter();
+
+        $alreadySeated = $session->registrations()
+            ->where('payment_status', PaymentStatus::Paid)
+            ->where(fn ($query) => $query
+                ->whereIn('player_id', $partyIds)
+                ->orWhereIn('partner_player_id', $partyIds))
+            ->exists();
+
+        if ($alreadySeated) {
+            throw new PaymentUnavailableException(__('Someone in your group is already registered for this session. Please register again without them.'));
+        }
+
+        if ($session->max_players === null) {
+            return;
+        }
+
+        $partySize = ($lead->partner_player_id !== null ? 2 : 1) + $lead->groupMembers()->count();
+
+        if ($session->registeredPlayersCount() + $partySize > $session->max_players) {
+            throw new PaymentUnavailableException(__('This session filled up before your payment — there are no longer enough spots.'));
+        }
+    }
+
     public function markGroupPaid(OpenPlayRegistration $lead): void
     {
         $lead->groupMembers()->update(['payment_status' => PaymentStatus::Paid]);
@@ -221,12 +274,68 @@ class OpenPlayRegistrationService
         return $pairsFormed;
     }
 
+    /**
+     * A player named as a "friend" in someone else's group that was never
+     * paid for is taken back out of it, so they can register themselves (the
+     * table allows one row per player per session). The group's total drops
+     * by one seat. Refused while that group has a QR that can still be paid,
+     * so nobody is charged for a seat that has just been given away.
+     *
+     * @return bool False when the player is held by a live payment.
+     */
+    private function releaseFromUnpaidGroup(OpenPlaySession $event, Player $player): bool
+    {
+        $held = $event->registrations()
+            ->where('player_id', $player->id)
+            ->whereNotNull('group_lead_id')
+            ->where('payment_status', PaymentStatus::Unpaid)
+            ->with('groupLead')
+            ->first();
+
+        if ($held === null) {
+            return true;
+        }
+
+        $lead = $held->groupLead;
+
+        $paying = $lead?->payments()
+            ->where('status', PaymentStatus::Pending)
+            ->where('qr_expires_at', '>', now())
+            ->exists();
+
+        if ($paying) {
+            return false;
+        }
+
+        DB::transaction(function () use ($held, $lead, $event): void {
+            $held->delete();
+
+            if ($lead !== null && $lead->payment_status === PaymentStatus::Unpaid) {
+                $lead->update([
+                    'amount' => max(0, round((float) $lead->amount - (float) $event->price_per_player, 2)),
+                ]);
+            }
+        });
+
+        return true;
+    }
+
     private function isRegistered(OpenPlaySession $event, Player $player): bool
     {
+        // A paid spot always counts. An unpaid one counts only if it is the
+        // player's own pending registration — otherwise anyone could lock a
+        // stranger out by naming them as a friend or partner and never paying.
         return $event->registrations()
             ->where(fn ($query) => $query
-                ->where('player_id', $player->id)
-                ->orWhere('partner_player_id', $player->id))
+                ->where(fn ($query) => $query
+                    ->where('payment_status', PaymentStatus::Paid)
+                    ->where(fn ($query) => $query
+                        ->where('player_id', $player->id)
+                        ->orWhere('partner_player_id', $player->id)))
+                ->orWhere(fn ($query) => $query
+                    ->where('payment_status', PaymentStatus::Unpaid)
+                    ->where('player_id', $player->id)
+                    ->whereNull('group_lead_id')))
             ->exists();
     }
 }

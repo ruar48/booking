@@ -4,6 +4,7 @@ namespace App\Http\Controllers\OpenPlay;
 
 use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\PaymentUnavailableException;
 use App\Http\Controllers\Controller;
 use App\Models\OpenPlayMatch;
 use App\Models\OpenPlayRegistration;
@@ -34,7 +35,11 @@ class OpenPlayJoinController extends Controller
         $sessions = OpenPlaySession::query()
             ->with([
                 'registrations' => fn ($query) => $query->where('payment_status', PaymentStatus::Paid),
+                // Column lists matter: a bare 'registrations.player' sends every
+                // registrant's phone, address and emergency contact to the page.
+                'registrations.player:id,user_id',
                 'registrations.player.user:id,name',
+                'registrations.partner:id,user_id',
                 'registrations.partner.user:id,name',
             ])
             ->orderByDesc('starts_at')
@@ -130,12 +135,16 @@ class OpenPlayJoinController extends Controller
     {
         $player = $request->user()->players()->first();
 
+        // A player can appear in several rows (their own, plus being named in
+        // someone else's still-unpaid group) — a paid spot wins.
         $myRegistration = $player !== null
             ? OpenPlayRegistration::query()
                 ->where('open_play_session_id', $open_play->id)
                 ->where(fn ($query) => $query
                     ->where('player_id', $player->id)
                     ->orWhere('partner_player_id', $player->id))
+                ->get()
+                ->sortBy(fn (OpenPlayRegistration $registration) => $registration->payment_status === PaymentStatus::Paid ? 0 : 1)
                 ->first()
             : null;
 
@@ -213,6 +222,7 @@ class OpenPlayJoinController extends Controller
         $pendingRegistration = OpenPlayRegistration::query()
             ->where('open_play_session_id', $open_play->id)
             ->where('player_id', $player->id)
+            ->whereNull('group_lead_id')
             ->where('payment_status', PaymentStatus::Unpaid)
             ->exists();
 
@@ -280,7 +290,7 @@ class OpenPlayJoinController extends Controller
 
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,
-            'registration' => $registration->load('groupMembers.player.user:id,name'),
+            'registration' => $registration->load('groupMembers.player:id,user_id', 'groupMembers.player.user:id,name'),
             'fee' => ConvenienceFee::for($registration->amount),
             'qrPayment' => $pendingPayment ? [
                 'id' => $pendingPayment->id,
@@ -317,7 +327,14 @@ class OpenPlayJoinController extends Controller
             return to_route('open-play.join', $open_play);
         }
 
-        $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration($registration, $request->user());
+        try {
+            $this->registrationService->assertPayable($registration);
+            $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration($registration, $request->user());
+        } catch (PaymentUnavailableException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return to_route('open-play.checkout', $open_play);
+        }
 
         Log::info('checkout.generate.qr_state', [
             'registration_id' => $registration->id,
@@ -329,7 +346,7 @@ class OpenPlayJoinController extends Controller
 
         return Inertia::render('open-play/checkout', [
             'session' => $open_play,
-            'registration' => $registration->load('groupMembers.player.user:id,name'),
+            'registration' => $registration->load('groupMembers.player:id,user_id', 'groupMembers.player.user:id,name'),
             'fee' => ConvenienceFee::for($registration->amount),
             'qrPayment' => [
                 'id' => $payment->id,

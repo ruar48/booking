@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PaymentController;
@@ -34,7 +33,7 @@ Route::middleware(['auth'])->post('broadcasting/pusher/auth', function (Request 
         ]);
 
         return $response;
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         Log::warning('broadcasting.pusher.auth.denied', [
             'user_id' => $request->user()?->id,
             'channel_name' => $request->input('channel_name'),
@@ -65,6 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::get('payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
         Route::patch('payments/{payment}/mark-paid', [PaymentController::class, 'markPaid'])->name('payments.mark-paid');
+        Route::patch('payments/{payment}/mark-refunded', [PaymentController::class, 'markRefunded'])->name('payments.mark-refunded');
 
         require __DIR__.'/players.php';
         require __DIR__.'/resources.php';

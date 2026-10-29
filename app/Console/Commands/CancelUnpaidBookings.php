@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
+use App\Models\Payment;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Services\ResourceBookingService;
@@ -34,6 +35,27 @@ class CancelUnpaidBookings extends Command
             ->where('status', BookingStatus::Pending)
             ->where('created_at', '<=', now()->subMinutes((int) $minutes))
             ->get();
+
+        // A customer may be mid-scan on a QR that PayMongo will still accept.
+        // Releasing the slot under them means taking money for a booking that
+        // no longer exists, so wait until that QR has expired. The QR hangs off
+        // one row of a bulk group, so the whole group waits with it.
+        $payingBookingIds = Payment::query()
+            ->where('payable_type', (new ResourceBooking)->getMorphClass())
+            ->whereIn('payable_id', $overdueBookings->pluck('id'))
+            ->where('status', PaymentStatus::Pending)
+            ->where('qr_expires_at', '>', now())
+            ->pluck('payable_id');
+
+        $payingGroupIds = $overdueBookings
+            ->whereIn('id', $payingBookingIds)
+            ->pluck('booking_group_id')
+            ->filter();
+
+        $overdueBookings = $overdueBookings->reject(
+            fn (ResourceBooking $booking) => $payingBookingIds->contains($booking->id)
+                || ($booking->booking_group_id !== null && $payingGroupIds->contains($booking->booking_group_id)),
+        );
 
         foreach ($overdueBookings as $booking) {
             $resourceBookingService->cancel(

@@ -117,7 +117,13 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
             {
                 preserveScroll: true,
                 preserveState: true,
-                onSuccess: () => setStep(2),
+                // A refused checkout redirects back with a toast and no QR —
+                // stay put rather than show the pay step with nothing to scan.
+                onSuccess: (page) => {
+                    if (page.props.qrPayment) {
+                        setStep(2);
+                    }
+                },
                 onFinish: () => setGenerating(false),
             },
         );

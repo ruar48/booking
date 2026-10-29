@@ -12,6 +12,7 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Events\BookingFailed;
 use App\Exceptions\BookingConflictException;
+use App\Exceptions\PaymentUnavailableException;
 use App\Http\Requests\Booking\CheckoutRequest;
 use App\Http\Requests\Booking\CloseDateRequest;
 use App\Http\Requests\Booking\ReopenDateRequest;
@@ -184,11 +185,19 @@ class ResourceBookingController extends Controller
         ]);
     }
 
-    public function checkout(CheckoutRequest $request, ResourceBooking $booking, StartQrphCheckout $startCheckout): Response
+    public function checkout(CheckoutRequest $request, ResourceBooking $booking, StartQrphCheckout $startCheckout): RedirectResponse|Response
     {
+        try {
+            $qrPayment = $startCheckout->execute($booking, $request->user());
+        } catch (PaymentUnavailableException $e) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
+
+            return to_route('bookings.checkout', $booking);
+        }
+
         return Inertia::render('bookings/checkout', [
             ...$this->presenter->showProps($booking, $request->user()),
-            'qrPayment' => $startCheckout->execute($booking, $request->user()),
+            'qrPayment' => $qrPayment,
         ]);
     }
 
