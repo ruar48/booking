@@ -2,6 +2,7 @@
 
 namespace App\Services\Booking;
 
+use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Models\DateOverride;
 use App\Models\OpenPlaySession;
 use App\Models\Resource;
@@ -25,6 +26,7 @@ class BookingScheduleService
     public function __construct(
         private readonly ResourceBookingService $bookingService,
         private readonly WeatherService $weatherService,
+        private readonly ReleaseUnpaidBookings $releaseUnpaid,
     ) {}
 
     /**
@@ -37,6 +39,9 @@ class BookingScheduleService
      */
     public function pickerData(?User $user, ?int $excludeBookingId = null): array
     {
+        // Expired holds must not show as "Booked", even if cron is down.
+        $this->releaseUnpaid->executeThrottled();
+
         $bookedSlots = ResourceBooking::query()
             ->where('starts_at', '>=', now()->startOfDay())
             ->whereIn('status', ResourceBookingRepository::BLOCKING_STATUSES)
@@ -63,6 +68,8 @@ class BookingScheduleService
      */
     public function calendarData(?string $start, ?string $end): array
     {
+        $this->releaseUnpaid->executeThrottled();
+
         $from = $start !== null ? Carbon::parse($start) : Carbon::now()->startOfMonth();
         $to = $end !== null ? Carbon::parse($end) : Carbon::now()->endOfMonth();
 

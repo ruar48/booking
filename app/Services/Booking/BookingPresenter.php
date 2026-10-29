@@ -2,6 +2,7 @@
 
 namespace App\Services\Booking;
 
+use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Enums\PaymentStatus;
 use App\Models\Policy;
 use App\Models\ResourceBooking;
@@ -18,11 +19,22 @@ use App\Support\ConvenienceFee;
  */
 class BookingPresenter
 {
+    public function __construct(
+        private readonly ReleaseUnpaidBookings $releaseUnpaid,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
     public function showProps(ResourceBooking $booking, User $viewer): array
     {
+        // A booking past its window should show as cancelled, not "0:00 left",
+        // even if the scheduler isn't running.
+        if ($booking->payment_status === PaymentStatus::Unpaid) {
+            $this->releaseUnpaid->executeThrottled();
+            $booking->refresh();
+        }
+
         $booking->load(['resource', 'user', 'approver:id,name']);
 
         // Siblings from the same bulk submission, so checkout can show and

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
 use App\Enums\ResourceStatus;
@@ -36,6 +37,7 @@ class HomePageService
         private readonly WeatherService $weatherService,
         private readonly GalleryService $galleryService,
         private readonly CoachService $coachService,
+        private readonly ReleaseUnpaidBookings $releaseUnpaid,
     ) {}
 
     /**
@@ -43,6 +45,12 @@ class HomePageService
      */
     public function props(): array
     {
+        // Released holds must stop showing as "Booked" right away, not after
+        // the cache expires — and even if the scheduler isn't running.
+        if ($this->releaseUnpaid->executeThrottled() > 0) {
+            self::forget();
+        }
+
         return Cache::remember(self::CACHE_KEY, self::CACHE_SECONDS, fn (): array => $this->build());
     }
 

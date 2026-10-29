@@ -69,6 +69,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Run Scheduled Tasks On Request
+    |--------------------------------------------------------------------------
+    |
+    | For hosting without cron: scheduled tasks (releasing unpaid bookings,
+    | draining the queue, ...) run after page responses instead. Harmless
+    | alongside a real cron; set to false once one is in place if preferred.
+    | See App\Http\Middleware\RunScheduledTasksOnRequest.
+    |
+    */
+
+    'schedule_on_request' => (bool) env('SCHEDULE_ON_REQUEST', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Locale Configuration
     |--------------------------------------------------------------------------
     |

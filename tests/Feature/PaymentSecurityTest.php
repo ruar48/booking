@@ -19,6 +19,7 @@ use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\Request as HttpRequest;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Testing\TestResponse;
@@ -388,6 +389,37 @@ it('does not auto-cancel a booking while its QR can still be paid, then cancels 
         ->and($sibling->fresh()->status)->toBe(BookingStatus::Cancelled);
 });
 
+it('stops holding a slot for a long-lived QR once the grace period is over', function () {
+    Setting::query()->updateOrCreate(['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'], ['value' => 60]);
+
+    // PayMongo's QR is still valid for hours, but the hold is bounded.
+    $booking = secBooking(attributes: ['created_at' => now()->subMinutes(76)]);
+    secPendingPayment($booking, 'pi_long', ['qr_expires_at' => now()->addHours(3)]);
+
+    $this->artisan('bookings:cancel-unpaid')->assertSuccessful();
+
+    expect($booking->fresh()->status)->toBe(BookingStatus::Cancelled);
+});
+
+it('releases expired holds when the booking pages load, even if the scheduler is not running', function () {
+    Setting::query()->updateOrCreate(['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'], ['value' => 60]);
+    $booking = secBooking(attributes: ['created_at' => now()->subMinutes(61)]);
+
+    // The customer opens their booking after the window: it reads as cancelled,
+    // not "0:00 left".
+    $this->actingAs($booking->user)
+        ->get(route('bookings.show', $booking))
+        ->assertInertia(fn ($page) => $page->where('booking.status', 'cancelled'));
+
+    // And someone else browsing slots sees it available again.
+    $other = secBooking(attributes: ['created_at' => now()->subMinutes(61)]);
+    Cache::forget('bookings:release-unpaid');
+
+    $this->actingAs(secUser())->get(route('bookings.create'))->assertOk();
+
+    expect($other->fresh()->status)->toBe(BookingStatus::Cancelled);
+});
+
 // ---------------------------------------------------------------------------
 // Checkout: who can pay, what they're charged, and nothing hangs.
 // ---------------------------------------------------------------------------
@@ -626,4 +658,25 @@ it('hands back the same open play QR on a double-click', function () {
     $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
 
     expect(secIntentCalls())->toBe(1);
+});
+
+it('runs the scheduled tasks after a page request when the server has no cron', function () {
+    config(['app.schedule_on_request' => true]);
+    Setting::query()->updateOrCreate(['group' => 'bookings', 'key' => 'unpaid_cancel_minutes'], ['value' => 60]);
+    $overdue = secBooking(attributes: ['created_at' => now()->subMinutes(61)]);
+
+    // Any page at all — here, the public home page by a guest.
+    $this->get('/')->assertOk();
+
+    expect($overdue->fresh()->status)->toBe(BookingStatus::Cancelled);
+
+    // Throttled: a second overdue booking waits for the next minute's run.
+    $next = secBooking(attributes: ['created_at' => now()->subMinutes(61)]);
+    Cache::forget('bookings:release-unpaid');
+    $this->get(route('login'));
+    expect($next->fresh()->status)->toBe(BookingStatus::Pending);
+
+    $this->travel(61)->seconds();
+    $this->get(route('login'));
+    expect($next->fresh()->status)->toBe(BookingStatus::Cancelled);
 });

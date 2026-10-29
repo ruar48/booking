@@ -82,11 +82,23 @@ export default function BookingsShow({
     const showDeadline = canPay && Boolean(paymentDeadline);
     const deadline = useDeadlineCountdown(showDeadline ? paymentDeadline : null);
 
+    // Past the deadline the server may still be holding the slot briefly for
+    // a QR scan in progress, so keep checking until it settles either way.
+    const windowClosed = showDeadline && deadline.expired;
+
     useEffect(() => {
-        if (deadline.expired) {
-            router.reload({ only: ['booking'] });
+        if (!windowClosed) {
+            return;
         }
-    }, [deadline.expired]);
+
+        router.reload({ only: ['booking', 'paymentDeadline'] });
+        const interval = window.setInterval(
+            () => router.reload({ only: ['booking', 'paymentDeadline'] }),
+            30_000,
+        );
+
+        return () => window.clearInterval(interval);
+    }, [windowClosed]);
 
     const canMarkPaid =
         canManage &&
@@ -158,12 +170,14 @@ export default function BookingsShow({
                                 <AlertTriangle className="mt-0.5 size-4.5 shrink-0 text-amber-600" />
                                 <div>
                                     <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
-                                        Continue your payment
-                                        {deadline.label ? ` — ${deadline.label} left` : ''}
+                                        {windowClosed
+                                            ? 'Payment time is up'
+                                            : `Continue your payment${deadline.label ? ` — ${deadline.label} left` : ''}`}
                                     </p>
                                     <p className="text-muted-foreground text-xs">
-                                        If payment isn&apos;t received in time, this booking will be
-                                        automatically cancelled and the slot released to other customers.
+                                        {windowClosed
+                                            ? 'If you already scanned the QR, your payment will still be confirmed. Otherwise this booking is being released.'
+                                            : 'If payment isn’t received in time, this booking will be automatically cancelled and the slot released to other customers.'}
                                     </p>
                                 </div>
                             </div>
