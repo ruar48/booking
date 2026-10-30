@@ -55,12 +55,4 @@ return [
         'fee_fixed' => (float) env('PAYMONGO_FEE_FIXED', 0),
     ],
 
-    /*
-     * Google AdSense. The publisher id is public (it ships in every page's
-     * HTML), so a default is fine; set ADSENSE_CLIENT empty to disable ads.
-     */
-    'adsense' => [
-        'client' => env('ADSENSE_CLIENT', 'ca-pub-2089171520312591'),
-    ],
-
 ];
