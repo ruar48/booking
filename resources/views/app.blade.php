@@ -47,6 +47,13 @@
 
         @fonts
 
+        {{-- Google AdSense. Production only so local dev never requests ads.
+             Ads appear only in manual slots; Auto/vignette/anchor ads are
+             switched off in the AdSense dashboard. --}}
+        @if (app()->isProduction() && config('services.adsense.client'))
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ config('services.adsense.client') }}" crossorigin="anonymous"></script>
+        @endif
+
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
         {{-- Used only when the SSR server is down: SSR prints the page's own <Head>
