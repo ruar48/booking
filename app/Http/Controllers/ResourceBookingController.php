@@ -25,6 +25,7 @@ use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Services\Booking\BookingPresenter;
 use App\Services\Booking\BookingScheduleService;
+use App\Services\PaymentReceiptPresenter;
 use App\Services\ResourceBookingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,7 @@ class ResourceBookingController extends Controller
         private readonly ResourceBookingService $bookingService,
         private readonly BookingScheduleService $scheduleService,
         private readonly BookingPresenter $presenter,
+        private readonly PaymentReceiptPresenter $receipts,
     ) {}
 
     public function index(Request $request): Response
@@ -182,6 +184,8 @@ class ResourceBookingController extends Controller
                 'qrCodeUrl' => $pendingPayment->qr_code_url,
                 'expiresAt' => $pendingPayment->qr_expires_at,
             ] : null,
+            // Lazy, so the payment-status polls only pay for it when asked.
+            'receipt' => fn () => $this->receipts->forBooking($booking),
         ]);
     }
 
@@ -198,6 +202,8 @@ class ResourceBookingController extends Controller
         return Inertia::render('bookings/checkout', [
             ...$this->presenter->showProps($booking, $request->user()),
             'qrPayment' => $qrPayment,
+            // Non-null only when the booking turned out to be paid already.
+            'receipt' => fn () => $this->receipts->forBooking($booking),
         ]);
     }
 

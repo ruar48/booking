@@ -8,7 +8,15 @@ type PaymentPaidPayload = {
     payment_status: 'paid';
 };
 
-export function useBookingPaymentChannel(bookingId: number | null): void {
+const DEFAULT_RELOAD_PROPS = ['booking'];
+
+/**
+ * Reloads the page's booking the moment its payment is confirmed. Pages that
+ * render more from the paid state (checkout's receipt) pass those props too,
+ * so everything arrives in the same response. Pass a stable array — it is an
+ * effect dependency.
+ */
+export function useBookingPaymentChannel(bookingId: number | null, reloadProps: string[] = DEFAULT_RELOAD_PROPS): void {
     useEffect(() => {
         if (!bookingId) {
             return;
@@ -28,12 +36,12 @@ export function useBookingPaymentChannel(bookingId: number | null): void {
                 return;
             }
 
-            router.reload({ only: ['booking'] });
+            router.reload({ only: reloadProps });
         });
 
         return () => {
             channel.stopListening('.payment.paid');
             echo.leave(`private-${channelName}`);
         };
-    }, [bookingId]);
+    }, [bookingId, reloadProps]);
 }

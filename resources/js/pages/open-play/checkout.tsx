@@ -3,6 +3,7 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldC
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { ThermalReceipt } from '@/components/thermal-receipt';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -13,6 +14,7 @@ import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-pl
 import openPlayCheckout from '@/routes/open-play/checkout';
 import type { OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
 import type { ConvenienceFee } from '@/types/pos';
+import type { Receipt } from '@/types/receipt';
 
 type QrPayment = {
     id: number;
@@ -32,6 +34,7 @@ type Props = {
     qrPayment?: QrPayment | null;
     policies?: CheckoutPolicy[];
     fee?: ConvenienceFee | null;
+    receipt?: Receipt | null;
 };
 
 type Step = 1 | 2 | 3;
@@ -57,7 +60,14 @@ function useExpired(deadline: string | null | undefined) {
     return expired;
 }
 
-export default function OpenPlayCheckout({ session, registration, qrPayment = null, policies = [], fee = null }: Props) {
+export default function OpenPlayCheckout({
+    session,
+    registration,
+    qrPayment = null,
+    policies = [],
+    fee = null,
+    receipt = null,
+}: Props) {
     const isPaid = registration.payment_status === 'paid';
 
     const [step, setStep] = useState<Step>(() => {
@@ -75,10 +85,11 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
 
     useOpenPlayPaymentChannel(isPaid ? null : registration.id);
 
-    // Fallback if the websocket is unavailable or the event is missed.
+    // Fallback if the websocket is unavailable or the event is missed. The
+    // receipt rides along so the confirmation can print it at once.
     const { start: startPoll, stop: stopPoll } = usePoll(
         3000,
-        { only: ['registration', 'qrPayment'] },
+        { only: ['registration', 'qrPayment', 'receipt'] },
         { autoStart: false },
     );
 
@@ -121,7 +132,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
     const refresh = (label: string) => {
         setRefreshing(true);
         router.reload({
-            only: ['registration', 'qrPayment'],
+            only: ['registration', 'qrPayment', 'receipt'],
             onSuccess: (page) => {
                 const updated = page.props.registration as OpenPlayRegistration;
                 if (updated.payment_status !== 'paid') {
@@ -161,7 +172,7 @@ export default function OpenPlayCheckout({ session, registration, qrPayment = nu
                             onGenerateNew={generateQr}
                         />
                     ) : (
-                        <ConfirmationCard session={session} registration={registration} fee={fee} />
+                        <ConfirmationCard session={session} registration={registration} fee={fee} receipt={receipt} />
                     )}
 
                     {step !== 3 ? (
@@ -408,9 +419,34 @@ function PayCard({
     );
 }
 
+function ConfirmationCard({
+    session,
+    registration,
+    fee,
+    receipt,
+}: {
+    session: OpenPlaySession;
+    registration: OpenPlayRegistration;
+    fee: ConvenienceFee | null;
+    receipt: Receipt | null;
+}) {
+    // Marked paid by staff: no payment record, so nothing to print.
+    if (!receipt) {
+        return <PaidCard session={session} registration={registration} fee={fee} />;
+    }
+
+    return (
+        <ThermalReceipt receipt={receipt}>
+            <Button variant="outline" asChild>
+                <Link href={openPlayJoin(session)}>View session</Link>
+            </Button>
+        </ThermalReceipt>
+    );
+}
+
 const REDIRECT_SECONDS = 3;
 
-function ConfirmationCard({
+function PaidCard({
     session,
     registration,
     fee,

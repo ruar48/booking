@@ -12,6 +12,7 @@ use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Policy;
 use App\Services\OpenPlayRegistrationService;
+use App\Services\PaymentReceiptPresenter;
 use App\Services\PaymentService;
 use App\Support\ConvenienceFee;
 use Illuminate\Http\RedirectResponse;
@@ -25,6 +26,7 @@ class OpenPlayJoinController extends Controller
     public function __construct(
         private readonly OpenPlayRegistrationService $registrationService,
         private readonly PaymentService $paymentService,
+        private readonly PaymentReceiptPresenter $receipts,
     ) {}
 
     public function browse(Request $request): Response
@@ -298,6 +300,8 @@ class OpenPlayJoinController extends Controller
                 'expiresAt' => $pendingPayment->qr_expires_at,
             ] : null,
             'policies' => $this->checkoutPolicies(),
+            // Lazy, so the payment-status polls only pay for it when asked.
+            'receipt' => fn () => $this->receipts->forOpenPlayRegistration($registration),
         ]);
     }
 

@@ -13,6 +13,8 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { StatusBadge } from '@/components/status-badge';
+import { ThermalReceipt } from '@/components/thermal-receipt';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +27,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { StatusBadge } from '@/components/status-badge';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,11 @@ import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow 
 import checkoutActions from '@/routes/bookings/checkout';
 import type { ResourceBooking } from '@/types/booking';
 import type { ConvenienceFee } from '@/types/pos';
+import type { Receipt } from '@/types/receipt';
+
+// Every reload that can reveal the payment went through also asks for the
+// receipt, so the confirmation step has it the moment it renders.
+const PAID_RELOAD_PROPS = ['booking', 'receipt'];
 
 type QrPayment = {
     id: number;
@@ -59,6 +65,7 @@ type Props = {
     groupBookings?: ResourceBooking[] | null;
     groupTotalAmount?: number | null;
     fee?: ConvenienceFee | null;
+    receipt?: Receipt | null;
 };
 
 type Step = 1 | 2 | 3 | 4;
@@ -102,6 +109,7 @@ export default function BookingsCheckout({
     groupBookings = null,
     groupTotalAmount = null,
     fee = null,
+    receipt = null,
 }: Props) {
     const isPaid = booking.payment_status === 'paid';
     const isCancelled = booking.status === 'cancelled';
@@ -123,12 +131,12 @@ export default function BookingsCheckout({
     const qrExpiry = useDeadlineCountdown(qrPayment?.expiresAt ?? null);
     const qrExpired = qrPayment ? qrExpiry.expired : false;
 
-    useBookingPaymentChannel(isUnpaid ? booking.id : null);
+    useBookingPaymentChannel(isUnpaid ? booking.id : null, PAID_RELOAD_PROPS);
 
     // Fallback if the websocket is unavailable or the event is missed.
     const { start: startPoll, stop: stopPoll } = usePoll(
         3000,
-        { only: ['booking', 'qrPayment'] },
+        { only: [...PAID_RELOAD_PROPS, 'qrPayment'] },
         { autoStart: false },
     );
 
@@ -154,7 +162,7 @@ export default function BookingsCheckout({
 
     useEffect(() => {
         if (deadline.expired) {
-            router.reload({ only: ['booking'] });
+            router.reload({ only: PAID_RELOAD_PROPS });
         }
     }, [deadline.expired]);
 
@@ -181,7 +189,7 @@ export default function BookingsCheckout({
     const refresh = (label: string) => {
         setRefreshing(true);
         router.reload({
-            only: ['booking', 'qrPayment'],
+            only: [...PAID_RELOAD_PROPS, 'qrPayment'],
             onSuccess: (page) => {
                 const updated = page.props.booking as ResourceBooking;
                 if (updated.payment_status === 'unpaid') {
@@ -243,7 +251,7 @@ export default function BookingsCheckout({
                                     onGenerateNew={generateQr}
                                 />
                             ) : (
-                                <ConfirmationPanel booking={booking} amount={amountDue} />
+                                <ConfirmationPanel booking={booking} amount={amountDue} receipt={receipt} />
                             )}
                         </div>
 
@@ -648,9 +656,32 @@ function PaymentPanel({
     );
 }
 
+function ConfirmationPanel({
+    booking,
+    amount,
+    receipt,
+}: {
+    booking: ResourceBooking;
+    amount?: number | null;
+    receipt: Receipt | null;
+}) {
+    // Marked paid at the desk: no payment record, so nothing to print.
+    if (!receipt) {
+        return <PaidPanel booking={booking} amount={amount} />;
+    }
+
+    return (
+        <ThermalReceipt receipt={receipt}>
+            <Button variant="outline" asChild>
+                <Link href={bookingsShow(booking)}>View booking</Link>
+            </Button>
+        </ThermalReceipt>
+    );
+}
+
 const REDIRECT_SECONDS = 3;
 
-function ConfirmationPanel({ booking, amount }: { booking: ResourceBooking; amount?: number | null }) {
+function PaidPanel({ booking, amount }: { booking: ResourceBooking; amount?: number | null }) {
     const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
 
     useEffect(() => {

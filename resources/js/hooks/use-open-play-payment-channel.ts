@@ -28,7 +28,8 @@ export function useOpenPlayPaymentChannel(registrationId: number | null): void {
                 return;
             }
 
-            router.reload({ only: ['registration', 'qrPayment'] });
+            // The receipt rides along so the confirmation can print it at once.
+            router.reload({ only: ['registration', 'qrPayment', 'receipt'] });
         });
 
         return () => {
