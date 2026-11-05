@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             RentalItemSeeder::class,
             OpenPlayDoubleEliminationSeeder::class,
             OpenPlayPaidJoinSeeder::class,
+            CourtRulesSeeder::class,
         ]);
     }
 }

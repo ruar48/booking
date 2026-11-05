@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LoginHistory;
 use App\Models\PageView;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -12,8 +13,10 @@ Artisan::command('inspire', function () {
 Schedule::command('bookings:cancel-unpaid')->everyMinute();
 Schedule::command('bookings:mark-completed')->everyFiveMinutes();
 
-// Drop analytics page views older than PageView::RETENTION_DAYS.
-Schedule::command('model:prune', ['--model' => [PageView::class]])->daily();
+// Drop records past the retention periods the Privacy Notice states:
+// analytics page views (PageView::RETENTION_DAYS) and login history
+// (LoginHistory::RETENTION_DAYS).
+Schedule::command('model:prune', ['--model' => [PageView::class, LoginHistory::class]])->daily();
 
 // Shared hosting (cPanel) can't run a persistent `queue:work` daemon — the
 // process just gets killed. Draining the queue once a minute via the

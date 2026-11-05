@@ -1,6 +1,7 @@
 import { createInertiaApp, router } from '@inertiajs/react';
 import { lazy, Suspense } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { CookieConsent } from '@/components/cookie-consent';
 import { NavigationLoader } from '@/components/navigation-loader';
 import { PwaInstallPrompt } from '@/components/pwa-install-prompt';
 import { Toaster } from '@/components/ui/sonner';
@@ -19,9 +20,16 @@ const appName = brand.name;
 const loadAppLayout = () => import('@/layouts/app-layout');
 const loadAuthLayout = () => import('@/layouts/auth-layout');
 const loadSettingsLayout = () => import('@/layouts/settings/layout');
+// FAQ and legal pages only; rarely the first page anyone opens, so not warmed.
+const loadPublicLayout = () => import('@/layouts/public-layout');
+// Always a named loader, never lazy(() => import(...)) inline: Fast Refresh
+// registers an inline one as a component, which makes this entry import itself,
+// and after any edit Vite busts that import's cache, so a reload in dev runs
+// the app twice and renders a blank page.
 const AppLayout = lazy(loadAppLayout);
 const AuthLayout = lazy(loadAuthLayout);
 const SettingsLayout = lazy(loadSettingsLayout);
+const PublicLayout = lazy(loadPublicLayout);
 
 createInertiaApp({
     // A title that already names the venue (the home page's SEO title) is used as-is.
@@ -31,6 +39,9 @@ createInertiaApp({
             case name === 'welcome':
             case name.startsWith('errors/'):
                 return null;
+            case name === 'faq':
+            case name.startsWith('legal/'):
+                return PublicLayout;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
@@ -48,6 +59,7 @@ createInertiaApp({
                 <Toaster />
                 <PwaInstallPrompt />
                 <NavigationLoader />
+                <CookieConsent />
             </TooltipProvider>
         );
     },

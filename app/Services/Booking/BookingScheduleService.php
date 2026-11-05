@@ -3,8 +3,10 @@
 namespace App\Services\Booking;
 
 use App\Actions\Booking\ReleaseUnpaidBookings;
+use App\Enums\PolicyPlacement;
 use App\Models\DateOverride;
 use App\Models\OpenPlaySession;
+use App\Models\Policy;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\User;
@@ -59,6 +61,7 @@ class BookingScheduleService
                 ->get(['id', 'date', 'is_closed', 'open_time', 'close_time', 'reason']),
             'canManage' => $user?->isVenueAdmin() ?? false,
             'hourlyWeather' => $this->weatherService->hourlyForecast(),
+            'courtRules' => Policy::linesAt(PolicyPlacement::CourtRules),
         ];
     }
 

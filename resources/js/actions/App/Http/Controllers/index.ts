@@ -1,4 +1,6 @@
 import HomeController from './HomeController'
+import FaqController from './FaqController'
+import LegalController from './LegalController'
 import PaymongoWebhookController from './PaymongoWebhookController'
 import SupportChatController from './SupportChatController'
 import ResourceBookingController from './ResourceBookingController'
@@ -18,6 +20,8 @@ import Settings from './Settings'
 import SessionController from './SessionController'
 const Controllers = {
     HomeController: Object.assign(HomeController, HomeController),
+FaqController: Object.assign(FaqController, FaqController),
+LegalController: Object.assign(LegalController, LegalController),
 PaymongoWebhookController: Object.assign(PaymongoWebhookController, PaymongoWebhookController),
 SupportChatController: Object.assign(SupportChatController, SupportChatController),
 ResourceBookingController: Object.assign(ResourceBookingController, ResourceBookingController),

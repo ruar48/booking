@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymongoWebhookController;
 use App\Http\Controllers\SupportChatController;
@@ -12,6 +14,12 @@ use Illuminate\Support\Facades\Route;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+// Public, like the home page: the terms and privacy notice have to be
+// readable before anyone signs up or pays.
+Route::get('/faq', FaqController::class)->name('faq');
+Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
+Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
 
 Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
 
@@ -48,7 +56,12 @@ Route::middleware(['auth'])->post('broadcasting/pusher/auth', function (Request 
 
 Route::get('/sitemap.xml', function () {
     return response()
-        ->view('sitemap', ['url' => url('/')])
+        ->view('sitemap', ['urls' => [
+            ['loc' => url('/'), 'changefreq' => 'daily', 'priority' => '1.0'],
+            ['loc' => route('faq'), 'changefreq' => 'weekly', 'priority' => '0.6'],
+            ['loc' => route('legal.terms'), 'changefreq' => 'yearly', 'priority' => '0.3'],
+            ['loc' => route('legal.privacy'), 'changefreq' => 'yearly', 'priority' => '0.3'],
+        ]])
         ->header('Content-Type', 'text/xml');
 })->name('sitemap');
 

@@ -14,7 +14,7 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int|null $user_id
- * @property string $visitor_hash
+ * @property string|null $visitor_hash
  * @property string $path
  * @property string|null $route_name
  * @property string $device

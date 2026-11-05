@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\LoginHistory;
 use App\Models\PageView;
 use Closure;
 use Illuminate\Http\Request;
@@ -40,8 +41,8 @@ class RunScheduledTasksOnRequest
             '--tries' => 3,
             '--max-time' => 40,
         ]],
-        'prune-page-views' => ['seconds' => 86400, 'command' => 'model:prune', 'parameters' => [
-            '--model' => [PageView::class],
+        'prune-old-records' => ['seconds' => 86400, 'command' => 'model:prune', 'parameters' => [
+            '--model' => [PageView::class, LoginHistory::class],
         ]],
     ];
 

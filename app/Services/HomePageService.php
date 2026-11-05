@@ -5,13 +5,19 @@ namespace App\Services;
 use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
+use App\Enums\PolicyPlacement;
+use App\Enums\RentalItemStatus;
 use App\Enums\ResourceStatus;
+use App\Enums\Sport;
 use App\Models\DateOverride;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
+use App\Models\Policy;
+use App\Models\RentalItem;
 use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
+use App\Services\Booking\BookingPricer;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -110,6 +116,8 @@ class HomePageService
             'seo' => $this->seo->forVenue($venue),
             'gallery' => $this->galleryService->publicSections(),
             'coaches' => $this->coachService->publicProfiles(),
+            'courtRules' => Policy::linesAt(PolicyPlacement::CourtRules),
+            'rates' => $this->rates($courts),
             'stats' => [
                 'courts' => $courts->count(),
                 'members' => Player::query()->where('is_active', true)->count(),
@@ -124,6 +132,67 @@ class HomePageService
                     ->count(),
             ],
         ]), true);
+    }
+
+    /**
+     * The rates card: each sport's hourly rate before and after the evening
+     * rate starts, and the cheapest paddle rental. When a sport's courts don't
+     * all charge the same, the lowest rate is shown as a "from" price.
+     *
+     * @param  Collection<int, \App\Models\Resource>  $courts
+     * @return array{
+     *     eveningFrom: string,
+     *     sports: list<array{sport: string, label: string, unit: string, day: float, evening: float|null, varies: bool}>,
+     *     paddleRental: array{amount: float, per: string, from: bool}|null,
+     * }
+     */
+    private function rates(Collection $courts): array
+    {
+        $sports = [];
+
+        foreach (Sport::cases() as $sport) {
+            $bookable = $courts->filter(
+                fn (Resource $court): bool => $court->sport === $sport && $court->status === ResourceStatus::Available,
+            );
+
+            if ($bookable->isEmpty()) {
+                continue;
+            }
+
+            $day = $bookable->map(fn (Resource $court): float => (float) $court->hourly_rate);
+            // No evening rate means the day rate applies all day.
+            $evening = $bookable->map(fn (Resource $court): float => (float) ($court->evening_rate ?? $court->hourly_rate));
+
+            $sports[] = [
+                'sport' => $sport->value,
+                'label' => $sport->label(),
+                'unit' => $sport->unitNoun(),
+                'day' => $day->min(),
+                'evening' => $evening->all() === $day->all() ? null : $evening->min(),
+                'varies' => $day->unique()->count() > 1 || $evening->unique()->count() > 1,
+            ];
+        }
+
+        // Priced per hour when the item has an hourly option, otherwise per day.
+        $paddles = RentalItem::query()
+            ->where('status', RentalItemStatus::Active)
+            ->where('name', 'like', '%paddle%')
+            ->get(['rate', 'hourly_rate'])
+            ->map(fn (RentalItem $item): array => (float) $item->hourly_rate > 0
+                ? ['amount' => (float) $item->hourly_rate, 'per' => 'hour']
+                : ['amount' => (float) $item->rate, 'per' => 'day'])
+            ->sortBy('amount')
+            ->values();
+        $cheapest = $paddles->first();
+
+        return [
+            'eveningFrom' => Carbon::parse(BookingPricer::EVENING_STARTS)->format('g A'),
+            'sports' => $sports,
+            'paddleRental' => $cheapest === null ? null : [
+                ...$cheapest,
+                'from' => $paddles->unique()->count() > 1,
+            ],
+        ];
     }
 
     /**

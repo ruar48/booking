@@ -289,7 +289,85 @@ home.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     
     home.form = homeForm
 /**
- * @see routes/web.php:49
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+export const faq = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: faq.url(options),
+    method: 'get',
+})
+
+faq.definition = {
+    methods: ["get","head"],
+    url: '/faq',
+} satisfies RouteDefinition<["get","head"]>
+
+/**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+faq.url = (options?: RouteQueryOptions) => {
+    return faq.definition.url + queryParams(options)
+}
+
+/**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+faq.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
+    url: faq.url(options),
+    method: 'get',
+})
+/**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+faq.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
+    url: faq.url(options),
+    method: 'head',
+})
+
+    /**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+    const faqForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+        action: faq.url(options),
+        method: 'get',
+    })
+
+            /**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+        faqForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: faq.url(options),
+            method: 'get',
+        })
+            /**
+* @see \App\Http\Controllers\FaqController::__invoke
+ * @see app/Http/Controllers/FaqController.php:11
+ * @route '/faq'
+ */
+        faqForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
+            action: faq.url({
+                        [options?.mergeQuery ? 'mergeQuery' : 'query']: {
+                            _method: 'HEAD',
+                            ...(options?.query ?? options?.mergeQuery ?? {}),
+                        }
+                    }),
+            method: 'get',
+        })
+    
+    faq.form = faqForm
+/**
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
 export const sitemap = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -303,7 +381,7 @@ sitemap.definition = {
 } satisfies RouteDefinition<["get","head"]>
 
 /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
 sitemap.url = (options?: RouteQueryOptions) => {
@@ -311,7 +389,7 @@ sitemap.url = (options?: RouteQueryOptions) => {
 }
 
 /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
 sitemap.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
@@ -319,7 +397,7 @@ sitemap.get = (options?: RouteQueryOptions): RouteDefinition<'get'> => ({
     method: 'get',
 })
 /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
 sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
@@ -328,7 +406,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
 })
 
     /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
     const sitemapForm = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -337,7 +415,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
     })
 
             /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
         sitemapForm.get = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({
@@ -345,7 +423,7 @@ sitemap.head = (options?: RouteQueryOptions): RouteDefinition<'head'> => ({
             method: 'get',
         })
             /**
- * @see routes/web.php:49
+ * @see routes/web.php:57
  * @route '/sitemap.xml'
  */
         sitemapForm.head = (options?: RouteQueryOptions): RouteFormDefinition<'get'> => ({

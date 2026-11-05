@@ -64,19 +64,19 @@ export default function AdminPoliciesEdit({ policy }: Props) {
                                 <Label>Shown at</Label>
                                 <Select
                                     value={data.placement}
-                                    onValueChange={(v) => setData('placement', v as 'checkout' | 'general')}
+                                    onValueChange={(v) => setData('placement', v as Policy['placement'])}
                                 >
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="checkout">Booking checkout (payment step)</SelectItem>
+                                        <SelectItem value="court_rules">Court rules (home &amp; booking pages)</SelectItem>
                                         <SelectItem value="general">Not shown yet</SelectItem>
                                     </SelectContent>
                                 </Select>
                                 <p className="text-muted-foreground text-xs">
-                                    "Booking checkout" policies appear while players choose a payment method, for both
-                                    court bookings and open play.
+                                    "Booking checkout" policies appear while players choose a payment method, for both court bookings and open play. "Court rules" are listed one per line on the home and booking pages, in the FAQ and in the Terms of Service.
                                 </p>
                                 <InputError message={errors.placement} />
                             </div>

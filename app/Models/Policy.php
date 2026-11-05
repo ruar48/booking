@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PolicyPlacement;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $title
  * @property string $slug
- * @property string $placement
+ * @property PolicyPlacement $placement
  * @property string $body
  * @property bool $is_active
  * @property int $version
@@ -51,10 +52,32 @@ class Policy extends Model
     protected function casts(): array
     {
         return [
+            'placement' => PolicyPlacement::class,
             'is_active' => 'boolean',
             'version' => 'integer',
             'sort_order' => 'integer',
         ];
+    }
+
+    /**
+     * Every line of the active policies at a placement, in display order — a
+     * policy body holds one rule per line.
+     *
+     * @return array<int, string>
+     */
+    public static function linesAt(PolicyPlacement $placement): array
+    {
+        return static::query()
+            ->where('placement', $placement)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->pluck('body')
+            ->flatMap(fn (string $body): array => preg_split('/\R/', $body) ?: [])
+            ->map(fn (string $line): string => trim($line))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     public function updatedBy(): BelongsTo

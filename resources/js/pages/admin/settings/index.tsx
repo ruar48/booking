@@ -3,6 +3,7 @@ import {
     Bell,
     MapPin,
     Phone,
+    ShieldCheck,
     SlidersHorizontal,
     Store,
     Timer,
@@ -720,6 +721,85 @@ export default function AdminSettingsIndex({
                                                     )
                                                 }
                                             />
+                                        </div>
+                                    </FormSection>
+
+                                    {/* Stated on the Terms of Service and Privacy
+                                        Notice: who runs the business, and who
+                                        answers data privacy requests. */}
+                                    <FormSection
+                                        icon={ShieldCheck}
+                                        tone="emerald"
+                                        title="Business & privacy"
+                                        description="Shown on the Terms of Service and Privacy Notice."
+                                        contentClassName="grid gap-4 px-5 pb-5 sm:grid-cols-1"
+                                    >
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-legal-name">
+                                                Registered business name
+                                            </Label>
+                                            <Input
+                                                id="venue-legal-name"
+                                                value={venueField('legal_name')}
+                                                placeholder="As registered with DTI or SEC"
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'legal_name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-registration-number">
+                                                DTI / SEC registration no.
+                                            </Label>
+                                            <Input
+                                                id="venue-registration-number"
+                                                value={venueField('registration_number')}
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'registration_number',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-dpo-name">
+                                                Data Protection Officer
+                                            </Label>
+                                            <Input
+                                                id="venue-dpo-name"
+                                                value={venueField('dpo_name')}
+                                                placeholder="Full name"
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'dpo_name',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="venue-dpo-email">
+                                                Data privacy email
+                                            </Label>
+                                            <Input
+                                                id="venue-dpo-email"
+                                                type="email"
+                                                value={venueField('dpo_email')}
+                                                onChange={(e) =>
+                                                    setVenueField(
+                                                        'dpo_email',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Where privacy requests go. Leave blank to
+                                                use the contact email above.
+                                            </p>
                                         </div>
                                     </FormSection>
 

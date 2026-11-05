@@ -1,0 +1,1 @@
+import{p as e}from"./jsx-runtime-Xo2OcV_-.js";function t(){let{auth:t}=e().props;return t.user?.isVenueAdmin===!0}export{t};

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAvatarFallback } from '@/hooks/use-initials';
+import { privacy } from '@/routes/legal';
 import { edit } from '@/routes/profile';
 import { send } from '@/routes/verification';
 import type { Auth } from '@/types';
@@ -208,8 +209,18 @@ export default function Profile({
                                         />
                                     </div>
 
+                                    {/* Age is sensitive personal information under the
+                                        Data Privacy Act, so the purpose is stated where it
+                                        is collected (see the Privacy Notice). */}
                                     <p className="text-sm text-muted-foreground">
-                                        Required to join Open Play sessions.
+                                        Required to join Open Play. By saving it you agree that
+                                        venue staff can see your age; it is never shown publicly.{' '}
+                                        <Link
+                                            href={privacy()}
+                                            className="underline underline-offset-2"
+                                        >
+                                            Privacy Notice
+                                        </Link>
                                     </p>
 
                                     <InputError message={errors.birthdate} />

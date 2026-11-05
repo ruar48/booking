@@ -48,6 +48,15 @@ export function formatCurrency(amount?: number | string | null): string {
     }).format(amount != null ? Number(amount) : 0);
 }
 
+/** "₱250", or "₱212.50" when there are centavos: for prices shown large. */
+export function formatPrice(amount: number): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    }).format(amount);
+}
+
 export function formatStatusLabel(status: string): string {
     return status
         .split('_')

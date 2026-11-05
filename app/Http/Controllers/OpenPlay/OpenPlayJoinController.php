@@ -4,6 +4,7 @@ namespace App\Http\Controllers\OpenPlay;
 
 use App\Enums\MatchStatus;
 use App\Enums\PaymentStatus;
+use App\Enums\PolicyPlacement;
 use App\Exceptions\PaymentUnavailableException;
 use App\Http\Controllers\Controller;
 use App\Models\OpenPlayMatch;
@@ -311,7 +312,7 @@ class OpenPlayJoinController extends Controller
     protected function checkoutPolicies(): array
     {
         return Policy::query()
-            ->where('placement', 'checkout')
+            ->where('placement', PolicyPlacement::Checkout)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('title')

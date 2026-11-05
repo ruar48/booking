@@ -32,10 +32,13 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property Carbon|null $last_login_at
  * @property string|null $last_login_ip
+ * @property Carbon|null $terms_accepted_at
+ * @property string|null $terms_version
+ * @property string|null $privacy_version
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'email', 'phone', 'avatar', 'password', 'last_login_at', 'last_login_ip'])]
+#[Fillable(['name', 'email', 'phone', 'avatar', 'password', 'last_login_at', 'last_login_ip', 'terms_accepted_at', 'terms_version', 'privacy_version'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'last_login_ip'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
@@ -54,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
         ];
     }
 

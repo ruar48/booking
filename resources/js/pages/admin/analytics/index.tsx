@@ -86,7 +86,7 @@ export default function AnalyticsIndex({ analytics, ranges }: Props) {
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title="Analytics"
-                    description="Who's visiting the website. Staff and admin visits aren't counted."
+                    description="Who's visiting the website. Staff and admin visits aren't counted. Page views include everyone; visitors and member activity only count people who allowed analytics in the cookie banner."
                     actions={
                         <ToggleGroup
                             type="single"

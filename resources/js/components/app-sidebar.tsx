@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 
 import AppLogo from '@/components/app-logo';
+import { LegalLinks } from '@/components/legal-links';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import {
@@ -47,6 +48,10 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
+                <LegalLinks
+                    className="gap-x-3 px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
+                    linkClassName="hover:text-foreground"
+                />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

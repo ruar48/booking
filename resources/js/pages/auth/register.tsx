@@ -3,10 +3,12 @@ import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { login } from '@/routes';
+import { privacy, terms } from '@/routes/legal';
 import { store } from '@/routes/register';
 
 type Props = {
@@ -90,10 +92,50 @@ export default function Register({ passwordRules }: Props) {
                                 />
                             </div>
 
+                            {/* Not `required`: on Radix's hidden input the browser
+                                would block submit without showing why. The server
+                                checks it and returns a readable error instead. */}
+                            <div className="grid gap-2">
+                                <div className="flex items-start gap-2.5">
+                                    <Checkbox
+                                        id="terms"
+                                        name="terms"
+                                        value="1"
+                                        tabIndex={5}
+                                        className="mt-0.5"
+                                    />
+                                    <Label
+                                        htmlFor="terms"
+                                        className="block text-sm leading-snug font-normal text-muted-foreground"
+                                    >
+                                        I agree to the{' '}
+                                        <a
+                                            href={terms().url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-foreground underline underline-offset-4"
+                                        >
+                                            Terms of Service
+                                        </a>{' '}
+                                        and have read the{' '}
+                                        <a
+                                            href={privacy().url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-foreground underline underline-offset-4"
+                                        >
+                                            Privacy Notice
+                                        </a>
+                                        .
+                                    </Label>
+                                </div>
+                                <InputError message={errors.terms} />
+                            </div>
+
                             <Button
                                 type="submit"
                                 className="mt-2 w-full bg-brand-navy font-semibold text-white hover:bg-brand-navy-light"
-                                tabIndex={5}
+                                tabIndex={6}
                                 data-test="register-user-button"
                             >
                                 {processing && <Spinner />}
@@ -103,7 +145,7 @@ export default function Register({ passwordRules }: Props) {
 
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
-                            <TextLink href={login()} tabIndex={6}>
+                            <TextLink href={login()} tabIndex={7}>
                                 Log in
                             </TextLink>
                         </div>

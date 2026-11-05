@@ -1,8 +1,57 @@
 import { ExternalLink, MapPin, Navigation } from 'lucide-react';
+import { useState, useSyncExternalStore } from 'react';
 
 import { Button } from '@/components/ui/button';
+import { hasConsent, subscribeToConsent } from '@/lib/cookie-consent';
 import { cn } from '@/lib/utils';
 import type { VenueProfile } from '@/types/booking';
+
+/**
+ * Google's keyless map embed, held back until the visitor allows it: loading
+ * it lets Google set its own cookies and see the visitor's IP address. It
+ * loads by itself once "Preferences" are allowed, otherwise on a click.
+ */
+export function GoogleMapEmbed({ src, title, className }: { src: string; title: string; className?: string }) {
+    const allowed = useSyncExternalStore(subscribeToConsent, () => hasConsent('preferences'), () => false);
+    const [requested, setRequested] = useState(false);
+
+    if (allowed || requested) {
+        return (
+            <iframe
+                title={title}
+                src={src}
+                className={className}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+            />
+        );
+    }
+
+    return (
+        <div
+            className={cn(
+                className,
+                'flex flex-col items-center justify-center gap-1 bg-slate-100 p-4 text-center text-slate-600',
+            )}
+        >
+            <MapPin className="size-5 text-brand-court" />
+            <p className="text-xs font-semibold text-slate-700">Map by Google</p>
+            <p className="max-w-64 text-[11px] leading-snug">
+                Showing it lets Google set cookies and see your IP address.
+            </p>
+            <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="mt-1 h-8 border-slate-300 bg-white text-slate-800 hover:bg-slate-50"
+                onClick={() => setRequested(true)}
+            >
+                Show map
+            </Button>
+        </div>
+    );
+}
 
 export function venueAddress(venue: VenueProfile): string {
     return [venue.address_line_1, venue.city, venue.state, venue.postal_code]
@@ -75,13 +124,10 @@ export function VenueMap({
                     </a>
                 </Button>
             </div>
-            <iframe
+            <GoogleMapEmbed
                 title={`Map of ${address}`}
                 src={embedUrl}
                 className={cn('h-64 w-full rounded-lg border-0 sm:h-80', mapClassName)}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                allowFullScreen
             />
         </div>
     );

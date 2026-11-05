@@ -4,6 +4,7 @@ namespace App\Services\Booking;
 
 use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Enums\PaymentStatus;
+use App\Enums\PolicyPlacement;
 use App\Models\Policy;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
@@ -96,7 +97,7 @@ class BookingPresenter
     private function checkoutPolicies(): array
     {
         return Policy::query()
-            ->where('placement', 'checkout')
+            ->where('placement', PolicyPlacement::Checkout)
             ->where('is_active', true)
             ->orderBy('sort_order')
             ->orderBy('title')

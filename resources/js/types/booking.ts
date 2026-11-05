@@ -172,6 +172,27 @@ export type Resource = {
     updated_at?: string;
 };
 
+/** One sport's hourly rate on the home page's rates card. */
+export type SportRate = {
+    sport: SportValue;
+    label: string;
+    /** Plural noun for its bookable resources: "courts", "tables". */
+    unit: string;
+    day: number;
+    /** Null when the day rate applies all day. */
+    evening: number | null;
+    /** The courts don't all charge the same, so the rates are "from" prices. */
+    varies: boolean;
+};
+
+/** The home page's rates card (HomePageService::rates). */
+export type VenueRates = {
+    /** When the evening rate starts, e.g. "6 PM". */
+    eveningFrom: string;
+    sports: SportRate[];
+    paddleRental: { amount: number; per: 'hour' | 'day'; from: boolean } | null;
+};
+
 export type ResourceBooking = {
     id: number;
     booking_group_id?: string | null;
@@ -429,7 +450,7 @@ export type Policy = {
     id: number;
     title: string;
     slug: string;
-    placement: 'checkout' | 'general';
+    placement: 'checkout' | 'court_rules' | 'general';
     body: string;
     is_active: boolean;
     version: number;

@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\PageView;
+use App\Support\CookieConsent;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -42,14 +43,19 @@ class RecordPageView
         try {
             $userAgent = (string) $request->userAgent();
 
+            // Only visitors who allowed analytics in the cookie banner are
+            // counted as themselves. Everyone else is an anonymous page view:
+            // no visitor hash, and never tied to their account.
+            $identifiable = CookieConsent::fromRequest($request)->allowsAnalytics();
+
             PageView::query()->create([
-                'user_id' => $request->user()?->id,
-                'visitor_hash' => hash('sha256', implode('|', [
+                'user_id' => $identifiable ? $request->user()?->id : null,
+                'visitor_hash' => $identifiable ? hash('sha256', implode('|', [
                     config('app.key'),
                     $request->ip(),
                     $userAgent,
                     now()->toDateString(),
-                ])),
+                ])) : null,
                 'path' => mb_substr('/'.ltrim($request->path(), '/'), 0, 255),
                 'route_name' => $request->route()?->getName(),
                 'device' => preg_match('/Mobi|Android|iPhone|iPad/i', $userAgent) ? 'mobile' : 'desktop',

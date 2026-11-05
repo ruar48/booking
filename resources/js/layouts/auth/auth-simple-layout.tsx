@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { CalendarCheck2, ShieldCheck, Users } from 'lucide-react';
 import { BrandLogo } from '@/components/brand-logo';
+import { LegalLinks } from '@/components/legal-links';
 import { PageTransition } from '@/components/page-transition';
 import { brand } from '@/lib/brand';
 import { home } from '@/routes';
@@ -106,6 +107,11 @@ export default function AuthSimpleLayout({
                         <div className="rounded-2xl border border-border/60 bg-card p-6 shadow-sm sm:p-8">
                             {children}
                         </div>
+
+                        <LegalLinks
+                            className="justify-center text-xs text-muted-foreground"
+                            linkClassName="hover:text-foreground"
+                        />
                     </div>
                 </PageTransition>
             </section>

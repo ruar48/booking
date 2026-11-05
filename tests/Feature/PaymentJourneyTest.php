@@ -152,6 +152,7 @@ it('takes a brand-new visitor from sign-up to a confirmed, paid court booking', 
         'email' => 'ana@example.com',
         'password' => 'Str0ng-Passw0rd!',
         'password_confirmation' => 'Str0ng-Passw0rd!',
+        'terms' => 'on',
     ])->assertRedirect();
 
     $ana = User::query()->where('email', 'ana@example.com')->sole();

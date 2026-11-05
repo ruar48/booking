@@ -24,31 +24,33 @@ import {
     ShowerHead,
     SquareParking,
     Toilet,
-    UserRound,
     Users,
     UsersRound,
     Wifi,
     Youtube,
 } from 'lucide-react';
 import type { LucideIcon, LucideProps } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ComponentType } from 'react';
 
+import { CourtRates } from '@/components/court-rates';
+import { CourtRules } from '@/components/court-rules';
 import { BookYourCourt, PanelTitle, useCourtBooking } from '@/components/home-court-booking';
-import { InstallAppButton } from '@/components/install-app-button';
+import { LegalLinks } from '@/components/legal-links';
 import { PaddleDuel } from '@/components/paddle-duel';
 import { PhotoLightbox } from '@/components/photo-lightbox';
+import { SiteHeader, splitName, Wordmark } from '@/components/site-header';
 import { SupportWidget } from '@/components/support-widget';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { venueAddress, venueMapUrls } from '@/components/venue-map';
+import { GoogleMapEmbed, venueAddress, venueMapUrls } from '@/components/venue-map';
+import { useShorterColumn } from '@/hooks/use-shorter-column';
 import { brand } from '@/lib/brand';
 import { formatClock, formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { dashboard, login, register } from '@/routes';
-import { index as bookingsIndex } from '@/routes/bookings';
+import { dashboard, register } from '@/routes';
 import {
     browse as openPlayBrowse,
     show as openPlayShow,
@@ -63,6 +65,7 @@ import type {
     PublicCoach,
     Resource,
     VenueProfile,
+    VenueRates,
 } from '@/types/booking';
 
 type HomeStats = {
@@ -84,6 +87,8 @@ type Props = {
     hourlyWeather?: Record<string, HourForecast>;
     gallery?: GallerySection[];
     coaches?: PublicCoach[];
+    courtRules?: string[];
+    rates?: VenueRates;
     // Built server-side (HomeSeoService) and also printed by the Blade root view.
     seo: HomeSeo;
 };
@@ -108,13 +113,6 @@ const heroSrcSet = '/bg-1080.webp 1080w, /bg.webp 1672w';
 const fallbackDescription =
     'A place where you can enjoy playing pickleball with your friends, family, and fellow players. Whether you are a beginner or an experienced player, everyone is welcome to play, have fun, stay active, and enjoy the game together.';
 
-
-/** "Galaang-Ramos Pickleball" → ["Galaang-Ramos", "Pickleball"], for the two-tone wordmark. */
-function splitName(name: string): [string, string] {
-    const at = name.lastIndexOf(' ');
-
-    return at === -1 ? [name, ''] : [name.slice(0, at), name.slice(at + 1)];
-}
 
 function formatSkillLevel(level?: string): string {
     if (!level || level === 'all_levels') {
@@ -182,22 +180,6 @@ function Swoosh({ className }: { className?: string }) {
     );
 }
 
-function Wordmark({ size = 'md' }: { size?: 'md' | 'lg' }) {
-    const [first, last] = splitName(brand.name);
-
-    return (
-        <span
-            className={cn(
-                'flex flex-col text-left leading-[1.1] font-bold tracking-tight',
-                size === 'lg' ? 'text-lg' : 'text-base sm:text-lg',
-            )}
-        >
-            <span className="text-white">{first}</span>
-            {last && <span className="text-brand-lime">{last}</span>}
-        </span>
-    );
-}
-
 function amenityIcon(name: string): LucideIcon {
     const n = name.toLowerCase();
 
@@ -234,64 +216,6 @@ function amenityIcon(name: string): LucideIcon {
     }
 
     return CircleCheck;
-}
-
-function SiteHeader({ onNavigate }: { onNavigate: (key: NavKey) => void }) {
-    const { auth } = usePage().props;
-    const accountHref = auth.user?.isVenueAdmin ? dashboard() : bookingsIndex();
-
-    const outlineClass =
-        'h-10 rounded-lg border-white/70 bg-transparent px-4 text-white shadow-none hover:bg-white/10 hover:text-white';
-
-    return (
-        <header className="sticky top-0 z-40 border-b border-white/10 bg-brand-navy-dark/95 text-white backdrop-blur-md">
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:h-[4.5rem] sm:px-6 lg:px-8">
-                <button
-                    type="button"
-                    onClick={() => onNavigate('home')}
-                    className="flex min-w-0 items-center gap-3"
-                >
-                    {/* Named: on phones the wordmark is hidden and this is the button's only content. */}
-                    <img
-                        src={brand.logo}
-                        alt={brand.name}
-                        className="size-10 shrink-0 object-contain sm:size-12"
-                    />
-                    <span className="hidden sm:block">
-                        <Wordmark />
-                    </span>
-                </button>
-
-                <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                    <InstallAppButton
-                        variant="outline"
-                        iconOnly
-                        className={cn(outlineClass, 'px-2.5 sm:hidden')}
-                    />
-                    <InstallAppButton
-                        variant="outline"
-                        className={cn(outlineClass, 'hidden sm:inline-flex')}
-                    />
-                    <Button variant="outline" asChild className={outlineClass}>
-                        <Link href={auth.user ? accountHref : login()}>
-                            <UserRound className="size-4" />
-                            <span className="hidden sm:inline">
-                                {auth.user ? 'My account' : 'Login'}
-                            </span>
-                        </Link>
-                    </Button>
-                    <Button
-                        onClick={() => onNavigate('book')}
-                        className="h-10 rounded-lg bg-brand-lime px-4 font-bold text-brand-navy hover:bg-brand-lime-dark"
-                    >
-                        <CalendarDays className="size-4" />
-                        <span className="hidden sm:inline">Book a Court</span>
-                        <span className="sm:hidden">Book</span>
-                    </Button>
-                </div>
-            </div>
-        </header>
-    );
 }
 
 function Hero({
@@ -513,13 +437,10 @@ function LocationCard({
 
             {urls && (
                 <div className="space-y-3 p-3">
-                    <iframe
+                    <GoogleMapEmbed
                         title={`Map of ${urls.address}`}
                         src={urls.embedUrl}
                         className="h-36 w-full rounded-xl border-0 bg-slate-100"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        allowFullScreen
                     />
                     <Button
                         asChild
@@ -544,76 +465,43 @@ function NewsCard({ announcements }: { announcements: Announcement[] }) {
         <div className={cn(panelClass, 'p-5')}>
             <PanelHeading icon={Megaphone}>News &amp; Announcements</PanelHeading>
 
-            {announcements.length === 0 ? (
-                <p className="mt-3 text-xs text-slate-500">
-                    No announcements right now. Check back soon.
-                </p>
-            ) : (
-                <ul className="mt-2">
-                    {announcements.slice(0, 3).map((announcement) => {
-                        const isOpen = openId === announcement.id;
+            <ul className="mt-2">
+                {announcements.slice(0, 3).map((announcement) => {
+                    const isOpen = openId === announcement.id;
 
-                        return (
-                            <li key={announcement.id} className="border-b border-slate-100 last:border-0">
-                                <button
-                                    type="button"
-                                    onClick={() => setOpenId(isOpen ? null : announcement.id)}
-                                    aria-expanded={isOpen}
-                                    className="flex w-full items-start gap-3 py-3 text-left"
-                                >
-                                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-emerald-500" />
-                                    <span className="min-w-0 flex-1">
-                                        <span className="block text-xs font-bold text-brand-navy">
-                                            {announcement.title}
-                                        </span>
-                                        <span
-                                            className={cn(
-                                                'mt-0.5 block text-xs leading-relaxed text-slate-500',
-                                                !isOpen && 'line-clamp-1',
-                                            )}
-                                        >
-                                            {announcement.content}
-                                        </span>
-                                        {announcement.published_at && (
-                                            <span className="mt-1 block text-[11px] text-slate-400">
-                                                {formatDate(announcement.published_at)}
-                                            </span>
-                                        )}
+                    return (
+                        <li key={announcement.id} className="border-b border-slate-100 last:border-0">
+                            <button
+                                type="button"
+                                onClick={() => setOpenId(isOpen ? null : announcement.id)}
+                                aria-expanded={isOpen}
+                                className="flex w-full items-start gap-3 py-3 text-left"
+                            >
+                                <span className="mt-1.5 size-2 shrink-0 rounded-full bg-emerald-500" />
+                                <span className="min-w-0 flex-1">
+                                    <span className="block text-xs font-bold text-brand-navy">
+                                        {announcement.title}
                                     </span>
-                                </button>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+                                    <span
+                                        className={cn(
+                                            'mt-0.5 block text-xs leading-relaxed text-slate-500',
+                                            !isOpen && 'line-clamp-1',
+                                        )}
+                                    >
+                                        {announcement.content}
+                                    </span>
+                                    {announcement.published_at && (
+                                        <span className="mt-1 block text-[11px] text-slate-400">
+                                            {formatDate(announcement.published_at)}
+                                        </span>
+                                    )}
+                                </span>
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
         </div>
-    );
-}
-
-function PromoCard({ onClick }: { onClick: () => void }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className="group relative block h-48 w-full overflow-hidden rounded-2xl bg-brand-navy-dark text-left shadow-sm"
-            aria-label="Explore Open Play"
-        >
-            {/* The ball-and-paddle corner of the hero photo. */}
-            <div
-                className="absolute inset-0 bg-cover transition-transform duration-500 group-hover:scale-105"
-                style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: '78% 75%', backgroundSize: '260%' }}
-                aria-hidden="true"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-brand-navy-dark/90 via-brand-navy-dark/50 to-transparent" />
-            <div className="absolute right-4 bottom-5 -rotate-6 text-right font-script text-2xl leading-tight text-white drop-shadow-lg">
-                <p className="mr-6">More Plays</p>
-                <p className="mr-3">More Friends</p>
-                <p>
-                    More <span className="text-brand-lime">Pickleball</span>
-                </p>
-                <Swoosh className="-mt-1 ml-auto w-32 text-brand-lime" />
-            </div>
-        </button>
     );
 }
 
@@ -1161,9 +1049,12 @@ function SiteFooter({ venue }: { venue?: VenueProfile | null }) {
                         )}
                     </div>
                 </div>
-                <p className="border-t border-white/10 py-5 text-center text-xs text-white/60">
-                    &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
-                </p>
+                <div className="flex flex-col items-center gap-3 border-t border-white/10 pt-5 pb-24 text-xs text-white/60 sm:flex-row sm:justify-between sm:pr-20 sm:pb-5">
+                    <p>
+                        &copy; {new Date().getFullYear()} {brand.name}. All rights reserved.
+                    </p>
+                    <LegalLinks className="justify-center" linkClassName="hover:text-white" />
+                </div>
             </div>
         </footer>
     );
@@ -1180,9 +1071,23 @@ export default function Welcome({
     hourlyWeather = {},
     gallery = [],
     coaches = [],
+    courtRules = [],
+    rates,
     seo,
 }: Props) {
     const { auth } = usePage().props;
+    const exploreRef = useRef<HTMLElement>(null);
+    const sidebarRef = useRef<HTMLDivElement>(null);
+    const rulesRef = useRef<HTMLDivElement>(null);
+    // The rules fill whichever column is shorter: beside a long list of time
+    // slots they go in the sidebar, under a short panel they go below it.
+    const rulesColumn = useShorterColumn(exploreRef, sidebarRef, rulesRef);
+    const rulesCard =
+        courtRules.length > 0 ? (
+            <div ref={rulesRef}>
+                <CourtRules rules={courtRules} tone="site" />
+            </div>
+        ) : null;
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
     const ogImage =
         typeof window !== 'undefined'
@@ -1262,77 +1167,83 @@ export default function Welcome({
 
                 <main className="mx-auto max-w-7xl px-4 pt-6 pb-16 sm:px-6 lg:px-8">
                     <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-                        <section
-                            id="explore"
-                            className={cn(panelClass, 'scroll-mt-32 overflow-hidden')}
-                        >
-                            <Tabs
-                                value={activeTab}
-                                onValueChange={(value) => {
-                                    setActiveTab(value as ExploreTab);
-                                }}
-                                className="gap-0"
+                        <div className="min-w-0 space-y-5">
+                            <section
+                                ref={exploreRef}
+                                id="explore"
+                                className={cn(panelClass, 'scroll-mt-32 overflow-hidden')}
                             >
-                                <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-slate-50 p-1.5 [scrollbar-width:none] sm:p-2">
-                                    {exploreTabs.map(({ key, label, icon: Icon }) => (
-                                        <TabsTrigger
-                                            key={key}
-                                            value={key}
-                                            className="flex-1 shrink-0 gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-500 data-[state=active]:bg-brand-navy data-[state=active]:text-white data-[state=active]:shadow-sm sm:text-sm"
-                                        >
-                                            <Icon
-                                                className={cn(
-                                                    'size-4',
-                                                    activeTab === key && 'text-brand-lime',
-                                                )}
+                                <Tabs
+                                    value={activeTab}
+                                    onValueChange={(value) => {
+                                        setActiveTab(value as ExploreTab);
+                                    }}
+                                    className="gap-0"
+                                >
+                                    <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-slate-50 p-1.5 [scrollbar-width:none] sm:p-2">
+                                        {exploreTabs.map(({ key, label, icon: Icon }) => (
+                                            <TabsTrigger
+                                                key={key}
+                                                value={key}
+                                                className="flex-1 shrink-0 gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-500 data-[state=active]:bg-brand-navy data-[state=active]:text-white data-[state=active]:shadow-sm sm:text-sm"
+                                            >
+                                                <Icon
+                                                    className={cn(
+                                                        'size-4',
+                                                        activeTab === key && 'text-brand-lime',
+                                                    )}
+                                                />
+                                                {label}
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+
+                                    <div className="p-4 sm:p-6">
+                                        <TabsContent value="book" className="mt-0">
+                                            <BookYourCourt booking={booking} hourlyWeather={hourlyWeather} />
+                                        </TabsContent>
+
+                                        <TabsContent value="open-play" className="mt-0 space-y-5">
+                                            <PanelTitle
+                                                icon={RunnerIcon}
+                                                title="Open Play"
+                                                subtitle="Join a scheduled session, meet new players, and enjoy the game."
                                             />
-                                            {label}
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
+                                            <OpenPlayTab
+                                                sessions={openPlaySessions}
+                                                isAuthenticated={!!auth.user}
+                                            />
+                                        </TabsContent>
 
-                                <div className="p-4 sm:p-6">
-                                    <TabsContent value="book" className="mt-0">
-                                        <BookYourCourt booking={booking} hourlyWeather={hourlyWeather} />
-                                    </TabsContent>
+                                        <TabsContent value="coaches" className="mt-0 space-y-5">
+                                            <PanelTitle
+                                                icon={GraduationCap}
+                                                title="Train with our Coaches"
+                                                subtitle="Private and group lessons for every level — from your first dink to tournament play."
+                                            />
+                                            <CoachesTab coaches={coaches} />
+                                        </TabsContent>
 
-                                    <TabsContent value="open-play" className="mt-0 space-y-5">
-                                        <PanelTitle
-                                            icon={RunnerIcon}
-                                            title="Open Play"
-                                            subtitle="Join a scheduled session, meet new players, and enjoy the game."
-                                        />
-                                        <OpenPlayTab
-                                            sessions={openPlaySessions}
-                                            isAuthenticated={!!auth.user}
-                                        />
-                                    </TabsContent>
+                                        <TabsContent value="photos" className="mt-0 space-y-5">
+                                            <PanelTitle
+                                                icon={ImageIcon}
+                                                title="Photos"
+                                                subtitle="A look around our courts and community."
+                                            />
+                                            <PhotosTab courts={courts} sections={gallery} />
+                                        </TabsContent>
+                                    </div>
+                                </Tabs>
+                            </section>
+                            {rulesColumn === 'main' ? rulesCard : null}
+                        </div>
 
-                                    <TabsContent value="coaches" className="mt-0 space-y-5">
-                                        <PanelTitle
-                                            icon={GraduationCap}
-                                            title="Train with our Coaches"
-                                            subtitle="Private and group lessons for every level — from your first dink to tournament play."
-                                        />
-                                        <CoachesTab coaches={coaches} />
-                                    </TabsContent>
-
-                                    <TabsContent value="photos" className="mt-0 space-y-5">
-                                        <PanelTitle
-                                            icon={ImageIcon}
-                                            title="Photos"
-                                            subtitle="A look around our courts and community."
-                                        />
-                                        <PhotosTab courts={courts} sections={gallery} />
-                                    </TabsContent>
-                                </div>
-                            </Tabs>
-                        </section>
-
-                        <div className="grid items-start gap-5 md:grid-cols-2 lg:grid-cols-1">
+                        {/* Only cards with something to show, so the column follows the data. */}
+                        <div ref={sidebarRef} className="grid items-start gap-5 md:grid-cols-2 lg:grid-cols-1">
                             <LocationCard venue={venue} dateOverrides={dateOverrides} />
-                            <NewsCard announcements={announcements} />
-                            <PromoCard onClick={() => navigate('open-play')} />
+                            {announcements.length > 0 ? <NewsCard announcements={announcements} /> : null}
+                            {rates ? <CourtRates rates={rates} /> : null}
+                            {rulesColumn === 'side' ? rulesCard : null}
                         </div>
                     </div>
                 </main>

@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
+import { hasConsent, subscribeToConsent } from '@/lib/cookie-consent';
+
 export type ResolvedAppearance = 'light' | 'dark';
 export type Appearance = ResolvedAppearance | 'system';
 
@@ -27,6 +29,20 @@ const setCookie = (name: string, value: string, days = 365): void => {
 
     const maxAge = days * 24 * 60 * 60;
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
+};
+
+/**
+ * Remembering the theme across visits is a preference cookie: without consent
+ * the choice still applies, just only until the page is reloaded.
+ */
+const persistAppearance = (mode: Appearance): void => {
+    if (!hasConsent('preferences')) {
+        return;
+    }
+
+    // localStorage for the client, the cookie for the server render.
+    localStorage.setItem('appearance', mode);
+    setCookie('appearance', mode);
 };
 
 const getStoredAppearance = (): Appearance => {
@@ -75,16 +91,14 @@ export function initializeTheme(): void {
         return;
     }
 
-    if (!localStorage.getItem('appearance')) {
-        localStorage.setItem('appearance', 'system');
-        setCookie('appearance', 'system');
-    }
-
     currentAppearance = getStoredAppearance();
     applyTheme(currentAppearance);
 
     // Set up system theme change listener
     mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+
+    // A theme picked before preferences were allowed is kept once they are.
+    subscribeToConsent(() => persistAppearance(currentAppearance));
 }
 
 export function useAppearance(): UseAppearanceReturn {
@@ -100,13 +114,7 @@ export function useAppearance(): UseAppearanceReturn {
 
     const updateAppearance = (mode: Appearance): void => {
         currentAppearance = mode;
-
-        // Store in localStorage for client-side persistence...
-        localStorage.setItem('appearance', mode);
-
-        // Store in cookie for SSR...
-        setCookie('appearance', mode);
-
+        persistAppearance(mode);
         applyTheme(mode);
         notify();
     };

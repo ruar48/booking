@@ -22,7 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
+        // cookie_consent is written by the banner in the browser and read here
+        // (RecordPageView), so it can't be encrypted.
+        $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'cookie_consent']);
 
         $middleware->validateCsrfTokens(except: ['webhooks/paymongo']);
 

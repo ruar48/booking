@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
 
+import { CourtRules } from '@/components/court-rules';
 import { CourtScheduleGrid, type WalkInCustomerPayload } from '@/components/court-schedule-grid';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ type Props = {
     dateOverrides?: DateOverride[];
     canManage: boolean;
     hourlyWeather?: Record<string, HourForecast>;
+    courtRules?: string[];
 };
 
 type BookingForMode = 'myself' | 'existing' | 'new';
@@ -40,6 +42,7 @@ export default function BookingsCreate({
     dateOverrides = [],
     canManage,
     hourlyWeather = {},
+    courtRules = [],
 }: Props) {
     const { auth } = usePage().props;
 
@@ -227,6 +230,7 @@ export default function BookingsCreate({
                         />
                     </CardContent>
                 </Card>
+                <CourtRules rules={courtRules} className="mx-auto w-full max-w-4xl" />
             </div>
         </>
     );

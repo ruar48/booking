@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useOpenPlayPaymentChannel } from '@/hooks/use-open-play-payment-channel';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { terms as legalTerms } from '@/routes/legal';
 import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
 import openPlayCheckout from '@/routes/open-play/checkout';
 import type { OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
@@ -310,7 +311,18 @@ function PaymentMethodCard({
                             checked={agreed}
                             onCheckedChange={(checked) => onAgreedChange(checked === true)}
                         />
-                        <span>I have read and agree to the policies above.</span>
+                        <span>
+                            I have read and agree to the policies above and the{' '}
+                            <a
+                                href={legalTerms().url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-medium underline underline-offset-2"
+                            >
+                                Terms of Service
+                            </a>
+                            .
+                        </span>
                     </label>
                 ) : null}
 

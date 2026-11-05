@@ -1,7 +1,8 @@
 import { Download, Share, SquarePlus, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import { usePwaInstall } from '@/hooks/use-pwa-install';
+import { hasConsent, hasDecided, subscribeToConsent } from '@/lib/cookie-consent';
 import { cn } from '@/lib/utils';
 
 const DISMISSED_KEY = 'pwa-install-dismissed-at';
@@ -56,13 +57,21 @@ export function PwaInstallPrompt() {
     const { canInstall, isIos, promptInstall } = usePwaInstall();
     const [dismissed, setDismissed] = useState(true);
     const engaged = useHasEngaged();
+    // One prompt at a time: the install offer waits until the cookie banner
+    // has been answered rather than stacking on top of it.
+    const cookieChoiceMade = useSyncExternalStore(subscribeToConsent, hasDecided, () => false);
 
     useEffect(() => {
         setDismissed(wasRecentlyDismissed());
     }, []);
 
     const dismiss = () => {
-        localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+        // Snoozing the prompt across visits is a remembered preference;
+        // without consent it stays dismissed only for this visit.
+        if (hasConsent('preferences')) {
+            localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+        }
+
         setDismissed(true);
     };
 
@@ -71,7 +80,7 @@ export function PwaInstallPrompt() {
         dismiss();
     };
 
-    if (!canInstall || dismissed || !engaged) {
+    if (!canInstall || dismissed || !engaged || !cookieChoiceMade) {
 return null;
 }
 

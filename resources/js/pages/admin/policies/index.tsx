@@ -26,6 +26,7 @@ type Props = {
 
 const PLACEMENT_LABELS: Record<string, string> = {
     checkout: 'Booking checkout (payment step)',
+    court_rules: 'Court rules (home & booking pages)',
     general: 'Not shown yet',
 };
 

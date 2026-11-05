@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PolicyPlacement;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Policy;
 use App\Services\AuditLogService;
+use App\Services\HomePageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,6 +54,8 @@ class PolicyController extends Controller
         ]);
 
         $this->auditLogService->log('policy.created', $policy, null, $policy->toArray());
+        // Court rules are shown on the (cached) home page.
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy created.')]);
 
@@ -79,6 +84,7 @@ class PolicyController extends Controller
         ]);
 
         $this->auditLogService->log('policy.updated', $policy, $old, $policy->fresh()->toArray());
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy updated.')]);
 
@@ -93,6 +99,7 @@ class PolicyController extends Controller
         $policy->delete();
 
         $this->auditLogService->log('policy.deleted', null, $old, null);
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Policy deleted.')]);
 
@@ -106,7 +113,7 @@ class PolicyController extends Controller
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'placement' => ['required', 'string', 'in:checkout,general'],
+            'placement' => ['required', Rule::enum(PolicyPlacement::class)],
             'body' => ['required', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],

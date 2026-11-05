@@ -24,12 +24,19 @@ class CreateNewUser implements CreatesNewUsers
         Validator::make($input, [
             ...$this->profileRules(),
             'password' => $this->passwordRules(),
+            'terms' => ['accepted'],
+        ], [
+            'terms.accepted' => __('Please agree to the Terms of Service and Privacy Notice to create an account.'),
         ])->validate();
 
         $user = User::create([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
+            // Proof of what was agreed to, and to which versions.
+            'terms_accepted_at' => now(),
+            'terms_version' => config('legal.terms.version'),
+            'privacy_version' => config('legal.privacy.version'),
         ]);
 
         $user->assignRole(Role::Player->value);

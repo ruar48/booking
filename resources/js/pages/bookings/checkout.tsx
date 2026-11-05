@@ -32,6 +32,7 @@ import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
 import checkoutActions from '@/routes/bookings/checkout';
+import { terms as legalTerms } from '@/routes/legal';
 import type { ResourceBooking } from '@/types/booking';
 import type { ConvenienceFee } from '@/types/pos';
 import type { Receipt } from '@/types/receipt';
@@ -428,7 +429,16 @@ function MethodAndPolicyPanel({
                                     className="text-primary decoration-primary/40 hover:decoration-primary font-medium underline underline-offset-2 transition-colors"
                                 >
                                     Payment &amp; Refund Policy
-                                </button>
+                                </button>{' '}
+                                and the{' '}
+                                <a
+                                    href={legalTerms().url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary decoration-primary/40 hover:decoration-primary font-medium underline underline-offset-2 transition-colors"
+                                >
+                                    Terms of Service
+                                </a>
                                 .
                             </span>
                         </label>

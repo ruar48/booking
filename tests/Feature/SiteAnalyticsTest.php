@@ -21,7 +21,8 @@ function analyticsUser(RoleEnum $role): User
 const BROWSER_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148';
 
 it('records a guest page view without storing the IP', function () {
-    $this->withHeaders(['User-Agent' => BROWSER_UA, 'Referer' => 'https://www.facebook.com/somepost'])
+    $this->withUnencryptedCookie('cookie_consent', json_encode(['v' => 1, 'preferences' => false, 'analytics' => true]))
+        ->withHeaders(['User-Agent' => BROWSER_UA, 'Referer' => 'https://www.facebook.com/somepost'])
         ->get('/')
         ->assertOk();
 
@@ -34,6 +35,40 @@ it('records a guest page view without storing the IP', function () {
         ->and($view->referrer_host)->toBe('facebook.com')
         ->and($view->visitor_hash)->toHaveLength(64)
         ->and($view->visitor_hash)->not->toContain('127.0.0.1');
+});
+
+it('counts visitors who have not allowed analytics only as anonymous page views', function () {
+    $member = analyticsUser(RoleEnum::Player);
+
+    // Signed in, but analytics declined in the cookie banner.
+    $this->actingAs($member)
+        ->withUnencryptedCookie('cookie_consent', json_encode(['v' => 1, 'preferences' => true, 'analytics' => false]))
+        ->withHeaders(['User-Agent' => BROWSER_UA])
+        ->get('/')
+        ->assertOk();
+
+    // A visitor who hasn't answered the banner at all.
+    auth()->logout();
+    $this->withHeaders(['User-Agent' => BROWSER_UA])->get('/')->assertOk();
+
+    expect(PageView::query()->count())->toBe(2)
+        ->and(PageView::query()->whereNotNull('user_id')->exists())->toBeFalse()
+        ->and(PageView::query()->whereNotNull('visitor_hash')->exists())->toBeFalse();
+});
+
+it('links page views to the member once they allow analytics', function () {
+    $member = analyticsUser(RoleEnum::Player);
+
+    $this->actingAs($member)
+        ->withUnencryptedCookie('cookie_consent', json_encode(['v' => 1, 'preferences' => false, 'analytics' => true]))
+        ->withHeaders(['User-Agent' => BROWSER_UA])
+        ->get('/')
+        ->assertOk();
+
+    $view = PageView::query()->sole();
+
+    expect($view->user_id)->toBe($member->id)
+        ->and($view->visitor_hash)->toHaveLength(64);
 });
 
 it('does not record bots, partial reloads, or staff', function () {
