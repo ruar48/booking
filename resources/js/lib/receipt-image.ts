@@ -1,6 +1,6 @@
 import QRCode from 'qrcode';
 
-import type { ReceiptLine } from '@/lib/receipt';
+import type { ReceiptLine } from '@/types/receipt';
 
 /*
  * Draws a receipt onto a canvas for "Save receipt".

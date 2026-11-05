@@ -6,11 +6,9 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { brand } from '@/lib/brand';
 import { formatCurrency } from '@/lib/format';
-import { receiptLines } from '@/lib/receipt';
-import type { ReceiptLine } from '@/lib/receipt';
 import { saveReceiptImage } from '@/lib/receipt-image';
 import { cn } from '@/lib/utils';
-import type { Receipt } from '@/types/receipt';
+import type { Receipt, ReceiptLine } from '@/types/receipt';
 
 /**
  * printing → paper feeds out of the slot
@@ -34,7 +32,7 @@ const WARM_UP_MS = 550;
  * skips to the end.
  */
 export function ThermalReceipt({ receipt, children }: { receipt: Receipt; children?: React.ReactNode }) {
-    const lines = useMemo(() => receiptLines(receipt), [receipt]);
+    const { lines } = receipt;
     const paperRef = useRef<HTMLDivElement>(null);
     const progressRef = useRef<HTMLDivElement>(null);
     const animationsRef = useRef<Animation[]>([]);

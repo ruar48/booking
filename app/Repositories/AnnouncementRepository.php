@@ -43,7 +43,9 @@ class AnnouncementRepository implements AnnouncementRepositoryInterface
     public function getPublished(): Collection
     {
         return Announcement::query()
-            ->with(['creator'])
+            // Published announcements reach guests on the home page: only the
+            // author's name, never their email, phone or account details.
+            ->with(['creator:id,name'])
             ->where('is_published', true)
             ->where(function ($query): void {
                 $query->whereNull('published_at')

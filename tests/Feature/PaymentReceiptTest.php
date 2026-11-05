@@ -14,7 +14,9 @@ use App\Models\Resource;
 use App\Models\ResourceBooking;
 use App\Models\Setting;
 use App\Models\User;
+use App\Notifications\PaymentSuccessfulNotification;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
@@ -237,4 +239,75 @@ it('prints the open play receipt for the whole party, under the venue from setti
             ->where('receipt.items.0.players', 3)
             ->where('receipt.items.0.amount', 450)
             ->where('receipt.total', 450));
+});
+
+it('builds the printed lines on the server, so every copy of the receipt reads the same', function () {
+    $ana = receiptCustomer();
+    $booking = receiptBooking($ana, receiptCourt(), 18);
+    $payment = receiptPayment($booking, $ana);
+
+    $lines = collect(data_get(
+        $this->actingAs($ana)->get(route('bookings.checkout', $booking))->viewData('page'),
+        'props.receipt.lines',
+    ));
+
+    expect($lines)->toContain(['kind' => 'center', 'text' => 'ACKNOWLEDGEMENT RECEIPT', 'spaced' => true])
+        ->toContain(['kind' => 'reference', 'text' => $payment->invoice_number])
+        ->toContain(['kind' => 'status', 'text' => 'PAID · CONFIRMED'])
+        // In the venue's own time, whatever the customer's phone is set to.
+        ->toContain(['kind' => 'text', 'text' => $booking->starts_at->format('D, M j, Y').' · 6 PM–7 PM'])
+        ->toContain(['kind' => 'row', 'label' => 'Court 1', 'value' => '₱500.00'])
+        ->toContain(['kind' => 'row', 'label' => 'Convenience fee', 'value' => '₱15.00'])
+        ->toContain(['kind' => 'row', 'label' => 'TOTAL', 'value' => '₱515.00', 'strong' => true])
+        ->toContain(['kind' => 'qr', 'value' => route('payments.show', $payment), 'caption' => 'SCAN TO VERIFY']);
+});
+
+it('emails the same receipt, with a link back to the page where it prints', function () {
+    $ana = receiptCustomer();
+    $booking = receiptBooking($ana, receiptCourt(), 18);
+    $payment = receiptPayment($booking, $ana);
+
+    $mail = (new PaymentSuccessfulNotification($payment))->toMail($ana);
+    $html = (string) $mail->render();
+
+    expect($mail->subject)->toBe('Your e-receipt · '.$payment->invoice_number)
+        ->and($html)->toContain('ACKNOWLEDGEMENT RECEIPT')
+        ->toContain($payment->invoice_number)
+        ->toContain('₱515.00')
+        ->toContain('PAID · CONFIRMED')
+        ->toContain(e(route('bookings.checkout', $booking)))
+        // An acknowledgement, not a BIR official receipt.
+        ->not->toContain('official receipt');
+});
+
+it('emails a late or duplicate payment as refund due, never as a confirmed booking', function () {
+    $ana = receiptCustomer();
+    $booking = receiptBooking($ana, receiptCourt(), 18);
+    $payment = receiptPayment($booking, $ana, ['flagged_at' => now()]);
+
+    $mail = (new PaymentSuccessfulNotification($payment))->toMail($ana);
+    $html = (string) $mail->render();
+
+    expect($mail->subject)->toBe('Payment received, refund due · '.$payment->invoice_number)
+        ->and($html)->toContain('PAID · REFUND DUE')
+        ->toContain('it will be refunded to you')
+        ->not->toContain('Your booking is confirmed');
+});
+
+it('sends the QR code and logo inside the email, with a plain-text copy', function () {
+    $ana = receiptCustomer();
+    $booking = receiptBooking($ana, receiptCourt(), 18);
+    $payment = receiptPayment($booking, $ana);
+
+    $ana->notify(new PaymentSuccessfulNotification($payment));
+
+    $email = Mail::mailer('array')->getSymfonyTransport()->messages()->sole()->getOriginalMessage();
+    $images = collect($email->getAttachments())->filter(fn ($part) => $part->getMediaType() === 'image');
+
+    // Embedded (cid:) rather than linked, so they show without "load images".
+    expect($images)->toHaveCount(2)
+        ->and((string) $email->getHtmlBody())->toContain('cid:')
+        ->and((string) $email->getTextBody())->toContain('ACKNOWLEDGEMENT RECEIPT')
+        ->toContain('TOTAL')
+        ->toContain('₱515.00');
 });

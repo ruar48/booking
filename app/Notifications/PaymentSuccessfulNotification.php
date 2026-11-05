@@ -5,9 +5,15 @@ namespace App\Notifications;
 use App\Models\OpenPlayRegistration;
 use App\Models\Payment;
 use App\Models\ResourceBooking;
-use App\Models\Setting;
+use App\Services\PaymentReceiptPresenter;
+use BaconQrCode\Renderer\Color\Rgb;
+use BaconQrCode\Renderer\GDLibRenderer;
+use BaconQrCode\Renderer\RendererStyle\Fill;
+use BaconQrCode\Writer;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PaymentSuccessfulNotification extends Notification
 {
@@ -23,51 +29,61 @@ class PaymentSuccessfulNotification extends Notification
         return ['mail', 'database', 'broadcast'];
     }
 
+    /**
+     * The same e-receipt the checkout page prints, line for line, drawn as
+     * paper coming out of the printer.
+     */
     public function toMail(object $notifiable): MailMessage
     {
-        $payable = $this->payment->payable;
-
-        [$itemDescription, $itemSchedule] = match (true) {
-            $payable instanceof ResourceBooking => [
-                'Court booking'.($payable->resource ? ' — '.$payable->resource->name : ''),
-                $payable->starts_at?->toDayDateTimeString(),
-            ],
-            $payable instanceof OpenPlayRegistration => [
-                'Open Play registration'.($payable->openPlaySession ? ' — '.$payable->openPlaySession->title : '')
-                    .($payable->groupMembers()->exists() ? ' ('.($payable->groupMembers()->count() + 1).' players)' : ''),
-                $payable->openPlaySession?->starts_at?->toDayDateTimeString(),
-            ],
-            default => ['Payment', null],
-        };
+        $receipt = app(PaymentReceiptPresenter::class)->forPayment($this->payment);
+        $reference = $receipt['reference'];
 
         return (new MailMessage)
-            ->subject('Your Payment Receipt')
-            ->view('emails.receipt', [
-                'venueName' => $this->venueName(),
-                'amount' => number_format((float) $this->payment->amount, 2),
-                'convenienceFee' => (float) $this->payment->convenience_fee > 0
-                    ? number_format((float) $this->payment->convenience_fee, 2)
-                    : null,
-                'currency' => $this->payment->currency,
-                'invoiceNumber' => $this->payment->invoice_number,
-                'paymentMethod' => $this->payment->payment_method
-                    ? str($this->payment->payment_method)->replace('_', ' ')->title()->toString()
-                    : 'Online payment',
-                'payerName' => $this->payment->user->name,
-                'paidAt' => ($this->payment->paid_at ?? now())->toDayDateTimeString(),
-                'itemDescription' => $itemDescription,
-                'itemSchedule' => $itemSchedule,
+            ->subject($receipt['refund_due']
+                ? __('Payment received, refund due · :reference', ['reference' => $reference])
+                : __('Your e-receipt · :reference', ['reference' => $reference]))
+            ->view(['emails.receipt', 'emails.receipt-text'], [
+                'receipt' => $receipt,
+                'receiptUrl' => $this->receiptUrl(),
+                'qrPng' => $this->qrPng($receipt['verify_url']),
+                'logoPath' => public_path('pwa-192.png'),
             ]);
     }
 
-    private function venueName(): string
+    /**
+     * Where the receipt prints with its animation: the checkout page the
+     * payment was made from, which shows it once paid.
+     */
+    private function receiptUrl(): ?string
     {
-        $profile = Setting::query()
-            ->where('group', 'venue')
-            ->where('key', 'profile')
-            ->value('value') ?? [];
+        $payable = $this->payment->payable;
 
-        return $profile['name'] ?? config('app.name');
+        return match (true) {
+            $payable instanceof ResourceBooking => route('bookings.checkout', $payable),
+            $payable instanceof OpenPlayRegistration && $payable->openPlaySession !== null => route('open-play.checkout', $payable->openPlaySession),
+            default => null,
+        };
+    }
+
+    /**
+     * The verification QR as a PNG, since mail clients don't show the SVG the
+     * page uses. The email still reads fine without it, so a failure to draw
+     * one never stops the receipt from going out.
+     */
+    private function qrPng(string $value): ?string
+    {
+        try {
+            $paperAndInk = Fill::uniformColor(new Rgb(251, 249, 244), new Rgb(36, 34, 30));
+
+            return (new Writer(new GDLibRenderer(240, 2, 'png', 9, $paperAndInk)))->writeString($value);
+        } catch (Throwable $e) {
+            Log::warning('receipt.email.qr_failed', [
+                'payment_id' => $this->payment->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**
