@@ -192,7 +192,7 @@ class ResourceBookingController extends Controller
     public function checkout(CheckoutRequest $request, ResourceBooking $booking, StartQrphCheckout $startCheckout): RedirectResponse|Response
     {
         try {
-            $qrPayment = $startCheckout->execute($booking, $request->user());
+            $qrPayment = $startCheckout->execute($booking, $request->user(), $request->checkoutAgreement());
         } catch (PaymentUnavailableException $e) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
 

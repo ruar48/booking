@@ -401,6 +401,23 @@ export type Announcement = {
     updated_at?: string;
 };
 
+/** The record kept with an online payment of what the customer agreed to. */
+export type PaymentAgreement = {
+    terms_version: string;
+    privacy_version: string;
+    policies: { id: number; title: string; version: number }[];
+    ip: string | null;
+    user_agent: string | null;
+};
+
+/** A checkout policy as the customer is shown it, with the version they agree to. */
+export type CheckoutPolicy = {
+    id: number;
+    title: string;
+    body: string;
+    version: number;
+};
+
 export type Payment = {
     id: number;
     user_id: number;
@@ -411,6 +428,10 @@ export type Payment = {
     payment_method?: string | null;
     paid_at?: string | null;
     flagged_at?: string | null;
+    /** When the customer ticked "I agree" at online checkout. */
+    agreed_at?: string | null;
+    /** What they agreed to; only on the payment's detail page. */
+    agreement?: PaymentAgreement | null;
     notes?: string | null;
     user?: { id: number; name: string; email: string };
     payable?: ResourceBooking | Tournament | Record<string, unknown>;

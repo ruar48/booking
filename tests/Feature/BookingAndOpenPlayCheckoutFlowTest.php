@@ -150,6 +150,7 @@ it('lets a customer book a court, pay via QR Ph, and see the booking confirmed',
     // Step 3: generate the QR Ph payment (hits the faked PayMongo gateway).
     $this->post(route('bookings.checkout.generate', $booking), [
         'payment_method' => 'qrph',
+        ...checkoutAgreement(),
     ])->assertOk();
 
     $payment = Payment::query()
@@ -250,6 +251,7 @@ it('charges the full total for a multi-slot bulk booking, not just the first run
 
     $this->post(route('bookings.checkout.generate', $primary), [
         'payment_method' => 'qrph',
+        ...checkoutAgreement(),
     ])->assertOk();
 
     $payment = Payment::query()
@@ -302,6 +304,7 @@ it('lets a customer join a paid open play session, pay via QR Ph, and get regist
     // Step 3: generate the QR Ph payment.
     $this->post(route('open-play.checkout.generate', $session), [
         'payment_method' => 'qrph',
+        ...checkoutAgreement(),
     ])->assertOk();
 
     $payment = Payment::query()
@@ -369,6 +372,7 @@ it('keeps showing the same pending QR Ph payment across a refresh, even when Pay
 
     $this->post(route('bookings.checkout.generate', $booking), [
         'payment_method' => 'qrph',
+        ...checkoutAgreement(),
     ])->assertOk();
 
     $payment = Payment::query()->where('payable_id', $booking->id)->firstOrFail();
@@ -416,7 +420,7 @@ it('charges price × everyone when a player pays for friends, ignoring any clien
         ->and($lead->groupMembers)->toHaveCount(2)
         ->and($lead->groupMembers->every(fn ($m) => (float) $m->amount === 0.0 && $m->payment_status->value === 'unpaid'))->toBeTrue();
 
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
 
     $payment = Payment::query()->where('payable_id', $lead->id)->latest()->firstOrFail();
     expect((float) $payment->amount)->toBe(600.0);
@@ -478,7 +482,7 @@ it('passes the PayMongo fee on to the customer so the venue nets the full price'
     $this->get(route('open-play.checkout', $session))
         ->assertInertia(fn ($page) => $page->where('fee.fee', 2)->where('fee.total', 100));
 
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
 
     $registration = $session->registrations()->where('player_id', $player->id)->firstOrFail();
     $payment = Payment::query()->where('payable_id', $registration->id)->firstOrFail();

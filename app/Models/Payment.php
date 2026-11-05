@@ -30,6 +30,8 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed>|null $raw_response
  * @property Carbon|null $paid_at
  * @property Carbon|null $flagged_at
+ * @property Carbon|null $agreed_at When the customer accepted the checkout policy and Terms.
+ * @property array{terms_version: string, privacy_version: string, policies: list<array{id: int, title: string, version: int}>, ip: string|null, user_agent: string|null}|null $agreement
  * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -51,11 +53,15 @@ use Illuminate\Support\Carbon;
     'raw_response',
     'paid_at',
     'flagged_at',
+    'agreed_at',
+    'agreement',
     'notes',
 ])]
 // Gateway internals (the intent's client key, billing details) never need to
-// reach a page; nothing on the frontend reads them.
-#[Hidden(['raw_response', 'paymongo_payment_intent_id', 'paymongo_payment_method_id'])]
+// reach a page; nothing on the frontend reads them. The agreement record holds
+// the customer's IP address and browser, so only the payment's detail page
+// shows it, on purpose.
+#[Hidden(['raw_response', 'paymongo_payment_intent_id', 'paymongo_payment_method_id', 'agreement'])]
 class Payment extends Model
 {
     /** @use HasFactory<PaymentFactory> */
@@ -71,6 +77,8 @@ class Payment extends Model
             'qr_expires_at' => 'datetime',
             'paid_at' => 'datetime',
             'flagged_at' => 'datetime',
+            'agreed_at' => 'datetime',
+            'agreement' => 'array',
         ];
     }
 

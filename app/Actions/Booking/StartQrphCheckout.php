@@ -24,11 +24,12 @@ class StartQrphCheckout
     ) {}
 
     /**
+     * @param  array<string, mixed>  $agreement  What the customer agreed to, kept with the payment.
      * @return array<string, mixed>|null Null when the booking is already paid.
      *
      * @throws PaymentUnavailableException
      */
-    public function execute(ResourceBooking $booking, User $payer): ?array
+    public function execute(ResourceBooking $booking, User $payer, array $agreement): ?array
     {
         if ($booking->payment_status === PaymentStatus::Paid) {
             return null;
@@ -51,7 +52,7 @@ class StartQrphCheckout
         // charged for only a fraction of what they booked.
         $groupTotal = (string) round((float) $booking->groupBookings()->sum('amount'), 2);
 
-        $payment = $this->paymentService->createQrphPaymentForBooking($booking, $payer, $groupTotal);
+        $payment = $this->paymentService->createQrphPaymentForBooking($booking, $payer, $groupTotal, $agreement);
 
         Log::info('checkout.generate.qr_state', [
             'booking_id' => $booking->id,

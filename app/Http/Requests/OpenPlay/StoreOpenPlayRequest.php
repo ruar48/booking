@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\OpenPlay;
 
 use App\Enums\BracketGenerationMode;
 use App\Enums\TeamSize;

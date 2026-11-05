@@ -28,12 +28,13 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
+import { agreementPayload, showCheckoutErrors } from '@/lib/checkout-agreement';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { create as bookingsCreate, index as bookingsIndex, show as bookingsShow } from '@/routes/bookings';
 import checkoutActions from '@/routes/bookings/checkout';
 import { terms as legalTerms } from '@/routes/legal';
-import type { ResourceBooking } from '@/types/booking';
+import type { CheckoutPolicy, ResourceBooking } from '@/types/booking';
 import type { ConvenienceFee } from '@/types/pos';
 import type { Receipt } from '@/types/receipt';
 
@@ -45,12 +46,6 @@ type QrPayment = {
     id: number;
     qrCodeUrl: string | null;
     expiresAt: string | null;
-};
-
-type CheckoutPolicy = {
-    id: number;
-    title: string;
-    body: string;
 };
 
 type Props = {
@@ -171,7 +166,7 @@ export default function BookingsCheckout({
         setGenerating(true);
         router.post(
             checkoutActions.generate({ booking: booking.id }).url,
-            { payment_method: 'qrph' },
+            { payment_method: 'qrph', ...agreementPayload(agreed, policies) },
             {
                 preserveScroll: true,
                 preserveState: true,
@@ -182,10 +177,19 @@ export default function BookingsCheckout({
                         setStep(3);
                     }
                 },
+                onError: (errors) =>
+                    showCheckoutErrors(errors, () => {
+                        setAgreed(false);
+                        setStep(2);
+                    }),
                 onFinish: () => setGenerating(false),
             },
         );
     };
+
+    // A new QR needs the box ticked. After a page refresh on the pay step it
+    // isn't, so the customer goes back to agree rather than being refused.
+    const generateNewQr = () => (agreed ? generateQr() : setStep(2));
 
     const refresh = (label: string) => {
         setRefreshing(true);
@@ -249,7 +253,7 @@ export default function BookingsCheckout({
                                     refreshing={refreshing}
                                     countdownLabel={deadline.label}
                                     onRefresh={refresh}
-                                    onGenerateNew={generateQr}
+                                    onGenerateNew={generateNewQr}
                                 />
                             ) : (
                                 <ConfirmationPanel booking={booking} amount={amountDue} receipt={receipt} />
@@ -380,14 +384,16 @@ function MethodAndPolicyPanel({
     onBack,
     onContinue,
 }: {
-    policies: { id: number; title: string; body: string }[];
+    policies: CheckoutPolicy[];
     agreed: boolean;
     onAgreedChange: (value: boolean) => void;
     generating: boolean;
     onBack: () => void;
     onContinue: () => void;
 }) {
-    const requiresAgreement = policies.length > 0;
+    // Always asked, even with no payment policy published: the Terms apply to
+    // every booking, and the server won't start a payment without it.
+    const hasPolicies = policies.length > 0;
     const [policiesOpen, setPoliciesOpen] = useState(false);
 
     return (
@@ -402,21 +408,21 @@ function MethodAndPolicyPanel({
                     <PaymentOption icon={Wallet} label="Maya" description="Coming soon" disabled />
                 </div>
 
-                {requiresAgreement ? (
-                    <>
-                        {/* One line instead of the full policy text: the wording
-                            opens a dialog, and checkout stays blocked until the
-                            box is ticked. */}
-                        <label className="hover:bg-muted/50 flex items-start gap-2.5 rounded-lg border p-3 text-sm transition-colors">
-                            <Checkbox
-                                className="mt-0.5"
-                                checked={agreed}
-                                onCheckedChange={(checked) =>
-                                    onAgreedChange(checked === true)
-                                }
-                            />
-                            <span className="leading-snug">
-                                I have read and agree to the{' '}
+                {/* One line instead of the full policy text: the wording
+                    opens a dialog, and checkout stays blocked until the
+                    box is ticked. */}
+                <label className="hover:bg-muted/50 flex items-start gap-2.5 rounded-lg border p-3 text-sm transition-colors">
+                    <Checkbox
+                        className="mt-0.5"
+                        checked={agreed}
+                        onCheckedChange={(checked) =>
+                            onAgreedChange(checked === true)
+                        }
+                    />
+                    <span className="leading-snug">
+                        I have read and agree to the{' '}
+                        {hasPolicies ? (
+                            <>
                                 <button
                                     type="button"
                                     onClick={(event) => {
@@ -431,29 +437,31 @@ function MethodAndPolicyPanel({
                                     Payment &amp; Refund Policy
                                 </button>{' '}
                                 and the{' '}
-                                <a
-                                    href={legalTerms().url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-primary decoration-primary/40 hover:decoration-primary font-medium underline underline-offset-2 transition-colors"
-                                >
-                                    Terms of Service
-                                </a>
-                                .
-                            </span>
-                        </label>
+                            </>
+                        ) : null}
+                        <a
+                            href={legalTerms().url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary decoration-primary/40 hover:decoration-primary font-medium underline underline-offset-2 transition-colors"
+                        >
+                            Terms of Service
+                        </a>
+                        .
+                    </span>
+                </label>
 
-                        <PolicyDialog
-                            open={policiesOpen}
-                            onOpenChange={setPoliciesOpen}
-                            policies={policies}
-                            agreed={agreed}
-                            onAgree={() => {
-                                onAgreedChange(true);
-                                setPoliciesOpen(false);
-                            }}
-                        />
-                    </>
+                {hasPolicies ? (
+                    <PolicyDialog
+                        open={policiesOpen}
+                        onOpenChange={setPoliciesOpen}
+                        policies={policies}
+                        agreed={agreed}
+                        onAgree={() => {
+                            onAgreedChange(true);
+                            setPoliciesOpen(false);
+                        }}
+                    />
                 ) : null}
 
                 <div className="flex gap-2">
@@ -463,15 +471,15 @@ function MethodAndPolicyPanel({
                     <Button
                         className="flex-1"
                         onClick={onContinue}
-                        disabled={(requiresAgreement && !agreed) || generating}
+                        disabled={!agreed || generating}
                     >
                         {generating ? 'Generating QR…' : 'Continue to Payment'}
                     </Button>
                 </div>
 
-                {requiresAgreement && !agreed ? (
+                {!agreed ? (
                     <p className="text-muted-foreground text-center text-xs">
-                        Accept the policy to continue.
+                        {hasPolicies ? 'Accept the policy to continue.' : 'Accept the Terms of Service to continue.'}
                     </p>
                 ) : null}
             </CardContent>
@@ -488,7 +496,7 @@ function PolicyDialog({
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    policies: { id: number; title: string; body: string }[];
+    policies: CheckoutPolicy[];
     agreed: boolean;
     onAgree: () => void;
 }) {

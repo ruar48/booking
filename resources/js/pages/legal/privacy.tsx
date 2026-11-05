@@ -90,8 +90,10 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                     </li>
                     <li>
                         <strong>Payments:</strong> amount, convenience fee, invoice number, payment method, status and
-                        time. To create your QR Ph payment we give our payment provider your name and email address. We
-                        never receive your card, bank or e-wallet credentials.
+                        time. When you pay online we also record that you agreed to our payment policy and Terms of
+                        Service: which versions, when, and the IP address and browser you used, kept with that payment
+                        as proof of what was agreed. To create your QR Ph payment we give our payment provider your name
+                        and email address. We never receive your card, bank or e-wallet credentials.
                     </li>
                     <li>
                         <strong>Rentals and counter purchases:</strong> what you rent or buy and the amounts, when our
@@ -139,7 +141,8 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                             Taking, confirming and managing them, and checking you in at the counter.
                         </Purpose>
                         <Purpose title="Payments and refunds" basis="our contract with you, and our legal obligations to keep financial records">
-                            Collecting payment, issuing your e-receipt and handling refunds.
+                            Collecting payment, issuing your e-receipt, handling refunds, and keeping proof of what you
+                            agreed to before paying.
                         </Purpose>
                         <Purpose title="Booking messages" basis="our contract with you">
                             Confirmations, reminders and payment receipts about your bookings.

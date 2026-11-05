@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\PolicyPlacement;
 use App\Exceptions\PaymentUnavailableException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OpenPlay\CheckoutOpenPlayRequest;
 use App\Models\OpenPlayMatch;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;
@@ -311,21 +312,12 @@ class OpenPlayJoinController extends Controller
      */
     protected function checkoutPolicies(): array
     {
-        return Policy::query()
-            ->where('placement', PolicyPlacement::Checkout)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('title')
-            ->get(['id', 'title', 'body'])
-            ->all();
+        // With their versions, so the agreement is recorded against the exact wording.
+        return Policy::activeAt(PolicyPlacement::Checkout)->all();
     }
 
-    public function checkout(Request $request, OpenPlaySession $open_play): RedirectResponse|Response
+    public function checkout(CheckoutOpenPlayRequest $request, OpenPlaySession $open_play): RedirectResponse|Response
     {
-        $request->validate([
-            'payment_method' => ['required', 'in:qrph'],
-        ]);
-
         $registration = $this->unpaidRegistrationFor($request, $open_play);
 
         if ($registration === null) {
@@ -334,7 +326,11 @@ class OpenPlayJoinController extends Controller
 
         try {
             $this->registrationService->assertPayable($registration);
-            $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration($registration, $request->user());
+            $payment = $this->paymentService->createQrphPaymentForOpenPlayRegistration(
+                $registration,
+                $request->user(),
+                $request->checkoutAgreement(),
+            );
         } catch (PaymentUnavailableException $e) {
             Inertia::flash('toast', ['type' => 'error', 'message' => $e->getMessage()]);
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\PolicyPlacement;
+use App\Models\Policy;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -52,4 +54,18 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * What a checkout page sends with "I agree": the box, and the version of each
+ * checkout policy in force, as the customer was shown them.
+ *
+ * @return array{agreed: bool, policy_versions: array<int, int>}
+ */
+function checkoutAgreement(): array
+{
+    return [
+        'agreed' => true,
+        'policy_versions' => Policy::activeAt(PolicyPlacement::Checkout)->pluck('version', 'id')->all(),
+    ];
 }

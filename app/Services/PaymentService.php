@@ -36,29 +36,35 @@ class PaymentService
      *                               submission and the QR must cover the
      *                               whole group's total, not just this row
      *                               (see ResourceBookingController::checkout()).
+     * @param  array<string, mixed>  $agreement  What the customer agreed to at checkout
+     *                                           (CheckoutAgreementValidationRules::checkoutAgreement()).
      *
      * @throws PaymentUnavailableException
      */
-    public function createQrphPaymentForBooking(ResourceBooking $booking, User $user, ?string $amount = null): Payment
+    public function createQrphPaymentForBooking(ResourceBooking $booking, User $user, ?string $amount, array $agreement): Payment
     {
         return $this->createQrphPayment(
             payable: $booking,
             user: $user,
             amount: $amount ?? (string) $booking->amount,
             description: "Payment for booking #{$booking->id}",
+            agreement: $agreement,
         );
     }
 
     /**
+     * @param  array<string, mixed>  $agreement  What the customer agreed to at checkout.
+     *
      * @throws PaymentUnavailableException
      */
-    public function createQrphPaymentForOpenPlayRegistration(OpenPlayRegistration $registration, User $user): Payment
+    public function createQrphPaymentForOpenPlayRegistration(OpenPlayRegistration $registration, User $user, array $agreement): Payment
     {
         return $this->createQrphPayment(
             payable: $registration,
             user: $user,
             amount: (string) $registration->amount,
             description: "Open Play registration #{$registration->id}",
+            agreement: $agreement,
         );
     }
 
@@ -67,23 +73,31 @@ class PaymentService
      * would otherwise create two live PayMongo QRs for the same booking, and a
      * customer who pays both is charged twice.
      *
+     * @param  array<string, mixed>  $agreement
+     *
      * @throws PaymentUnavailableException
      */
-    private function createQrphPayment(Model $payable, User $user, string $amount, string $description): Payment
+    private function createQrphPayment(Model $payable, User $user, string $amount, string $description, array $agreement): Payment
     {
         $lock = Cache::lock("payments:qrph:{$payable->getMorphClass()}:{$payable->getKey()}", 60);
 
         try {
-            return $lock->block(20, fn (): Payment => $this->startQrphPayment($payable, $user, $amount, $description));
+            return $lock->block(20, fn (): Payment => $this->startQrphPayment($payable, $user, $amount, $description, $agreement));
         } catch (LockTimeoutException) {
             throw new PaymentUnavailableException;
         }
     }
 
     /**
+     * The agreement is stored on whichever payment the customer ends up
+     * paying, new or reused, so every QR they can scan carries the record of
+     * what they agreed to.
+     *
+     * @param  array<string, mixed>  $agreement
+     *
      * @throws PaymentUnavailableException
      */
-    private function startQrphPayment(Model $payable, User $user, string $amount, string $description): Payment
+    private function startQrphPayment(Model $payable, User $user, string $amount, string $description, array $agreement): Payment
     {
         // Re-read under the lock: a webhook may have confirmed payment while
         // this request was waiting its turn.
@@ -112,6 +126,9 @@ class PaymentService
         if ($reusable) {
             Log::info('paymongo.qr.generate.reused', ['payment_id' => $reusable->id]);
 
+            // They agreed again just now; keep the latest record.
+            $reusable->update(['agreed_at' => now(), 'agreement' => $agreement]);
+
             return $reusable;
         }
 
@@ -122,6 +139,7 @@ class PaymentService
             convenienceFee: number_format($charge['fee'], 2, '.', ''),
             currency: 'PHP',
             paymentMethod: PaymentMethod::Qrph->value,
+            agreement: $agreement,
         );
 
         Log::info('paymongo.qr.generate.start', [
@@ -297,6 +315,9 @@ class PaymentService
         });
     }
 
+    /**
+     * @param  array<string, mixed>|null  $agreement  What the customer agreed to, for online checkouts.
+     */
     public function create(
         int $userId,
         Model $payable,
@@ -305,6 +326,7 @@ class PaymentService
         ?string $paymentMethod = null,
         ?string $notes = null,
         string $convenienceFee = '0',
+        ?array $agreement = null,
     ): Payment {
         // Two checkouts in the same instant can compute the same next invoice
         // number; the unique index rejects the second, so take the next one.
@@ -321,6 +343,8 @@ class PaymentService
                     'status' => PaymentStatus::Pending,
                     'payment_method' => $paymentMethod,
                     'notes' => $notes,
+                    'agreed_at' => $agreement !== null ? now() : null,
+                    'agreement' => $agreement,
                 ]));
             } catch (UniqueConstraintViolationException $e) {
                 if ($attempt >= 5) {

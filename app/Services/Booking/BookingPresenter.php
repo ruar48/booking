@@ -92,16 +92,12 @@ class BookingPresenter
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array<int, Policy>
      */
     private function checkoutPolicies(): array
     {
-        return Policy::query()
-            ->where('placement', PolicyPlacement::Checkout)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('title')
-            ->get(['id', 'title', 'body'])
-            ->all();
+        // With their versions: checkout sends back the ones the customer saw,
+        // so their agreement is recorded against the exact wording.
+        return Policy::activeAt(PolicyPlacement::Checkout)->all();
     }
 }

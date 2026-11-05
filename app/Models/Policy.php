@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PolicyPlacement;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -60,6 +61,21 @@ class Policy extends Model
     }
 
     /**
+     * The active policies at a placement, in the order customers see them.
+     *
+     * @return Collection<int, Policy>
+     */
+    public static function activeAt(PolicyPlacement $placement): Collection
+    {
+        return self::query()
+            ->where('placement', $placement)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('title')
+            ->get(['id', 'title', 'body', 'version']);
+    }
+
+    /**
      * Every line of the active policies at a placement, in display order — a
      * policy body holds one rule per line.
      *
@@ -67,11 +83,7 @@ class Policy extends Model
      */
     public static function linesAt(PolicyPlacement $placement): array
     {
-        return static::query()
-            ->where('placement', $placement)
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->orderBy('title')
+        return static::activeAt($placement)
             ->pluck('body')
             ->flatMap(fn (string $body): array => preg_split('/\R/', $body) ?: [])
             ->map(fn (string $line): string => trim($line))

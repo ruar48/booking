@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileCheck } from 'lucide-react';
 import type { FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDateTime } from '@/lib/format';
 import { index as paymentsIndex, markPaid, markRefunded } from '@/routes/payments';
-import type { Payment } from '@/types/booking';
+import type { Payment, PaymentAgreement } from '@/types/booking';
 
 type Props = {
     payment: Payment;
@@ -140,9 +140,47 @@ export default function PaymentsShow({ payment, canMarkRefunded }: Props) {
                             </CardContent>
                         </Card>
                     )}
+
+                    {payment.agreed_at && payment.agreement ? (
+                        <AgreementCard agreedAt={payment.agreed_at} agreement={payment.agreement} />
+                    ) : null}
                 </div>
             </div>
         </>
+    );
+}
+
+/**
+ * What the customer agreed to before paying online, recorded by the server
+ * when they generated the QR: the record to point to in a dispute.
+ */
+function AgreementCard({ agreedAt, agreement }: { agreedAt: string; agreement: PaymentAgreement }) {
+    const rows: [string, string][] = [
+        ['Agreed at', formatDateTime(agreedAt)],
+        ...agreement.policies.map((policy): [string, string] => [policy.title, `Version ${policy.version}`]),
+        ['Terms of Service', `Version ${agreement.terms_version}`],
+        ['Privacy Notice', `Version ${agreement.privacy_version}`],
+        ['IP address', agreement.ip ?? '—'],
+        ['Browser', agreement.user_agent ?? '—'],
+    ];
+
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <FileCheck className="size-5 text-emerald-600" />
+                    Agreed at checkout
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+                {rows.map(([label, value]) => (
+                    <div key={label} className="flex justify-between gap-4">
+                        <span className="text-muted-foreground shrink-0">{label}</span>
+                        <span className="min-w-0 text-right wrap-break-word">{value}</span>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
     );
 }
 

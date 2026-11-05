@@ -429,7 +429,7 @@ it('sends a guest to log in instead of showing or starting a checkout', function
     $booking = secBooking();
 
     $this->get(route('bookings.checkout', $booking))->assertRedirect(route('login'));
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertRedirect(route('login'));
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertRedirect(route('login'));
 
     expect(secIntentCalls())->toBe(0);
 });
@@ -439,7 +439,7 @@ it('does not let one customer view or pay for another customer\'s booking', func
     $stranger = secUser();
 
     $this->actingAs($stranger)->get(route('bookings.checkout', $booking))->assertForbidden();
-    $this->actingAs($stranger)->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertForbidden();
+    $this->actingAs($stranger)->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertForbidden();
 
     expect(secIntentCalls())->toBe(0)
         ->and(Payment::query()->count())->toBe(0);
@@ -449,7 +449,7 @@ it('charges the server-side price and ignores any amount the browser sends', fun
     $booking = secBooking();
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', 'amount' => 1, 'total' => 1])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', 'amount' => 1, 'total' => 1, ...checkoutAgreement()])
         ->assertOk();
 
     Http::assertSent(fn (HttpRequest $request) => str_ends_with($request->url(), '/v1/payment_intents')
@@ -462,7 +462,7 @@ it('rejects payment methods that are not live', function (string $method) {
     $booking = secBooking();
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => $method])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => $method, ...checkoutAgreement()])
         ->assertSessionHasErrors('payment_method');
 
     expect(secIntentCalls())->toBe(0);
@@ -472,8 +472,8 @@ it('hands back the same QR on a double-click instead of creating a second charge
     $booking = secBooking();
     $this->actingAs($booking->user);
 
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
 
     expect(secIntentCalls())->toBe(1)
         ->and(Payment::query()->count())->toBe(1);
@@ -483,9 +483,9 @@ it('issues a fresh QR once the previous one has expired', function () {
     $booking = secBooking();
     $this->actingAs($booking->user);
 
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
     $this->travel(16)->minutes();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
 
     expect(secIntentCalls())->toBe(2);
 });
@@ -494,7 +494,7 @@ it('will not start a payment for a cancelled or rejected booking', function (Boo
     $booking = secBooking(attributes: ['status' => $status]);
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('bookings.checkout', $booking));
 
     expect(secIntentCalls())->toBe(0)
@@ -506,7 +506,7 @@ it('will not start a payment once the payment window has closed', function () {
     $booking = secBooking(attributes: ['created_at' => now()->subMinutes(16)]);
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('bookings.checkout', $booking));
 
     expect(secIntentCalls())->toBe(0);
@@ -516,7 +516,7 @@ it('will not start a second payment for an already-paid booking', function () {
     $booking = secBooking(attributes: ['payment_status' => PaymentStatus::Paid, 'status' => BookingStatus::Approved]);
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('qrPayment', null));
 
@@ -531,7 +531,7 @@ it('shows a friendly error and leaves nothing stuck when PayMongo is down', func
     $booking = secBooking();
 
     $this->actingAs($booking->user)
-        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+        ->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('bookings.checkout', $booking));
 
     expect(Payment::query()->sole()->status)->toBe(PaymentStatus::Failed);
@@ -615,7 +615,7 @@ it('will not take payment for an open play session that has already started', fu
     $session->update(['starts_at' => now()->subMinute()]);
 
     $this->actingAs($user)
-        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])
+        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('open-play.checkout', $session));
 
     expect(secIntentCalls())->toBe(0);
@@ -633,7 +633,7 @@ it('will not take payment once paid players have filled the session', function (
     ]);
 
     $this->actingAs($user)
-        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])
+        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('open-play.checkout', $session));
 
     expect(secIntentCalls())->toBe(0);
@@ -645,7 +645,7 @@ it('only ever charges a member for their own open play registration', function (
     Player::factory()->for($stranger)->create();
 
     $this->actingAs($stranger)
-        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])
+        ->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('open-play.join', $session));
 
     expect(secIntentCalls())->toBe(0);
@@ -655,8 +655,8 @@ it('hands back the same open play QR on a double-click', function () {
     [$user, $session] = secOpenPlayRegistration();
     $this->actingAs($user);
 
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
 
     expect(secIntentCalls())->toBe(1);
 });

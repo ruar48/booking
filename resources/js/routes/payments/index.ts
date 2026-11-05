@@ -181,7 +181,7 @@ show.head = (args: { payment: number | { id: number } } | [payment: number | { i
     show.form = showForm
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:60
+ * @see app/Http/Controllers/PaymentController.php:62
  * @route '/payments/{payment}/mark-paid'
  */
 export const markPaid = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -196,7 +196,7 @@ markPaid.definition = {
 
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:60
+ * @see app/Http/Controllers/PaymentController.php:62
  * @route '/payments/{payment}/mark-paid'
  */
 markPaid.url = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -229,7 +229,7 @@ markPaid.url = (args: { payment: number | { id: number } } | [payment: number | 
 
 /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:60
+ * @see app/Http/Controllers/PaymentController.php:62
  * @route '/payments/{payment}/mark-paid'
  */
 markPaid.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -239,7 +239,7 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
 
     /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:60
+ * @see app/Http/Controllers/PaymentController.php:62
  * @route '/payments/{payment}/mark-paid'
  */
     const markPaidForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -254,7 +254,7 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
 
             /**
 * @see \App\Http\Controllers\PaymentController::markPaid
- * @see app/Http/Controllers/PaymentController.php:60
+ * @see app/Http/Controllers/PaymentController.php:62
  * @route '/payments/{payment}/mark-paid'
  */
         markPaidForm.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -270,7 +270,7 @@ markPaid.patch = (args: { payment: number | { id: number } } | [payment: number 
     markPaid.form = markPaidForm
 /**
 * @see \App\Http\Controllers\PaymentController::markRefunded
- * @see app/Http/Controllers/PaymentController.php:88
+ * @see app/Http/Controllers/PaymentController.php:90
  * @route '/payments/{payment}/mark-refunded'
  */
 export const markRefunded = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -285,7 +285,7 @@ markRefunded.definition = {
 
 /**
 * @see \App\Http\Controllers\PaymentController::markRefunded
- * @see app/Http/Controllers/PaymentController.php:88
+ * @see app/Http/Controllers/PaymentController.php:90
  * @route '/payments/{payment}/mark-refunded'
  */
 markRefunded.url = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions) => {
@@ -318,7 +318,7 @@ markRefunded.url = (args: { payment: number | { id: number } } | [payment: numbe
 
 /**
 * @see \App\Http\Controllers\PaymentController::markRefunded
- * @see app/Http/Controllers/PaymentController.php:88
+ * @see app/Http/Controllers/PaymentController.php:90
  * @route '/payments/{payment}/mark-refunded'
  */
 markRefunded.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteDefinition<'patch'> => ({
@@ -328,7 +328,7 @@ markRefunded.patch = (args: { payment: number | { id: number } } | [payment: num
 
     /**
 * @see \App\Http\Controllers\PaymentController::markRefunded
- * @see app/Http/Controllers/PaymentController.php:88
+ * @see app/Http/Controllers/PaymentController.php:90
  * @route '/payments/{payment}/mark-refunded'
  */
     const markRefundedForm = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({
@@ -343,7 +343,7 @@ markRefunded.patch = (args: { payment: number | { id: number } } | [payment: num
 
             /**
 * @see \App\Http\Controllers\PaymentController::markRefunded
- * @see app/Http/Controllers/PaymentController.php:88
+ * @see app/Http/Controllers/PaymentController.php:90
  * @route '/payments/{payment}/mark-refunded'
  */
         markRefundedForm.patch = (args: { payment: number | { id: number } } | [payment: number | { id: number } ] | number | { id: number }, options?: RouteQueryOptions): RouteFormDefinition<'post'> => ({

@@ -182,7 +182,7 @@ it('takes a brand-new visitor from sign-up to a confirmed, paid court booking', 
         ->assertInertia(fn ($page) => $page->where('qrPayment', null)->where('fee.total', 1000));
 
     // Generates a QR, then refreshes the page — same QR, not a new charge.
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertOk()
         ->assertInertia(fn ($page) => $page->where('qrPayment.qrCodeUrl', 'https://api.paymongo.com/qr/journey.png'));
     $payment = journeyLatestPayment();
@@ -226,14 +226,14 @@ it('recovers cleanly when PayMongo is down, then lets the customer pay once it i
 
     // PayMongo outage: a friendly message, no stuck "Preparing payment…".
     journeyGateway(down: true);
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('bookings.checkout', $booking));
     $this->get(route('bookings.checkout', $booking))
         ->assertInertia(fn ($page) => $page->where('qrPayment', null)->hasFlash('toast.type', 'error'));
 
     // PayMongo recovers; she tries again and pays.
     journeyGateway();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
     $payment = Payment::query()->where('status', PaymentStatus::Pending)->sole();
     journeyPayMongoConfirms($payment)->assertOk();
 
@@ -252,7 +252,7 @@ it('handles a payment that lands after the slot was released and resold, through
     // Ana books and opens the QR, then gets distracted.
     $this->actingAs($ana)->post(route('bookings.store-bulk'), ['bookings' => [['resource_id' => $court->id, ...journeySlot()]]]);
     $booking = ResourceBooking::query()->sole();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
     $payment = journeyLatestPayment();
 
     // Her window passes, but the QR is still live — the slot is held.
@@ -266,7 +266,7 @@ it('handles a payment that lands after the slot was released and resold, through
     expect($booking->fresh()->status)->toBe(BookingStatus::Cancelled);
 
     // Ana can't start a fresh payment for the cancelled booking.
-    $this->actingAs($ana)->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])
+    $this->actingAs($ana)->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])
         ->assertRedirect(route('bookings.checkout', $booking));
 
     $this->actingAs($ben)->post(route('bookings.store-bulk'), ['bookings' => [['resource_id' => $court->id, ...journeySlot()]]])
@@ -314,10 +314,10 @@ it('flags the second of two paid QRs for refund and keeps the booking paid once'
 
     // First QR expires on her screen; she generates another. Both get paid
     // (her phone had queued the first scan).
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph']);
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()]);
     $first = journeyLatestPayment();
     $this->travel(16)->minutes();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph']);
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()]);
     $second = journeyLatestPayment();
     expect($second->id)->not->toBe($first->id);
 
@@ -352,7 +352,7 @@ it('takes a player through paying for themselves and two friends at open play', 
         ->post(route('open-play.join.store', $session), ['friend_player_ids' => $friends->pluck('id')->all()])
         ->assertRedirect(route('open-play.checkout', $session));
 
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph'])->assertOk();
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertOk();
     $payment = journeyLatestPayment();
     expect((string) $payment->amount)->toBe('450.00');
 
@@ -372,7 +372,7 @@ it('takes a player through paying for themselves and two friends at open play', 
     Player::factory()->for($late)->create(['birthdate' => '1990-01-01']);
     $this->actingAs($late)
         ->post(route('open-play.join.store', $session), ['friend_player_ids' => [Player::factory()->create()->id]]);
-    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph']);
+    $this->post(route('open-play.checkout.generate', $session), ['payment_method' => 'qrph', ...checkoutAgreement()]);
 
     expect(Payment::query()->count())->toBe(1);
 });
@@ -385,13 +385,13 @@ it('stops a logged-in stranger at every step of someone else\'s payment', functi
 
     $this->actingAs($ana)->post(route('bookings.store-bulk'), ['bookings' => [['resource_id' => $court->id, ...journeySlot()]]]);
     $booking = ResourceBooking::query()->sole();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph']);
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()]);
     $payment = journeyLatestPayment();
 
     $this->actingAs($mallory);
     $this->get(route('bookings.show', $booking))->assertForbidden();
     $this->get(route('bookings.checkout', $booking))->assertForbidden();
-    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph'])->assertForbidden();
+    $this->post(route('bookings.checkout.generate', $booking), ['payment_method' => 'qrph', ...checkoutAgreement()])->assertForbidden();
     $this->patch(route('bookings.mark-paid', $booking))->assertRedirect();
     $this->get(route('payments.index'))->assertRedirect();
     $this->get(route('payments.show', $payment))->assertRedirect();

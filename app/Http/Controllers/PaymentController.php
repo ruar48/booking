@@ -52,7 +52,9 @@ class PaymentController extends Controller
         $payment->load(['user', 'payable']);
 
         return Inertia::render('payments/show', [
-            'payment' => $payment,
+            // The one page that shows the customer's checkout agreement: the
+            // record to point to in a dispute.
+            'payment' => $payment->makeVisible('agreement'),
             'canMarkRefunded' => $request->user()->can('markRefunded', $payment),
         ]);
     }

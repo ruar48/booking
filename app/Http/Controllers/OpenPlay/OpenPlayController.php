@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\OpenPlay;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreOpenPlayRequest;
-use App\Http\Requests\UpdateOpenPlayRequest;
+use App\Http\Requests\OpenPlay\StoreOpenPlayRequest;
+use App\Http\Requests\OpenPlay\UpdateOpenPlayRequest;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;

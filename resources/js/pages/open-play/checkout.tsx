@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useOpenPlayPaymentChannel } from '@/hooks/use-open-play-payment-channel';
+import { agreementPayload, showCheckoutErrors } from '@/lib/checkout-agreement';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { terms as legalTerms } from '@/routes/legal';
 import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
 import openPlayCheckout from '@/routes/open-play/checkout';
-import type { OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
+import type { CheckoutPolicy, OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
 import type { ConvenienceFee } from '@/types/pos';
 import type { Receipt } from '@/types/receipt';
 
@@ -21,12 +22,6 @@ type QrPayment = {
     id: number;
     qrCodeUrl: string | null;
     expiresAt: string | null;
-};
-
-type CheckoutPolicy = {
-    id: number;
-    title: string;
-    body: string;
 };
 
 type Props = {
@@ -114,7 +109,7 @@ export default function OpenPlayCheckout({
         setGenerating(true);
         router.post(
             openPlayCheckout.generate(session).url,
-            { payment_method: 'qrph' },
+            { payment_method: 'qrph', ...agreementPayload(agreed, policies) },
             {
                 preserveScroll: true,
                 preserveState: true,
@@ -125,10 +120,19 @@ export default function OpenPlayCheckout({
                         setStep(2);
                     }
                 },
+                onError: (errors) =>
+                    showCheckoutErrors(errors, () => {
+                        setAgreed(false);
+                        setStep(1);
+                    }),
                 onFinish: () => setGenerating(false),
             },
         );
     };
+
+    // A new QR needs the box ticked. After a page refresh on the pay step it
+    // isn't, so the player goes back to agree rather than being refused.
+    const generateNewQr = () => (agreed ? generateQr() : setStep(1));
 
     const refresh = (label: string) => {
         setRefreshing(true);
@@ -170,7 +174,7 @@ export default function OpenPlayCheckout({
                             generating={generating}
                             refreshing={refreshing}
                             onRefresh={refresh}
-                            onGenerateNew={generateQr}
+                            onGenerateNew={generateNewQr}
                         />
                     ) : (
                         <ConfirmationCard session={session} registration={registration} fee={fee} receipt={receipt} />
@@ -217,13 +221,12 @@ function PaymentMethodCard({
     session: OpenPlaySession;
     registration: OpenPlayRegistration;
     fee: ConvenienceFee | null;
-    policies: { id: number; title: string; body: string }[];
+    policies: CheckoutPolicy[];
     agreed: boolean;
     onAgreedChange: (value: boolean) => void;
     generating: boolean;
     onContinue: () => void;
 }) {
-    const requiresAgreement = policies.length > 0;
 
     return (
         <Card className="gap-3 py-4">
@@ -305,31 +308,31 @@ function PaymentMethodCard({
                     <PolicyCard key={policy.id} title={policy.title} body={policy.body} />
                 ))}
 
-                {requiresAgreement ? (
-                    <label className="flex items-start gap-2 px-1 text-xs">
-                        <Checkbox
-                            checked={agreed}
-                            onCheckedChange={(checked) => onAgreedChange(checked === true)}
-                        />
-                        <span>
-                            I have read and agree to the policies above and the{' '}
-                            <a
-                                href={legalTerms().url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium underline underline-offset-2"
-                            >
-                                Terms of Service
-                            </a>
-                            .
-                        </span>
-                    </label>
-                ) : null}
+                {/* Always asked, even with no payment policy published: the
+                    Terms apply, and the server won't start a payment without it. */}
+                <label className="flex items-start gap-2 px-1 text-xs">
+                    <Checkbox
+                        checked={agreed}
+                        onCheckedChange={(checked) => onAgreedChange(checked === true)}
+                    />
+                    <span>
+                        I have read and agree to the {policies.length > 0 ? 'policies above and the ' : ''}
+                        <a
+                            href={legalTerms().url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="font-medium underline underline-offset-2"
+                        >
+                            Terms of Service
+                        </a>
+                        .
+                    </span>
+                </label>
 
                 <Button
                     className="w-full"
                     onClick={onContinue}
-                    disabled={(requiresAgreement && !agreed) || generating}
+                    disabled={!agreed || generating}
                 >
                     {generating ? 'Generating QR…' : 'Continue to Payment'}
                 </Button>
