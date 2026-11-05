@@ -1,1 +1,0 @@
-import{I as e}from"./app-oB3VL3_Y.js";var t=e(`ChevronRight`,[[`path`,{d:`m9 18 6-6-6-6`,key:`mthhwq`}]]);export{t};

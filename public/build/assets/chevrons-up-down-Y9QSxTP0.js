@@ -1,1 +1,0 @@
-import{I as e}from"./app-oB3VL3_Y.js";var t=e(`ChevronsUpDown`,[[`path`,{d:`m7 15 5 5 5-5`,key:`1hf1tw`}],[`path`,{d:`m7 9 5-5 5 5`,key:`sgt6xg`}]]);export{t};
