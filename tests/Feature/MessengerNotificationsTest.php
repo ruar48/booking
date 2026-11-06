@@ -440,3 +440,21 @@ test('every template body follows Meta template rules', function (MessengerTempl
         ->and(array_keys($template->examples()))->toEqualCanonicalizing($template->placeholders())
         ->and($template->templateName())->toMatch('/^[a-z0-9_]+$/');
 })->with(MessengerTemplate::cases());
+
+test('setup submits each template with its URL button example nested the way Meta expects', function () {
+    $this->artisan('messenger:setup', ['--templates-only' => true])->assertSuccessful();
+
+    Http::assertSent(function (Request $request) {
+        if (! str_ends_with(parse_url($request->url(), PHP_URL_PATH), '/message_templates') || $request['name'] !== 'booking_approved_v1') {
+            return false;
+        }
+
+        $button = $request['components'][1]['buttons'][0];
+
+        return $request['category'] === 'UTILITY'
+            && $request['parameter_format'] === 'NAMED'
+            && $button['url'] === 'https://courts.test/{{1}}'
+            && $button['example'] === ['url_suffix_example' => 'https://courts.test/bookings/1']
+            && ! array_key_exists('url_suffix_example', $button);
+    });
+});

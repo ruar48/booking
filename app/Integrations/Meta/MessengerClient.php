@@ -175,7 +175,7 @@ class MessengerClient
                         'type' => 'URL',
                         'text' => $template->buttonLabel(),
                         'url' => $buttonBaseUrl.'/{{1}}',
-                        'url_suffix_example' => $buttonBaseUrl.'/bookings/1',
+                        'example' => ['url_suffix_example' => $buttonBaseUrl.'/bookings/1'],
                     ]],
                 ],
             ],
