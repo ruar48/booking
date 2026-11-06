@@ -453,7 +453,7 @@ test('setup submits each template with its URL button example nested the way Met
 
         return $request['category'] === 'UTILITY'
             && $request['parameter_format'] === 'NAMED'
-            && $button['url'] === 'https://courts.test/{{1}}'
+            && $button['url'] === 'https://courts.test/{{url_suffix}}'
             && $button['example'] === ['url_suffix_example' => 'https://courts.test/bookings/1']
             && ! array_key_exists('url_suffix_example', $button);
     });

@@ -167,7 +167,7 @@ class MessengerSender
     }
 
     /**
-     * Template buttons are registered as APP_URL/{{1}}, so only the path is
+     * Template buttons are registered as APP_URL/{{url_suffix}}, so only the path is
      * sent. Hosts are compared rather than whole prefixes, because behind a
      * proxy route() can build http:// links while APP_URL says https://. A
      * link elsewhere falls back to the dashboard.

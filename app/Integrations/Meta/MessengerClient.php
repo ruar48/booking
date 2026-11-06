@@ -110,7 +110,7 @@ class MessengerClient
      * outside the 24-hour window.
      *
      * @param  array<string, string>  $parameters  named body placeholders
-     * @param  string|null  $urlSuffix  fills the button's `{{1}}`, relative to APP_URL
+     * @param  string|null  $urlSuffix  fills the button's `{{url_suffix}}`, relative to APP_URL
      * @return string Meta's message id
      */
     public function sendTemplate(string $psid, MessengerTemplate $template, array $parameters, ?string $urlSuffix): string
@@ -174,7 +174,8 @@ class MessengerClient
                     'buttons' => [[
                         'type' => 'URL',
                         'text' => $template->buttonLabel(),
-                        'url' => $buttonBaseUrl.'/{{1}}',
+                        // A NAMED template names its URL placeholder too.
+                        'url' => $buttonBaseUrl.'/{{url_suffix}}',
                         'example' => ['url_suffix_example' => $buttonBaseUrl.'/bookings/1'],
                     ]],
                 ],
@@ -266,8 +267,15 @@ class MessengerClient
         }
 
         if ($response->failed()) {
+            // "message" is often just "Invalid parameter"; Meta puts the
+            // actual reason in the user-facing title and message.
+            $detail = collect([$response->json('error.error_user_title'), $response->json('error.error_user_msg')])
+                ->filter(fn ($part) => is_string($part) && $part !== '')
+                ->implode(': ');
+
             throw new MessengerException(
-                (string) ($response->json('error.message') ?? 'Graph API returned HTTP '.$response->status()),
+                (string) ($response->json('error.message') ?? 'Graph API returned HTTP '.$response->status())
+                    .($detail !== '' ? ' — '.$detail : ''),
                 is_numeric($response->json('error.code')) ? (int) $response->json('error.code') : null,
                 is_numeric($response->json('error.error_subcode')) ? (int) $response->json('error.error_subcode') : null,
             );
