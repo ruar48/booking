@@ -70,6 +70,10 @@ return [
         'verify_token' => env('MESSENGER_VERIFY_TOKEN'),
         'graph_version' => env('MESSENGER_GRAPH_VERSION', 'v27.0'),
         'template_language' => env('MESSENGER_TEMPLATE_LANGUAGE', 'en'),
+        // Lets staff reply from the inbox for up to 7 days after a customer's
+        // last message, instead of 24 hours. Turn on only once Meta has
+        // approved the app for the Human Agent permission.
+        'human_agent' => (bool) env('MESSENGER_HUMAN_AGENT', false),
     ],
 
 ];

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AnalyticsController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\GalleryCategoryController;
 use App\Http\Controllers\Admin\GalleryPhotoController;
+use App\Http\Controllers\Admin\MessengerInboxController;
 use App\Http\Controllers\Admin\PolicyController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
@@ -26,6 +27,13 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('policies/{policy}/edit', [PolicyController::class, 'edit'])->name('policies.edit');
     Route::put('policies/{policy}', [PolicyController::class, 'update'])->name('policies.update');
     Route::delete('policies/{policy}', [PolicyController::class, 'destroy'])->name('policies.destroy');
+
+    Route::get('messenger', [MessengerInboxController::class, 'index'])->name('messenger.index');
+    Route::get('messenger/{conversation}', [MessengerInboxController::class, 'show'])->name('messenger.show');
+    Route::post('messenger/{conversation}/messages', [MessengerInboxController::class, 'reply'])
+        ->middleware('throttle:30,1')
+        ->name('messenger.reply');
+    Route::post('messenger/{conversation}/read', [MessengerInboxController::class, 'read'])->name('messenger.read');
 
     Route::get('gallery', [GalleryPhotoController::class, 'index'])->name('gallery.index');
     Route::post('gallery', [GalleryPhotoController::class, 'store'])->name('gallery.store');

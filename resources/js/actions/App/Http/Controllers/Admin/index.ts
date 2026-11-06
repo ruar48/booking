@@ -3,6 +3,7 @@ import AuditLogController from './AuditLogController'
 import AnalyticsController from './AnalyticsController'
 import UserController from './UserController'
 import PolicyController from './PolicyController'
+import MessengerInboxController from './MessengerInboxController'
 import GalleryPhotoController from './GalleryPhotoController'
 import GalleryCategoryController from './GalleryCategoryController'
 const Admin = {
@@ -11,6 +12,7 @@ AuditLogController: Object.assign(AuditLogController, AuditLogController),
 AnalyticsController: Object.assign(AnalyticsController, AnalyticsController),
 UserController: Object.assign(UserController, UserController),
 PolicyController: Object.assign(PolicyController, PolicyController),
+MessengerInboxController: Object.assign(MessengerInboxController, MessengerInboxController),
 GalleryPhotoController: Object.assign(GalleryPhotoController, GalleryPhotoController),
 GalleryCategoryController: Object.assign(GalleryCategoryController, GalleryCategoryController),
 }

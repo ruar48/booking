@@ -5,6 +5,7 @@ namespace App\Http\Controllers\OpenPlay;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OpenPlay\StoreOpenPlayRequest;
 use App\Http\Requests\OpenPlay\UpdateOpenPlayRequest;
+use App\Jobs\AnnounceOpenPlayOnMessenger;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;
@@ -79,6 +80,8 @@ class OpenPlayController extends Controller
 
         $session = OpenPlaySession::query()->create($data);
         $session->resources()->sync($resourceIds);
+
+        AnnounceOpenPlayOnMessenger::dispatch($session)->afterResponse();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Open play session created.')]);
 

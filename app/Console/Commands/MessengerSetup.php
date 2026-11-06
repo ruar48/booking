@@ -14,12 +14,17 @@ use Illuminate\Console\Command;
 class MessengerSetup extends Command
 {
     /**
-     * Webhook fields the app needs: messages and postbacks open the 24-hour
-     * window, referrals carry the account-linking ref, and template status
-     * updates report Meta's review decisions.
+     * Webhook fields the app needs: messages and postbacks fill the inbox and
+     * open the 24-hour window, echoes mirror replies typed in Facebook's own
+     * inbox, deliveries and reads drive Sent/Delivered/Seen, referrals carry
+     * the account-linking ref, and template status updates report Meta's
+     * review decisions.
      */
     private const WEBHOOK_FIELDS = [
         'messages',
+        'message_echoes',
+        'message_deliveries',
+        'message_reads',
         'messaging_postbacks',
         'messaging_referrals',
         'message_template_status_update',

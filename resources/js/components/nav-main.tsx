@@ -3,6 +3,7 @@ import {
     SidebarGroup,
     SidebarGroupLabel,
     SidebarMenu,
+    SidebarMenuBadge,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
@@ -52,6 +53,11 @@ export function NavMain({
                                     <span>{item.title}</span>
                                 </Link>
                             </SidebarMenuButton>
+                            {item.badge ? (
+                                <SidebarMenuBadge className="bg-[#0866ff] text-white peer-hover/menu-button:text-white peer-data-[active=true]/menu-button:text-white rounded-full">
+                                    {item.badge > 99 ? '99+' : item.badge}
+                                </SidebarMenuBadge>
+                            ) : null}
                         </SidebarMenuItem>
                     );
                 })}

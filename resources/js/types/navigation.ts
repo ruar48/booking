@@ -11,4 +11,6 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    /** Count shown beside the item, e.g. unread chats. Hidden when 0. */
+    badge?: number;
 };

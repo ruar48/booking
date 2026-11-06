@@ -2,7 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\MessengerConversation;
 use App\Models\Setting;
+use App\Services\Messenger\MessengerInboxService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -53,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             'notificationsCount' => fn () => $request->user()
                 ? $request->user()->unreadNotifications()->count()
                 : 0,
+            'messengerUnread' => fn () => $this->messengerUnread($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'support' => fn () => $this->supportContact(),
         ];
@@ -93,6 +96,23 @@ class HandleInertiaRequests extends Middleware
     /**
      * @return array<string, mixed>|null
      */
+    /**
+     * Unread Messenger chats, for the inbox badge in the sidebar. Staff only,
+     * and never worth failing a page over.
+     */
+    private function messengerUnread(Request $request): int
+    {
+        if (! $request->user()?->can('viewAny', MessengerConversation::class)) {
+            return 0;
+        }
+
+        try {
+            return app(MessengerInboxService::class)->unreadConversationCount();
+        } catch (\Throwable) {
+            return 0;
+        }
+    }
+
     private function resolveAuthenticatedUser(Request $request): ?array
     {
         $user = $request->user();

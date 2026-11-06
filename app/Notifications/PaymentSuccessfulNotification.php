@@ -8,7 +8,7 @@ use App\Models\Payment;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\Channels\MessengerChannel;
-use App\Notifications\Messages\MessengerMessage;
+use App\Notifications\Messages\MessengerNotificationMessage;
 use App\Services\PaymentReceiptPresenter;
 use BaconQrCode\Renderer\Color\Rgb;
 use BaconQrCode\Renderer\GDLibRenderer;
@@ -90,15 +90,15 @@ class PaymentSuccessfulNotification extends Notification
         }
     }
 
-    public function toMessenger(User $notifiable): MessengerMessage
+    public function toMessenger(User $notifiable): MessengerNotificationMessage
     {
         $payer = $this->payment->user;
         $isPayer = $payer !== null && $payer->id === $notifiable->id;
 
-        return new MessengerMessage(
+        return new MessengerNotificationMessage(
             $isPayer ? MessengerTemplate::PaymentReceived : MessengerTemplate::PaymentReceivedStaff,
             [
-                'name' => MessengerMessage::firstName($notifiable),
+                'name' => MessengerNotificationMessage::firstName($notifiable),
                 'customer' => $payer?->name ?? 'a customer',
                 'amount' => strtoupper((string) ($this->payment->currency ?: 'PHP')).' '.number_format((float) $this->payment->amount, 2),
                 'reference' => $this->payment->invoice_number,

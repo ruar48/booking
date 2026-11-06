@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MessengerConversation;
 use App\Models\OpenPlayRegistration;
 use App\Models\ResourceBooking;
 use Illuminate\Support\Facades\Broadcast;
@@ -24,3 +25,5 @@ $openPlayRegistrationsChannel = function ($user, $id) {
 
 Broadcast::channel('bookings.{id}', $bookingsChannel);
 Broadcast::channel('open-play-registrations.{id}', $openPlayRegistrationsChannel);
+
+Broadcast::channel('messenger.inbox', fn ($user) => $user->can('viewAny', MessengerConversation::class));

@@ -15,6 +15,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             notificationsCount: number;
+            messengerUnread: number;
             support?: {
                 email: string | null;
                 phone: string | null;

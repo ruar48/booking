@@ -13,7 +13,7 @@ use Illuminate\Support\Str;
  * its placeholders, and where its button goes. The channel decides whether it
  * goes out as an ordinary message or as the approved template.
  */
-final class MessengerMessage
+final class MessengerNotificationMessage
 {
     /** @var array<string, string> */
     public readonly array $parameters;

@@ -1,6 +1,12 @@
 <?php
 
+use App\Enums\MessengerDirection;
+use App\Enums\MessengerMessageSource;
+use App\Enums\MessengerMessageStatus;
 use App\Enums\MessengerTemplate;
+use App\Jobs\AnnounceOpenPlayOnMessenger;
+use App\Models\MessengerConversation;
+use App\Models\OpenPlaySession;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\BookingApprovedNotification;
@@ -18,7 +24,6 @@ beforeEach(function () {
         'services.messenger.verify_token' => 'verify-me',
         'services.messenger.graph_version' => 'v27.0',
     ]);
-    url()->forceRootUrl('https://courts.test');
 
     Http::fake(['graph.facebook.com/*' => Http::response(['recipient_id' => 'psid', 'message_id' => 'mid.1'])]);
 });
@@ -33,19 +38,19 @@ function postSignedMessengerWebhook(array $payload)
     ], $body);
 }
 
-function referralEvent(string $psid, string $ref): array
+function messengerEvent(array $event): array
 {
-    return [
-        'object' => 'page',
-        'entry' => [[
-            'id' => '111222333',
-            'messaging' => [[
-                'sender' => ['id' => $psid],
-                'recipient' => ['id' => '111222333'],
-                'postback' => ['payload' => 'GET_STARTED', 'referral' => ['ref' => $ref, 'source' => 'SHORTLINK']],
-            ]],
-        ]],
-    ];
+    return ['object' => 'page', 'entry' => [['id' => '111222333', 'messaging' => [$event]]]];
+}
+
+function getStartedEvent(string $psid, string $ref): array
+{
+    return messengerEvent([
+        'sender' => ['id' => $psid],
+        'recipient' => ['id' => '111222333'],
+        'timestamp' => now()->getTimestampMs(),
+        'postback' => ['title' => 'Get Started', 'payload' => 'GET_STARTED', 'referral' => ['ref' => $ref, 'source' => 'SHORTLINK']],
+    ]);
 }
 
 function connectRef(User $user): string
@@ -55,6 +60,24 @@ function connectRef(User $user): string
 
     return $query['ref'];
 }
+
+function linkedConversation(User $user, array $attributes = []): MessengerConversation
+{
+    return MessengerConversation::query()->create([
+        'psid' => 'psid-'.$user->id,
+        'user_id' => $user->id,
+        'linked_at' => now(),
+        'last_inbound_at' => now()->subHour(),
+        ...$attributes,
+    ]);
+}
+
+function venueAdmin(): User
+{
+    return tap(User::factory()->create(), fn (User $user) => $user->assignRole('club_admin'));
+}
+
+// --- Webhook --------------------------------------------------------------
 
 test('the webhook handshake echoes the challenge only for the right verify token', function () {
     $this->get('/webhooks/messenger?hub.mode=subscribe&hub.verify_token=verify-me&hub.challenge=abc123')
@@ -66,8 +89,12 @@ test('the webhook handshake echoes the challenge only for the right verify token
 });
 
 test('unsigned webhook deliveries are rejected', function () {
-    $this->postJson('/webhooks/messenger', referralEvent('999', 'anything'))->assertForbidden();
+    $this->postJson('/webhooks/messenger', getStartedEvent('999', 'anything'))->assertForbidden();
+
+    expect(MessengerConversation::query()->count())->toBe(0);
 });
+
+// --- Linking --------------------------------------------------------------
 
 test('opening the connect link and tapping Get Started links Messenger to the account', function () {
     $user = User::factory()->create(['name' => 'Juan Dela Cruz']);
@@ -75,59 +102,151 @@ test('opening the connect link and tapping Get Started links Messenger to the ac
     $location = $this->actingAs($user)->get(route('messenger.connect'))->assertRedirect()->headers->get('Location');
     expect($location)->toStartWith('https://m.me/venuepage?ref=');
 
-    postSignedMessengerWebhook(referralEvent('psid-123', connectRef($user)))->assertOk();
+    postSignedMessengerWebhook(getStartedEvent('psid-123', connectRef($user)))->assertOk();
 
-    $user->refresh();
-    expect($user->messenger_psid)->toBe('psid-123')
-        ->and($user->messenger_connected_at)->not->toBeNull()
-        ->and($user->hasOpenMessengerWindow())->toBeTrue();
+    $conversation = $user->refresh()->messengerConversation;
+    expect($conversation->psid)->toBe('psid-123')
+        ->and($conversation->linked_at)->not->toBeNull()
+        ->and($conversation->hasOpenWindow())->toBeTrue();
+
+    // The tapped button shows in the thread, followed by the welcome.
+    expect($conversation->messages()->pluck('text')->all())->toBe([
+        'Get Started',
+        "You're all set, Juan! Booking and payment updates from ".config('app.name').' will arrive here.',
+    ]);
 
     Http::assertSent(fn (Request $request) => str_contains($request->url(), '/111222333/messages')
         && $request['recipient']['id'] === 'psid-123'
-        && str_contains($request['message']['text'], "You're all set, Juan"));
+        && str_contains($request['message']['text'] ?? '', "You're all set, Juan"));
 });
 
 test('a connect link works only once', function () {
     $first = User::factory()->create();
     $ref = connectRef($first);
 
-    postSignedMessengerWebhook(referralEvent('psid-a', $ref));
-    postSignedMessengerWebhook(referralEvent('psid-b', $ref));
+    postSignedMessengerWebhook(getStartedEvent('psid-a', $ref));
+    postSignedMessengerWebhook(getStartedEvent('psid-b', $ref));
 
-    expect($first->refresh()->messenger_psid)->toBe('psid-a')
-        ->and(User::query()->where('messenger_psid', 'psid-b')->exists())->toBeFalse();
+    expect($first->refresh()->messengerConversation->psid)->toBe('psid-a')
+        ->and(MessengerConversation::query()->where('psid', 'psid-b')->value('user_id'))->toBeNull();
 });
 
 test('linking a Messenger account already linked elsewhere moves it to the new account', function () {
-    $old = User::factory()->create(['messenger_psid' => 'psid-shared', 'messenger_connected_at' => now()]);
+    $old = User::factory()->create();
+    linkedConversation($old, ['psid' => 'psid-shared']);
     $new = User::factory()->create();
 
-    postSignedMessengerWebhook(referralEvent('psid-shared', connectRef($new)));
+    postSignedMessengerWebhook(getStartedEvent('psid-shared', connectRef($new)));
 
-    expect($old->refresh()->messenger_psid)->toBeNull()
-        ->and($new->refresh()->messenger_psid)->toBe('psid-shared');
+    expect($old->refresh()->messengerConversation)->toBeNull()
+        ->and($new->refresh()->messengerConversation->psid)->toBe('psid-shared');
 });
 
-test('an incoming message reopens the 24-hour window', function () {
-    $user = User::factory()->create([
-        'messenger_psid' => 'psid-123',
-        'messenger_last_inbound_at' => now()->subDays(3),
-    ]);
+test('disconnecting unlinks the account but keeps the chat history', function () {
+    $this->withoutVite();
+    $user = User::factory()->create();
+    $conversation = linkedConversation($user);
 
-    postSignedMessengerWebhook([
-        'object' => 'page',
-        'entry' => [['messaging' => [['sender' => ['id' => 'psid-123'], 'message' => ['mid' => 'm1', 'text' => 'hi']]]]],
-    ])->assertOk();
+    $this->actingAs($user)->get(route('messenger.edit'))
+        ->assertInertia(fn ($page) => $page
+            ->component('settings/messenger')
+            ->where('messenger.available', true)
+            ->where('messenger.connected', true));
 
-    expect($user->refresh()->hasOpenMessengerWindow())->toBeTrue();
+    $this->actingAs($user)->delete(route('messenger.destroy'))->assertRedirect(route('messenger.edit'));
+
+    expect($user->refresh()->messengerConversation)->toBeNull()
+        ->and($conversation->fresh())->not->toBeNull();
 });
 
-test('inside the 24-hour window a notification goes out as an ordinary message with a button', function () {
-    $user = User::factory()->create([
-        'name' => 'Juan Dela Cruz',
-        'messenger_psid' => 'psid-123',
-        'messenger_last_inbound_at' => now()->subHour(),
-    ]);
+// --- Inbound, echoes and receipts ------------------------------------------
+
+test('a message to the Page lands in the inbox as unread and opens the window', function () {
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => 'psid-new'],
+        'recipient' => ['id' => '111222333'],
+        'timestamp' => now()->getTimestampMs(),
+        'message' => ['mid' => 'm_in_1', 'text' => 'Is court 2 free tonight?'],
+    ]))->assertOk();
+
+    $conversation = MessengerConversation::query()->where('psid', 'psid-new')->sole();
+
+    expect($conversation->unread_count)->toBe(1)
+        ->and($conversation->hasOpenWindow())->toBeTrue()
+        ->and($conversation->last_message_preview)->toBe('Is court 2 free tonight?')
+        ->and($conversation->messages()->sole()->direction)->toBe(MessengerDirection::Inbound);
+
+    // Meta redelivers webhooks; the same mid must not be stored twice.
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => 'psid-new'],
+        'timestamp' => now()->getTimestampMs(),
+        'message' => ['mid' => 'm_in_1', 'text' => 'Is court 2 free tonight?'],
+    ]));
+
+    expect($conversation->messages()->count())->toBe(1);
+});
+
+test('a reply typed in Facebook\'s own inbox shows up in the thread', function () {
+    $conversation = MessengerConversation::query()->create(['psid' => 'psid-1', 'unread_count' => 2]);
+
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => '111222333'],
+        'recipient' => ['id' => 'psid-1'],
+        'timestamp' => now()->getTimestampMs(),
+        'message' => ['mid' => 'm_echo_1', 'text' => 'Yes, see you at 7!', 'is_echo' => true],
+    ]));
+
+    $message = $conversation->messages()->sole();
+    expect($message->source)->toBe(MessengerMessageSource::PageInbox)
+        ->and($message->direction)->toBe(MessengerDirection::Outbound)
+        ->and($conversation->refresh()->unread_count)->toBe(0);
+});
+
+test('the echo of our own send updates it instead of duplicating it', function () {
+    $user = User::factory()->create();
+    $conversation = linkedConversation($user);
+    $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
+
+    $user->notify(new BookingApprovedNotification($booking));
+    $sent = $conversation->messages()->sole();
+
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => '111222333'],
+        'recipient' => ['id' => $conversation->psid],
+        'timestamp' => now()->addSeconds(2)->getTimestampMs(),
+        'message' => ['mid' => 'mid.1', 'is_echo' => true, 'metadata' => 'local:'.$sent->id, 'text' => $sent->text],
+    ]));
+
+    expect($conversation->messages()->count())->toBe(1);
+});
+
+test('delivery and read receipts move sent messages to Delivered and then Seen', function () {
+    $user = User::factory()->create();
+    $conversation = linkedConversation($user);
+    $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
+
+    $user->notify(new BookingApprovedNotification($booking));
+    $message = $conversation->messages()->sole();
+    expect($message->status)->toBe(MessengerMessageStatus::Sent);
+
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => $conversation->psid],
+        'delivery' => ['mids' => ['mid.1'], 'watermark' => now()->addSecond()->getTimestampMs()],
+    ]));
+    expect($message->refresh()->status)->toBe(MessengerMessageStatus::Delivered);
+
+    postSignedMessengerWebhook(messengerEvent([
+        'sender' => ['id' => $conversation->psid],
+        'read' => ['watermark' => now()->addSecond()->getTimestampMs()],
+    ]));
+    expect($message->refresh()->status)->toBe(MessengerMessageStatus::Read);
+});
+
+// --- Notifications ----------------------------------------------------------
+
+test('inside the 24-hour window a notification goes out as an ordinary message and is kept in the thread', function () {
+    $user = User::factory()->create(['name' => 'Juan Dela Cruz']);
+    $conversation = linkedConversation($user);
     $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
 
     $user->notify(new BookingApprovedNotification($booking));
@@ -139,13 +258,13 @@ test('inside the 24-hour window a notification goes out as an ordinary message w
             && str_starts_with($payload['text'], 'Good news, Juan!')
             && $payload['buttons'][0]['url'] === route('bookings.show', $booking);
     });
+
+    expect($conversation->messages()->sole()->source)->toBe(MessengerMessageSource::Notification);
 });
 
 test('outside the 24-hour window a notification uses the approved utility template', function () {
-    $user = User::factory()->create([
-        'messenger_psid' => 'psid-123',
-        'messenger_last_inbound_at' => now()->subDays(2),
-    ]);
+    $user = User::factory()->create();
+    linkedConversation($user, ['last_inbound_at' => now()->subDays(2)]);
     $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
 
     $user->notify(new BookingApprovedNotification($booking));
@@ -162,7 +281,8 @@ test('outside the 24-hour window a notification uses the approved utility templa
 
 test('staff get the staff wording for a customer booking', function () {
     $customer = User::factory()->create(['name' => 'Maria Santos']);
-    $staff = User::factory()->create(['messenger_psid' => 'psid-staff', 'messenger_last_inbound_at' => now()]);
+    $staff = User::factory()->create();
+    linkedConversation($staff);
     $booking = ResourceBooking::factory()->create(['user_id' => $customer->id]);
 
     $staff->notify(new BookingApprovedNotification($booking));
@@ -182,26 +302,31 @@ test('users without Messenger connected are never messaged', function () {
     Http::assertNothingSent();
 });
 
-test('a Messenger failure is swallowed and an unreachable recipient is disconnected', function () {
+test('a failed send is kept as Failed and an unreachable recipient is unlinked', function () {
     // Stubs match in registration order, so drop the success stub from beforeEach.
     Http::swap(new HttpFactory);
     Http::fake(['graph.facebook.com/*' => Http::response([
         'error' => ['message' => "(#551) This person isn't available right now.", 'code' => 551, 'error_subcode' => 1545041],
     ], 400)]);
 
-    $user = User::factory()->create(['messenger_psid' => 'psid-123', 'messenger_last_inbound_at' => now()]);
+    $user = User::factory()->create();
+    $conversation = linkedConversation($user);
     $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
 
     $user->notify(new BookingApprovedNotification($booking));
 
-    expect($user->refresh()->messenger_psid)->toBeNull();
+    $message = $conversation->messages()->sole();
+    expect($message->status)->toBe(MessengerMessageStatus::Failed)
+        ->and($message->error)->toContain('isn\'t available')
+        ->and($conversation->refresh()->user_id)->toBeNull();
     $this->assertDatabaseHas('notifications', ['notifiable_id' => $user->id]);
 });
 
 test('nothing is sent while Messenger is not configured', function () {
     config(['services.messenger.page_access_token' => null]);
 
-    $user = User::factory()->create(['messenger_psid' => 'psid-123', 'messenger_last_inbound_at' => now()]);
+    $user = User::factory()->create();
+    linkedConversation($user);
     $booking = ResourceBooking::factory()->create(['user_id' => $user->id]);
 
     $user->notify(new BookingApprovedNotification($booking));
@@ -210,20 +335,98 @@ test('nothing is sent while Messenger is not configured', function () {
     $this->actingAs($user)->get(route('messenger.connect'))->assertRedirect(route('messenger.edit'));
 });
 
-test('the settings page shows the connection status and disconnect clears it', function () {
+// --- Staff inbox -------------------------------------------------------------
+
+test('only venue admins can open the inbox', function () {
     $this->withoutVite();
-    $user = User::factory()->create(['messenger_psid' => 'psid-123', 'messenger_connected_at' => now()]);
+    $conversation = MessengerConversation::query()->create(['psid' => 'psid-1', 'last_message_at' => now()]);
 
-    $this->actingAs($user)->get(route('messenger.edit'))
+    $this->actingAs(User::factory()->create())->get(route('admin.messenger.index'))->assertForbidden();
+    $this->actingAs(User::factory()->create())
+        ->post(route('admin.messenger.reply', $conversation), ['text' => 'hi'])
+        ->assertForbidden();
+
+    $this->actingAs(venueAdmin())->get(route('admin.messenger.show', $conversation))
         ->assertInertia(fn ($page) => $page
-            ->component('settings/messenger')
-            ->where('messenger.available', true)
-            ->where('messenger.connected', true));
-
-    $this->actingAs($user)->delete(route('messenger.destroy'))->assertRedirect(route('messenger.edit'));
-
-    expect($user->refresh()->messenger_psid)->toBeNull();
+            ->component('admin/messenger/index')
+            ->has('conversations', 1)
+            ->where('active.id', $conversation->id));
 });
+
+test('staff can reply from the inbox inside the window', function () {
+    $admin = venueAdmin();
+    $conversation = MessengerConversation::query()->create([
+        'psid' => 'psid-1', 'last_inbound_at' => now()->subMinutes(5), 'unread_count' => 1,
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.messenger.reply', $conversation), ['text' => '  Yes, court 2 is free at 7.  '])
+        ->assertRedirect(route('admin.messenger.show', $conversation));
+
+    Http::assertSent(fn (Request $request) => $request['messaging_type'] === 'RESPONSE'
+        && $request['message']['text'] === 'Yes, court 2 is free at 7.');
+
+    $message = $conversation->messages()->sole();
+    expect($message->source)->toBe(MessengerMessageSource::Reply)
+        ->and($message->sent_by_id)->toBe($admin->id)
+        ->and($conversation->refresh()->unread_count)->toBe(0);
+});
+
+test('replies outside the window are refused unless the Human Agent tag is enabled', function () {
+    $admin = venueAdmin();
+    $conversation = MessengerConversation::query()->create(['psid' => 'psid-1', 'last_inbound_at' => now()->subDays(3)]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.messenger.reply', $conversation), ['text' => 'Hello?'])
+        ->assertSessionHasErrors('text');
+    Http::assertNothingSent();
+
+    config(['services.messenger.human_agent' => true]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.messenger.reply', $conversation), ['text' => 'Hello?'])
+        ->assertSessionHasNoErrors();
+
+    Http::assertSent(fn (Request $request) => $request['messaging_type'] === 'MESSAGE_TAG' && $request['tag'] === 'HUMAN_AGENT');
+});
+
+test('opening a chat marks it read and shows Seen in Messenger', function () {
+    $conversation = MessengerConversation::query()->create([
+        'psid' => 'psid-1', 'last_inbound_at' => now(), 'unread_count' => 3,
+    ]);
+    $conversation->messages()->create([
+        'direction' => MessengerDirection::Inbound,
+        'source' => MessengerMessageSource::Customer,
+        'status' => MessengerMessageStatus::Received,
+        'text' => 'Hi',
+        'sent_at' => now(),
+    ]);
+
+    $this->actingAs(venueAdmin())->post(route('admin.messenger.read', $conversation))->assertRedirect();
+
+    expect($conversation->refresh()->unread_count)->toBe(0);
+    Http::assertSent(fn (Request $request) => ($request['sender_action'] ?? null) === 'mark_seen');
+});
+
+// --- Open Play announcements -------------------------------------------------
+
+test('a new Open Play session is announced to everyone inside the window', function () {
+    $session = OpenPlaySession::factory()->create(['title' => 'Friday Night Dinks']);
+    $recent = MessengerConversation::query()->create(['psid' => 'psid-recent', 'last_inbound_at' => now()->subHours(2)]);
+    $stale = MessengerConversation::query()->create(['psid' => 'psid-stale', 'last_inbound_at' => now()->subDays(3)]);
+
+    app()->call([new AnnounceOpenPlayOnMessenger($session), 'handle']);
+
+    expect($recent->messages()->sole()->source)->toBe(MessengerMessageSource::Announcement)
+        ->and($stale->messages()->count())->toBe(0);
+
+    Http::assertSent(fn (Request $request) => $request['recipient']['id'] === 'psid-recent'
+        && str_contains($request['message']['attachment']['payload']['text'], 'New Open Play: Friday Night Dinks')
+        && $request['message']['attachment']['payload']['buttons'][0]['url'] === route('open-play.join', $session));
+    Http::assertNotSent(fn (Request $request) => ($request['recipient']['id'] ?? null) === 'psid-stale');
+});
+
+// --- Templates ---------------------------------------------------------------
 
 test('every template body follows Meta template rules', function (MessengerTemplate $template) {
     $body = $template->body();

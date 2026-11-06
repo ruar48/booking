@@ -11,6 +11,7 @@ import {
     ImageIcon,
     LayoutGrid,
     MapPin,
+    MessageCircle,
     Megaphone,
     Package,
     Receipt,
@@ -23,6 +24,7 @@ import { useIsVenueAdmin } from '@/hooks/use-is-venue-admin';
 import { dashboard } from '@/routes';
 import { index as adminAnalyticsIndex } from '@/routes/admin/analytics';
 import { index as adminGalleryIndex } from '@/routes/admin/gallery';
+import { index as adminMessengerIndex } from '@/routes/admin/messenger';
 import { index as adminPoliciesIndex } from '@/routes/admin/policies';
 import { index as adminSettingsIndex } from '@/routes/admin/settings';
 import { index as adminUsersIndex } from '@/routes/admin/users';
@@ -48,7 +50,8 @@ export type NavItems = {
 
 export function useNavItems(): NavItems {
     const isVenueAdmin = useIsVenueAdmin();
-    const isSuperAdmin = usePage().props.auth.user?.roles.includes('super_admin') === true;
+    const { auth, messengerUnread } = usePage().props;
+    const isSuperAdmin = auth.user?.roles.includes('super_admin') === true;
 
     const homeHref = isVenueAdmin ? dashboard() : bookingsIndex();
 
@@ -57,6 +60,7 @@ export function useNavItems(): NavItems {
               { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
               { title: 'Bookings', href: bookingsIndex(), icon: Calendar },
               { title: 'Calendar', href: bookingsCalendar(), icon: CalendarDays },
+              { title: 'Messenger', href: adminMessengerIndex(), icon: MessageCircle, badge: messengerUnread },
           ]
         : [
               { title: 'My bookings', href: bookingsIndex(), icon: Calendar },

@@ -6,7 +6,7 @@ use App\Enums\MessengerTemplate;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\Channels\MessengerChannel;
-use App\Notifications\Messages\MessengerMessage;
+use App\Notifications\Messages\MessengerNotificationMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -37,9 +37,9 @@ class BookingCreatedNotification extends Notification
             ->line('Please complete payment to secure the reservation.');
     }
 
-    public function toMessenger(User $notifiable): MessengerMessage
+    public function toMessenger(User $notifiable): MessengerNotificationMessage
     {
-        return MessengerMessage::forBooking(
+        return MessengerNotificationMessage::forBooking(
             $this->booking,
             $notifiable,
             MessengerTemplate::BookingCreated,

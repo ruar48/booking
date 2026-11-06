@@ -35,12 +35,22 @@ class MessengerClient
 
     /**
      * An ordinary message, allowed only within 24 hours of the person's last
-     * message to the Page. A button is attached when given one.
+     * message to the Page — or up to 7 days for a staff reply sent with the
+     * HUMAN_AGENT tag. A button is attached when given one.
      *
+     * @param  string  $messagingType  UPDATE for anything proactive, RESPONSE for a reply
+     * @param  string|null  $metadata  comes back on the echo, to match it to this send
      * @return string Meta's message id
      */
-    public function sendMessage(string $psid, string $text, ?string $buttonTitle = null, ?string $buttonUrl = null): string
-    {
+    public function sendMessage(
+        string $psid,
+        string $text,
+        ?string $buttonTitle = null,
+        ?string $buttonUrl = null,
+        string $messagingType = 'UPDATE',
+        bool $humanAgentTag = false,
+        ?string $metadata = null,
+    ): string {
         $message = $buttonTitle !== null && $buttonUrl !== null
             ? ['attachment' => [
                 'type' => 'template',
@@ -52,11 +62,47 @@ class MessengerClient
             ]]
             : ['text' => mb_substr($text, 0, 2000)];
 
+        if ($metadata !== null) {
+            $message['metadata'] = $metadata;
+        }
+
         return $this->send([
             'recipient' => ['id' => $psid],
-            'messaging_type' => 'UPDATE',
+            ...($humanAgentTag
+                ? ['messaging_type' => 'MESSAGE_TAG', 'tag' => 'HUMAN_AGENT']
+                : ['messaging_type' => $messagingType]),
             'message' => $message,
         ]);
+    }
+
+    /**
+     * Shows "Seen" to the person in Messenger.
+     */
+    public function markSeen(string $psid): void
+    {
+        $this->post($this->pageId().'/messages', [
+            'recipient' => ['id' => $psid],
+            'sender_action' => 'mark_seen',
+        ]);
+    }
+
+    /**
+     * Name and photo of someone who has messaged the Page. Needs Meta's
+     * "Business Asset User Profile Access" feature; without it Meta refuses
+     * and the caller falls back to a placeholder name.
+     *
+     * @return array{name: string|null, avatar_url: string|null}
+     */
+    public function profile(string $psid): array
+    {
+        $response = $this->get($psid, ['fields' => 'first_name,last_name,profile_pic']);
+
+        $name = trim($response->json('first_name', '').' '.$response->json('last_name', ''));
+
+        return [
+            'name' => $name !== '' ? $name : null,
+            'avatar_url' => $response->json('profile_pic'),
+        ];
     }
 
     /**
@@ -189,12 +235,32 @@ class MessengerClient
      */
     private function post(string $path, array $payload): Response
     {
+        return $this->call(fn (PendingRequest $request) => $request->post($path, $payload));
+    }
+
+    /**
+     * @param  array<string, string>  $query
+     *
+     * @throws MessengerException
+     */
+    private function get(string $path, array $query): Response
+    {
+        return $this->call(fn (PendingRequest $request) => $request->get($path, $query));
+    }
+
+    /**
+     * @param  callable(PendingRequest): Response  $send
+     *
+     * @throws MessengerException
+     */
+    private function call(callable $send): Response
+    {
         if (! $this->isConfigured()) {
             throw new MessengerException('Messenger is not configured.');
         }
 
         try {
-            $response = $this->request()->post($path, $payload);
+            $response = $send($this->request());
         } catch (ConnectionException $e) {
             throw new MessengerException('Could not reach the Graph API: '.$e->getMessage());
         }

@@ -6,7 +6,7 @@ use App\Enums\MessengerTemplate;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\Channels\MessengerChannel;
-use App\Notifications\Messages\MessengerMessage;
+use App\Notifications\Messages\MessengerNotificationMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -40,9 +40,9 @@ class BookingReminderNotification extends Notification
     /**
      * Reminders only go to the customer, so there is no staff wording.
      */
-    public function toMessenger(User $notifiable): MessengerMessage
+    public function toMessenger(User $notifiable): MessengerNotificationMessage
     {
-        return MessengerMessage::forBooking(
+        return MessengerNotificationMessage::forBooking(
             $this->booking,
             $notifiable,
             MessengerTemplate::BookingReminder,

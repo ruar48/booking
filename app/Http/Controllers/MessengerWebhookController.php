@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\MessengerConnectionService;
+use App\Services\Messenger\MessengerWebhookProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +11,7 @@ use Throwable;
 class MessengerWebhookController extends Controller
 {
     public function __construct(
-        private readonly MessengerConnectionService $connections,
+        private readonly MessengerWebhookProcessor $processor,
     ) {}
 
     /**
@@ -38,7 +38,7 @@ class MessengerWebhookController extends Controller
     public function handle(Request $request): Response
     {
         try {
-            $this->connections->handleWebhook($request->json()->all());
+            $this->processor->handle($request->json()->all());
         } catch (Throwable $e) {
             Log::error('messenger.webhook.failed', ['error' => $e->getMessage()]);
             report($e);

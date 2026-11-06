@@ -5,7 +5,7 @@ namespace App\Notifications;
 use App\Enums\MessengerTemplate;
 use App\Models\User;
 use App\Notifications\Channels\MessengerChannel;
-use App\Notifications\Messages\MessengerMessage;
+use App\Notifications\Messages\MessengerNotificationMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -38,16 +38,16 @@ class BookingFailedNotification extends Notification
             ->line('Reason: '.$this->reason);
     }
 
-    public function toMessenger(User $notifiable): MessengerMessage
+    public function toMessenger(User $notifiable): MessengerNotificationMessage
     {
         $isCustomer = $notifiable->id === $this->customer->id;
 
-        return new MessengerMessage(
+        return new MessengerNotificationMessage(
             $isCustomer ? MessengerTemplate::BookingFailed : MessengerTemplate::BookingFailedStaff,
             [
-                'name' => MessengerMessage::firstName($notifiable),
+                'name' => MessengerNotificationMessage::firstName($notifiable),
                 'customer' => $this->customer->name,
-                'schedule' => MessengerMessage::schedule($this->startsAt, $this->endsAt),
+                'schedule' => MessengerNotificationMessage::schedule($this->startsAt, $this->endsAt),
                 'reason' => rtrim($this->reason, '.'),
             ],
             $isCustomer ? route('bookings.create') : route('bookings.calendar'),

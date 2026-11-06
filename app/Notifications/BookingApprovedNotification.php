@@ -6,7 +6,7 @@ use App\Enums\MessengerTemplate;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\Channels\MessengerChannel;
-use App\Notifications\Messages\MessengerMessage;
+use App\Notifications\Messages\MessengerNotificationMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -37,9 +37,9 @@ class BookingApprovedNotification extends Notification
             ->line('Thank you for using our booking platform.');
     }
 
-    public function toMessenger(User $notifiable): MessengerMessage
+    public function toMessenger(User $notifiable): MessengerNotificationMessage
     {
-        return MessengerMessage::forBooking(
+        return MessengerNotificationMessage::forBooking(
             $this->booking,
             $notifiable,
             MessengerTemplate::BookingApproved,
