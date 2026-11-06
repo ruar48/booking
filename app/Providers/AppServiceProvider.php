@@ -141,13 +141,10 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Kept short on purpose: most customers sign up on their phones, and
+        // the venue chose ease of sign-up over stricter password rules.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
+            ? Password::min(6)
             : null,
         );
     }
