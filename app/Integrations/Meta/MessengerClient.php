@@ -180,7 +180,7 @@ class MessengerClient
                     ]],
                 ],
             ],
-        ])->json();
+        ], timeoutSeconds: 45)->json();
     }
 
     /**
@@ -234,9 +234,9 @@ class MessengerClient
      *
      * @throws MessengerException
      */
-    private function post(string $path, array $payload): Response
+    private function post(string $path, array $payload, int $timeoutSeconds = 10): Response
     {
-        return $this->call(fn (PendingRequest $request) => $request->post($path, $payload));
+        return $this->call(fn (PendingRequest $request) => $request->timeout($timeoutSeconds)->post($path, $payload));
     }
 
     /**

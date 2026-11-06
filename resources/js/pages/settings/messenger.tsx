@@ -108,10 +108,12 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
                                 </Button>
 
                                 {waiting ? (
-                                    <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                                        <Loader2 className="size-4 animate-spin" />
-                                        Waiting for Messenger… tap <strong className="text-foreground">Get Started</strong>{' '}
-                                        (or send any message) in the chat that opened.
+                                    <p className="text-muted-foreground flex items-start gap-2 text-sm">
+                                        <Loader2 className="mt-0.5 size-4 shrink-0 animate-spin" />
+                                        <span>
+                                            Waiting for Messenger… tap <strong className="text-foreground">Get Started</strong>{' '}
+                                            (or send any message) in the chat that opened.
+                                        </span>
                                     </p>
                                 ) : (
                                     <p className="text-muted-foreground text-xs">
