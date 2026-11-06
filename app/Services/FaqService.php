@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\PolicyPlacement;
+use App\Integrations\Meta\MessengerClient;
 use App\Models\DateOverride;
 use App\Models\Policy;
 use App\Models\Resource;
@@ -24,6 +25,10 @@ class FaqService
 {
     /** Friends one Open Play registration can include (OpenPlayJoinController::store). */
     private const MAX_OPEN_PLAY_FRIENDS = 9;
+
+    public function __construct(
+        private readonly MessengerClient $messenger,
+    ) {}
 
     /**
      * @return list<array<string, mixed>>
@@ -117,7 +122,8 @@ class FaqService
             [
                 'id' => 'receipt',
                 'question' => 'Will I get a receipt?',
-                'answer' => 'Yes. The moment your payment is confirmed, your e-receipt is printed on screen and you can save it as an image. Show it at the front desk when you arrive — staff can scan its QR code to check it.',
+                'answer' => 'Yes. The moment your payment is confirmed, your e-receipt is printed on screen and you can save it as an image. Show it at the front desk when you arrive — staff can scan its QR code to check it.'
+                    .($this->messenger->isConfigured() ? ' If you have connected Messenger, we also message you a link to it there.' : ''),
             ],
             [
                 'id' => 'payment-safety',
@@ -244,8 +250,20 @@ class FaqService
         $questions[] = [
             'id' => 'contact',
             'question' => 'How do I contact you?',
-            'answer' => ($contact !== '' ? 'You can '.$contact.'. ' : '').'The chat button at the bottom of the page also answers common questions straight away.',
+            'answer' => trim(($contact !== '' ? 'You can '.$contact.'. ' : '')
+                .($this->messenger->isConfigured() ? 'Or message us on Facebook Messenger with the button at the bottom of the page.' : ''))
+                ?: 'Ask us at the front desk — we are happy to help.',
         ];
+
+        if ($this->messenger->isConfigured()) {
+            $questions[] = [
+                'id' => 'messenger',
+                'question' => 'Can I get booking updates on Facebook Messenger?',
+                'answer' => 'Yes. Sign in, open Settings → Messenger and tap Connect Messenger, then send our Page any message in the chat that opens. From then on your booking confirmations, reminders and payment receipts also arrive in Messenger, alongside your emails.
+
+You can disconnect at any time from the same page.',
+            ];
+        }
 
         return $questions;
     }

@@ -1,6 +1,7 @@
 import { router, usePage } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
 
+import { hasConsent } from '@/lib/cookie-consent';
 import { connect } from '@/routes/messenger';
 
 const DISMISS_KEY = 'messenger-prompt-dismissed-until';
@@ -49,6 +50,12 @@ export function useMessengerPrompt() {
 
     const dismiss = useCallback(() => {
         setDismissed(true);
+
+        // Snoozing across visits is a remembered preference; without consent
+        // it is only hidden until the page is next loaded.
+        if (!hasConsent('preferences')) {
+            return;
+        }
 
         try {
             window.localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DAYS * 24 * 60 * 60 * 1000));

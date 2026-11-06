@@ -29,7 +29,7 @@ const OPEN_EVENT = 'cookie-consent:open';
 
 /** What "Preferences" covers, so withdrawing it can forget it all. */
 const PREFERENCE_COOKIES = ['appearance', 'sidebar_state'];
-const PREFERENCE_STORAGE_KEYS = ['appearance', 'pwa-install-dismissed-at'];
+const PREFERENCE_STORAGE_KEYS = ['appearance', 'pwa-install-dismissed-at', 'messenger-prompt-dismissed-until'];
 
 /** The raw cookie value: a stable snapshot for useSyncExternalStore. */
 export function consentCookieValue(): string {

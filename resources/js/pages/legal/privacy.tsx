@@ -277,11 +277,21 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                             app&rdquo; prompt, in your browser&apos;s storage.
                         </li>
                         <li>
+                            <strong>Messenger reminder</strong> — remembers for 3 days that you closed the &ldquo;get
+                            booking updates on Messenger&rdquo; reminder, in your browser&apos;s storage.
+                        </li>
+                        <li>
                             <strong>Google Maps</strong> — the map of our location loads by itself, and Google may set
                             its own cookies under Google&apos;s privacy policy. Without this choice the map shows only
                             when you click it.
                         </li>
                     </ul>
+                    <h3>Facebook Messenger</h3>
+                    <p>
+                        The Messenger button is a plain link: nothing from Facebook loads on our pages and Facebook sets no
+                        cookies through our site. Facebook&apos;s own cookies and privacy policy apply once you open
+                        Messenger.
+                    </p>
                     <h3>Analytics — only if you allow it</h3>
                     <p>
                         Analytics uses no cookie: we count visits on our own server. With your consent we link page views

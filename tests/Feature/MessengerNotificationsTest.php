@@ -494,3 +494,16 @@ test('the floating prompt is switched off while Messenger is not configured', fu
             ->where('messengerPrompt.available', false)
             ->where('messengerPrompt.chatUrl', null));
 });
+
+test('the FAQ explains Messenger updates only while Messenger is set up', function () {
+    $this->withoutVite();
+    $questionIds = fn () => collect($this->get(route('faq'))->viewData('page')['props']['topics'])
+        ->flatMap(fn (array $topic) => collect($topic['questions'])->pluck('id'))
+        ->all();
+
+    expect($questionIds())->toContain('messenger');
+
+    config(['services.messenger.page_access_token' => null]);
+
+    expect($questionIds())->not->toContain('messenger');
+});
