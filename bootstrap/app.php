@@ -26,7 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // (RecordPageView), so it can't be encrypted.
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state', 'cookie_consent']);
 
-        $middleware->validateCsrfTokens(except: ['webhooks/paymongo']);
+        $middleware->validateCsrfTokens(except: ['webhooks/paymongo', 'webhooks/messenger']);
 
         $middleware->alias([
             'venue.admin' => EnsureVenueAdmin::class,

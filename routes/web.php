@@ -4,9 +4,11 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FaqController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\MessengerWebhookController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymongoWebhookController;
 use App\Http\Controllers\SupportChatController;
+use App\Http\Middleware\VerifyMessengerSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +24,11 @@ Route::get('/terms', [LegalController::class, 'terms'])->name('legal.terms');
 Route::get('/privacy', [LegalController::class, 'privacy'])->name('legal.privacy');
 
 Route::post('webhooks/paymongo', [PaymongoWebhookController::class, 'handle'])->name('webhooks.paymongo');
+
+Route::get('webhooks/messenger', [MessengerWebhookController::class, 'verify'])->name('webhooks.messenger.verify');
+Route::post('webhooks/messenger', [MessengerWebhookController::class, 'handle'])
+    ->middleware(VerifyMessengerSignature::class)
+    ->name('webhooks.messenger');
 
 // Open to guests so the widget works on the public landing page; throttled
 // because every call costs money upstream.

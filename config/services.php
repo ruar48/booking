@@ -55,4 +55,21 @@ return [
         'fee_fixed' => (float) env('PAYMONGO_FEE_FIXED', 0),
     ],
 
+    /*
+     * Facebook Page Messenger notifications. Leave the token empty to turn
+     * the channel off entirely: nothing is sent and the settings page says
+     * the feature is unavailable. See `php artisan messenger:setup`.
+     */
+    'messenger' => [
+        'page_id' => env('MESSENGER_PAGE_ID'),
+        // The Page's username, for the m.me link (m.me/<username>). Falls
+        // back to the numeric Page ID, which m.me also accepts.
+        'page_username' => env('MESSENGER_PAGE_USERNAME'),
+        'page_access_token' => env('MESSENGER_PAGE_ACCESS_TOKEN'),
+        'app_secret' => env('MESSENGER_APP_SECRET'),
+        'verify_token' => env('MESSENGER_VERIFY_TOKEN'),
+        'graph_version' => env('MESSENGER_GRAPH_VERSION', 'v27.0'),
+        'template_language' => env('MESSENGER_TEMPLATE_LANGUAGE', 'en'),
+    ],
+
 ];

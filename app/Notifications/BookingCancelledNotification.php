@@ -2,7 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Enums\MessengerTemplate;
 use App\Models\ResourceBooking;
+use App\Models\User;
+use App\Notifications\Channels\MessengerChannel;
+use App\Notifications\Messages\MessengerMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -17,7 +21,7 @@ class BookingCancelledNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', 'database', 'broadcast', MessengerChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -34,6 +38,18 @@ class BookingCancelledNotification extends Notification
                 $this->booking->cancellation_reason,
                 fn (MailMessage $mail) => $mail->line('Reason: '.$this->booking->cancellation_reason),
             );
+    }
+
+    public function toMessenger(User $notifiable): MessengerMessage
+    {
+        return MessengerMessage::forBooking(
+            $this->booking,
+            $notifiable,
+            MessengerTemplate::BookingCancelled,
+            MessengerTemplate::BookingCancelledStaff,
+            route('bookings.show', $this->booking),
+            ['reason' => $this->booking->cancellation_reason ?: 'not specified'],
+        );
     }
 
     /**

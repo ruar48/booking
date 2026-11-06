@@ -2,7 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Enums\MessengerTemplate;
 use App\Models\ResourceBooking;
+use App\Models\User;
+use App\Notifications\Channels\MessengerChannel;
+use App\Notifications\Messages\MessengerMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -17,7 +21,7 @@ class BookingCreatedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', 'database', 'broadcast', MessengerChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -31,6 +35,17 @@ class BookingCreatedNotification extends Notification
             ->line('Court: '.($resource?->name ?? 'N/A'))
             ->line('Date: '.$this->booking->starts_at->toDayDateTimeString())
             ->line('Please complete payment to secure the reservation.');
+    }
+
+    public function toMessenger(User $notifiable): MessengerMessage
+    {
+        return MessengerMessage::forBooking(
+            $this->booking,
+            $notifiable,
+            MessengerTemplate::BookingCreated,
+            MessengerTemplate::BookingCreatedStaff,
+            route('bookings.checkout', $this->booking),
+        );
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\SessionController;
+use App\Http\Controllers\Settings\MessengerController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -33,6 +34,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('sessions.destroy');
 
     Route::inertia('settings/appearance', 'settings/appearance')->name('appearance.edit');
+
+    Route::get('settings/messenger', [MessengerController::class, 'edit'])->name('messenger.edit');
+    Route::get('settings/messenger/connect', [MessengerController::class, 'connect'])
+        ->middleware('throttle:10,1')
+        ->name('messenger.connect');
+    Route::post('settings/messenger/test', [MessengerController::class, 'test'])
+        ->middleware('throttle:5,1')
+        ->name('messenger.test');
+    Route::delete('settings/messenger', [MessengerController::class, 'destroy'])->name('messenger.destroy');
 });
 
 Route::get('.well-known/passkey-endpoints', function () {

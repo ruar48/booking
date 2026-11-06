@@ -2,7 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Enums\MessengerTemplate;
 use App\Models\User;
+use App\Notifications\Channels\MessengerChannel;
+use App\Notifications\Messages\MessengerMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
@@ -22,7 +25,7 @@ class BookingFailedNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail', 'database', 'broadcast'];
+        return ['mail', 'database', 'broadcast', MessengerChannel::class];
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -33,6 +36,22 @@ class BookingFailedNotification extends Notification
             ->line('A court booking attempt could not be completed.')
             ->line('Date: '.$this->startsAt->toDayDateTimeString())
             ->line('Reason: '.$this->reason);
+    }
+
+    public function toMessenger(User $notifiable): MessengerMessage
+    {
+        $isCustomer = $notifiable->id === $this->customer->id;
+
+        return new MessengerMessage(
+            $isCustomer ? MessengerTemplate::BookingFailed : MessengerTemplate::BookingFailedStaff,
+            [
+                'name' => MessengerMessage::firstName($notifiable),
+                'customer' => $this->customer->name,
+                'schedule' => MessengerMessage::schedule($this->startsAt, $this->endsAt),
+                'reason' => rtrim($this->reason, '.'),
+            ],
+            $isCustomer ? route('bookings.create') : route('bookings.calendar'),
+        );
     }
 
     /**
