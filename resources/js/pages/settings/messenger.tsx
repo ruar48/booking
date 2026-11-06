@@ -23,7 +23,9 @@ const MESSENGER_GRADIENT = 'bg-[linear-gradient(135deg,#0866ff_0%,#a033ff_60%,#f
 const WAIT_LIMIT_MS = 5 * 60 * 1000;
 
 export default function Messenger({ messenger }: { messenger: MessengerStatus }) {
-    const [waiting, setWaiting] = useState(false);
+    const [startedWaiting, setWaiting] = useState(false);
+    // Done waiting the moment the webhook links the account.
+    const waiting = startedWaiting && !messenger.connected;
     const [confirmDisconnect, setConfirmDisconnect] = useState(false);
     const [testing, setTesting] = useState(false);
 
@@ -46,12 +48,6 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
             stop();
         };
     }, [waiting]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    useEffect(() => {
-        if (messenger.connected) {
-            setWaiting(false);
-        }
-    }, [messenger.connected]);
 
     return (
         <>

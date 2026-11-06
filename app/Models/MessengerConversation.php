@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -93,7 +94,7 @@ class MessengerConversation extends Model
             && $this->last_inbound_at->greaterThan(now()->subDays(self::HUMAN_AGENT_DAYS)->addMinutes(10));
     }
 
-    public function replyWindowEndsAt(): ?Carbon
+    public function replyWindowEndsAt(): ?CarbonInterface
     {
         if ($this->last_inbound_at === null) {
             return null;

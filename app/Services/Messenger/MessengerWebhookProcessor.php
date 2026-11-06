@@ -10,7 +10,8 @@ use App\Integrations\Meta\MessengerClient;
 use App\Integrations\Meta\MessengerException;
 use App\Models\MessengerConversation;
 use App\Models\MessengerMessage;
-use Illuminate\Support\Carbon;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -87,7 +88,7 @@ class MessengerWebhookProcessor
     /**
      * @param  array<string, mixed>  $event
      */
-    private function recordFromCustomer(MessengerConversation $conversation, array $event, Carbon $at): void
+    private function recordFromCustomer(MessengerConversation $conversation, array $event, CarbonInterface $at): void
     {
         $text = null;
         $attachments = null;
@@ -141,7 +142,7 @@ class MessengerWebhookProcessor
     /**
      * @param  array<string, mixed>  $message
      */
-    private function recordEcho(MessengerConversation $conversation, array $message, Carbon $at): void
+    private function recordEcho(MessengerConversation $conversation, array $message, CarbonInterface $at): void
     {
         $mid = $message['mid'] ?? null;
         $metadata = $message['metadata'] ?? null;
@@ -295,10 +296,10 @@ class MessengerWebhookProcessor
         };
     }
 
-    private function timestamp(mixed $milliseconds): Carbon
+    private function timestamp(mixed $milliseconds): CarbonInterface
     {
         return is_numeric($milliseconds)
-            ? Carbon::createFromTimestampMs((int) $milliseconds)->setTimezone(config('app.timezone'))
+            ? Date::createFromTimestampMs((int) $milliseconds)->setTimezone(config('app.timezone'))
             : now();
     }
 }

@@ -24,6 +24,7 @@ beforeEach(function () {
         'services.messenger.verify_token' => 'verify-me',
         'services.messenger.graph_version' => 'v27.0',
     ]);
+    url()->forceRootUrl('https://courts.test');
 
     Http::fake(['graph.facebook.com/*' => Http::response(['recipient_id' => 'psid', 'message_id' => 'mid.1'])]);
 });
@@ -341,10 +342,13 @@ test('only venue admins can open the inbox', function () {
     $this->withoutVite();
     $conversation = MessengerConversation::query()->create(['psid' => 'psid-1', 'last_message_at' => now()]);
 
-    $this->actingAs(User::factory()->create())->get(route('admin.messenger.index'))->assertForbidden();
+    // Non-admins are bounced by the venue.admin middleware before the policy.
+    $this->actingAs(User::factory()->create())->get(route('admin.messenger.index'))->assertRedirect();
     $this->actingAs(User::factory()->create())
         ->post(route('admin.messenger.reply', $conversation), ['text' => 'hi'])
-        ->assertForbidden();
+        ->assertRedirect();
+    expect($conversation->messages()->count())->toBe(0);
+    Http::assertNothingSent();
 
     $this->actingAs(venueAdmin())->get(route('admin.messenger.show', $conversation))
         ->assertInertia(fn ($page) => $page
