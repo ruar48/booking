@@ -114,6 +114,13 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                         type in the support chat are answered automatically on our server and are not saved.
                     </li>
                     <li>
+                        <strong>Facebook Messenger:</strong> when you message our Facebook Page, Meta gives us your
+                        Page-scoped ID (a number that identifies you only to our Page), your messages and any photos or
+                        files you send, and — where Meta allows it — your name and profile picture. We also record when
+                        our messages to you are delivered and seen. If you connect Messenger in your account settings,
+                        we link that ID to your account so booking updates can reach you there.
+                    </li>
+                    <li>
                         <strong>Photos:</strong> photos or videos taken at the venue that we may publish in our gallery or
                         on social media.
                     </li>
@@ -146,6 +153,11 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                         </Purpose>
                         <Purpose title="Booking messages" basis="our contract with you">
                             Confirmations, reminders and payment receipts about your bookings.
+                        </Purpose>
+                        <Purpose title="Messenger" basis="your consent, given when you message our Page or connect Messenger">
+                            Answering the messages you send our Facebook Page, sending booking updates to Messenger once
+                            you connect it, and telling people who messaged us in the last 24 hours about new Open Play
+                            sessions. Disconnect at any time in Settings → Messenger, or block our Page in Messenger.
                         </Purpose>
                         <Purpose title="Security" basis="our legitimate interest in keeping accounts and payments safe">
                             Preventing fraud and misuse, protecting accounts, and keeping a record of changes to bookings
@@ -189,7 +201,9 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                             <strong>Service providers</strong> that process data for us, on our instructions only: our
                             web hosting provider (where the site and its database run), PayMongo (payments), Pusher (live
                             updates, such as your payment confirmation appearing on screen), our email delivery
-                            provider, and Google — only when you choose to show the embedded map.
+                            provider, Meta (Facebook Messenger — only if you message our Page or connect Messenger; Meta
+                            handles those messages under its own privacy policy), and Google — only when you choose to
+                            show the embedded map.
                         </li>
                         <li>
                             <strong>Other players</strong>, who see your name on Open Play rosters, brackets and results.
@@ -306,6 +320,11 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                     </li>
                     <li>
                         <strong>Support chat:</strong> not stored.
+                    </li>
+                    <li>
+                        <strong>Messenger chats with our Page:</strong> kept so our staff can see the conversation
+                        history, until you ask us to delete them. Disconnecting Messenger unlinks it from your account
+                        straight away. Meta keeps its own copy of the chat in Messenger.
                     </li>
                     <li>
                         <strong>Venue photos:</strong> until you ask us to remove them, or we no longer use them.

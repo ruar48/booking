@@ -19,7 +19,7 @@ return [
     ],
 
     'privacy' => [
-        'version' => '2026-11-05',
-        'effective_at' => '2026-11-05',
+        'version' => '2026-11-06',
+        'effective_at' => '2026-11-06',
     ],
 ];
