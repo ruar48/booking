@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useMessengerPrompt } from '@/hooks/use-messenger-prompt';
 import { cn } from '@/lib/utils';
 import { login } from '@/routes';
+import { edit as messengerSettings } from '@/routes/messenger';
 
 /**
  * Floating Messenger launcher, bottom-right on every customer page.
@@ -80,6 +81,7 @@ export function MessengerWidget({
                                 </ul>
                                 <ConnectButton href={connectHref} onClick={startWaiting} />
                                 {waiting && <WaitingNote />}
+                                <CodeHint />
                             </>
                         ) : prompt.signedIn ? (
                             <>
@@ -200,7 +202,20 @@ export function MessengerConnectCard({ onDismiss }: { onDismiss: () => void }) {
                 </Button>
             </div>
             {waiting && <WaitingNote className="mt-2" />}
+            <CodeHint className="mt-2 text-left" />
         </div>
+    );
+}
+
+/** Points to the connect code for when the link opens Messenger but nothing links. */
+function CodeHint({ className }: { className?: string }) {
+    return (
+        <p className={cn('text-muted-foreground text-center text-xs', className)}>
+            Opened Messenger but nothing happened?{' '}
+            <Link href={messengerSettings()} className="text-foreground font-medium underline underline-offset-2">
+                Connect with a code instead
+            </Link>
+        </p>
     );
 }
 

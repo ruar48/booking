@@ -1,5 +1,5 @@
 import { Head, router, usePoll } from '@inertiajs/react';
-import { CheckCircle2, ExternalLink, Loader2, MessageCircle, Send, Unlink } from 'lucide-react';
+import { Check, CheckCircle2, Copy, ExternalLink, Loader2, MessageCircle, Send, Unlink } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -7,6 +7,7 @@ import Heading from '@/components/heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useClipboard } from '@/hooks/use-clipboard';
 import { formatDateTime } from '@/lib/format';
 import { connect, destroy, edit, test } from '@/routes/messenger';
 
@@ -15,6 +16,8 @@ type MessengerStatus = {
     connected: boolean;
     connectedAt: string | null;
     canMessageNow: boolean;
+    /** Fallback for when the link's hidden reference gets lost (FB Lite, chat heads). */
+    connectCode: string | null;
 };
 
 const MESSENGER_GRADIENT = 'bg-[linear-gradient(135deg,#0866ff_0%,#a033ff_60%,#ff5c87_100%)]';
@@ -120,6 +123,10 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
                                         Opens our Page in Messenger. Tap Get Started and you're done.
                                     </p>
                                 )}
+
+                                {messenger.connectCode && (
+                                    <ConnectCode code={messenger.connectCode} onCopied={() => setWaiting(true)} />
+                                )}
                             </div>
                         )}
 
@@ -166,6 +173,41 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
                 onConfirm={() => router.delete(destroy().url, { preserveScroll: true })}
             />
         </>
+    );
+}
+
+/**
+ * For when the button opens Messenger but nothing connects: the hidden
+ * reference in the link is lost by FB Lite, chat heads, or a browser signed in
+ * as someone else. Sending the code as a normal message works from any app.
+ */
+function ConnectCode({ code, onCopied }: { code: string; onCopied: () => void }) {
+    const [copied, copy] = useClipboard();
+
+    return (
+        <div className="bg-muted/50 rounded-xl border border-dashed p-3">
+            <p className="text-sm font-medium">Opened Messenger but still not connected?</p>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+                Send this code to our Page in Messenger (or Facebook Lite). It works for 30 minutes.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+                <code className="bg-background rounded-lg border px-3 py-1.5 font-mono text-base font-semibold tracking-widest">
+                    {code}
+                </code>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                        await copy(code);
+                        onCopied();
+                    }}
+                >
+                    {copied === code ? <Check className="size-4" /> : <Copy className="size-4" />}
+                    {copied === code ? 'Copied' : 'Copy'}
+                </Button>
+            </div>
+        </div>
     );
 }
 

@@ -111,9 +111,11 @@ class MessengerWebhookProcessor
             $conversation->last_inbound_at = $at;
         }
 
-        $isNew = $text !== null || $attachments !== null;
+        // Meta redelivers webhooks; a mid already stored is the same message.
+        $isNew = ($text !== null || $attachments !== null)
+            && ($mid === null || ! MessengerMessage::query()->where('mid', $mid)->exists());
 
-        if ($isNew && ($mid === null || ! MessengerMessage::query()->where('mid', $mid)->exists())) {
+        if ($isNew) {
             $conversation->messages()->create([
                 'direction' => MessengerDirection::Inbound,
                 'source' => MessengerMessageSource::Customer,
@@ -137,6 +139,14 @@ class MessengerWebhookProcessor
 
         if (is_string($ref) && $ref !== '') {
             $this->connections->completeLink($ref, $conversation);
+
+            return;
+        }
+
+        // The fallback when the ref was lost on the way: they typed the
+        // connect code shown in their settings.
+        if ($isNew && isset($event['message'])) {
+            $this->connections->completeLinkFromMessage($text, $conversation);
         }
     }
 

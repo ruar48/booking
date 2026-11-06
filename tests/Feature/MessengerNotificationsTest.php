@@ -536,3 +536,53 @@ test('a nameless chat picks up the person\'s name once Meta shares it, without a
     $profileLookups = collect(Http::recorded())->filter(fn ($pair) => str_contains($pair[0]->url(), '/psid-anon'));
     expect($profileLookups)->toHaveCount(1);
 });
+
+// --- Connect code fallback ---------------------------------------------------
+
+function connectCodeFor(User $user): ?string
+{
+    test()->withoutVite();
+
+    return test()->actingAs($user)->get(route('messenger.edit'))->viewData('page')['props']['messenger']['connectCode'];
+}
+
+function plainMessage(string $psid, string $mid, string $text): array
+{
+    return messengerEvent([
+        'sender' => ['id' => $psid],
+        'timestamp' => now()->getTimestampMs(),
+        'message' => ['mid' => $mid, 'text' => $text],
+    ]);
+}
+
+test('sending the connect code as a plain message links the chat, even when the link\'s ref was lost', function () {
+    $user = User::factory()->create(['name' => 'Edrian Ramos']);
+    $code = connectCodeFor($user);
+
+    expect($code)->toMatch('/^GRP-[A-Z2-9]{6}$/')
+        ->and(connectCodeFor($user))->toBe($code); // stable across page reloads
+
+    // Typed on a phone: lower case, a space instead of the dash.
+    postSignedMessengerWebhook(plainMessage('psid-lite', 'm_code', 'hi '.strtolower(str_replace('-', ' ', $code))))->assertOk();
+
+    $conversation = $user->refresh()->messengerConversation;
+    expect($conversation->psid)->toBe('psid-lite')
+        ->and($conversation->displayName())->toBe('Edrian Ramos');
+
+    Http::assertSent(fn (Request $request) => str_contains($request['message']['text'] ?? '', "You're all set, Edrian"));
+
+    // Used up: the page offers no code once connected.
+    expect(connectCodeFor($user))->toBeNull();
+});
+
+test('a wrong code gets a helpful reply and links nothing, and ordinary messages are left alone', function () {
+    postSignedMessengerWebhook(plainMessage('psid-x', 'm_wrong', 'GRP-ZZZZZZ'));
+
+    expect(MessengerConversation::query()->where('psid', 'psid-x')->value('user_id'))->toBeNull();
+    Http::assertSent(fn (Request $request) => str_contains($request['message']['text'] ?? '', "That code didn't work"));
+
+    postSignedMessengerWebhook(plainMessage('psid-y', 'm_plain', 'Is the GRPS court open?'));
+
+    $plain = MessengerConversation::query()->where('psid', 'psid-y')->sole();
+    expect($plain->messages()->where('direction', MessengerDirection::Outbound)->count())->toBe(0);
+});

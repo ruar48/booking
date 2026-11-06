@@ -26,13 +26,23 @@ class MessengerConnectionService
 {
     private const LINK_TTL_MINUTES = 30;
 
+    /**
+     * Connect codes look like "GRP-7K4Q9M". No 0/O or 1/I, so they survive
+     * being read off a screen and typed on a phone.
+     */
+    private const CODE_PREFIX = 'GRP-';
+
+    private const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+    private const CODE_LENGTH = 6;
+
     public function __construct(
         private readonly MessengerClient $client,
         private readonly MessengerSender $sender,
     ) {}
 
     /**
-     * @return array{available: bool, connected: bool, connectedAt: string|null, canMessageNow: bool}
+     * @return array{available: bool, connected: bool, connectedAt: string|null, canMessageNow: bool, connectCode: string|null}
      */
     public function status(User $user): array
     {
@@ -43,6 +53,7 @@ class MessengerConnectionService
             'connected' => $conversation !== null,
             'connectedAt' => $conversation?->linked_at?->toIso8601String(),
             'canMessageNow' => $conversation?->hasOpenWindow() ?? false,
+            'connectCode' => $conversation === null ? $this->connectCode($user) : null,
         ];
     }
 
@@ -79,6 +90,66 @@ class MessengerConnectionService
         Cache::put($this->cacheKey($token), $user->id, now()->addMinutes(self::LINK_TTL_MINUTES));
 
         return $this->client->conversationUrl($token);
+    }
+
+    /**
+     * A code the user can send our Page as an ordinary message to connect,
+     * for when the m.me link's hidden reference gets lost on the way — FB
+     * Lite, Messenger chat heads, or a browser signed in as someone else all
+     * drop it. The same code is shown until it expires, so a page refresh
+     * doesn't invalidate one the user is halfway through typing.
+     */
+    public function connectCode(User $user): ?string
+    {
+        if (! $this->client->isConfigured()) {
+            return null;
+        }
+
+        $userKey = "messenger:user-code:{$user->id}";
+        $existing = Cache::get($userKey);
+
+        if (is_string($existing) && Cache::get($this->codeKey($existing)) === $user->id) {
+            return self::CODE_PREFIX.$existing;
+        }
+
+        $code = collect(range(1, self::CODE_LENGTH))
+            ->map(fn () => self::CODE_ALPHABET[random_int(0, strlen(self::CODE_ALPHABET) - 1)])
+            ->implode('');
+
+        $expires = now()->addMinutes(self::LINK_TTL_MINUTES);
+        Cache::put($this->codeKey($code), $user->id, $expires);
+        Cache::put($userKey, $code, $expires);
+
+        return self::CODE_PREFIX.$code;
+    }
+
+    /**
+     * Links the chat if the message is a connect code. Returns whether the
+     * message was meant as one, so the caller can treat it as ordinary text
+     * otherwise.
+     */
+    public function completeLinkFromMessage(?string $text, MessengerConversation $conversation): bool
+    {
+        if ($text === null || ! preg_match('/\bGRP[\s-]?([A-Z0-9]{'.self::CODE_LENGTH.'})\b/i', $text, $match)) {
+            return false;
+        }
+
+        $code = strtoupper($match[1]);
+        $userId = Cache::pull($this->codeKey($code));
+        $user = $userId !== null ? User::query()->find($userId) : null;
+
+        if ($user === null) {
+            Log::info('messenger.code_invalid', ['conversation_id' => $conversation->id]);
+
+            $this->replyAfterResponse($conversation, __("That code didn't work or has expired. Open Settings > Messenger on :app for a new one.",['app' => config('app.name')]));
+
+            return true;
+        }
+
+        Cache::forget("messenger:user-code:{$user->id}");
+        $this->link($user, $conversation);
+
+        return true;
     }
 
     /**
@@ -131,6 +202,11 @@ class MessengerConnectionService
             return;
         }
 
+        $this->link($user, $conversation);
+    }
+
+    private function link(User $user, MessengerConversation $conversation): void
+    {
         DB::transaction(function () use ($user, $conversation): void {
             // One account has one Messenger, and one Messenger belongs to one
             // account. Re-linking moves the link rather than failing.
@@ -168,5 +244,10 @@ class MessengerConnectionService
     private function cacheKey(string $token): string
     {
         return 'messenger:link:'.hash('sha256', $token);
+    }
+
+    private function codeKey(string $code): string
+    {
+        return 'messenger:code:'.strtoupper($code);
     }
 }
