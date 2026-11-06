@@ -10,6 +10,7 @@ use App\Models\OpenPlaySession;
 use App\Models\ResourceBooking;
 use App\Models\User;
 use App\Notifications\BookingApprovedNotification;
+use App\Services\Messenger\MessengerWebhookProcessor;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
@@ -506,4 +507,32 @@ test('the FAQ explains Messenger updates only while Messenger is set up', functi
     config(['services.messenger.page_access_token' => null]);
 
     expect($questionIds())->not->toContain('messenger');
+});
+
+test('a nameless chat picks up the person\'s name once Meta shares it, without asking on every message', function () {
+    Http::swap(new HttpFactory);
+    Http::fake([
+        'graph.facebook.com/v27.0/psid-anon*' => Http::response(['first_name' => 'Edrian', 'last_name' => 'Ramos', 'profile_pic' => 'https://cdn.test/edrian.jpg']),
+        'graph.facebook.com/*' => Http::response(['message_id' => 'mid.x']),
+    ]);
+    $conversation = MessengerConversation::query()->create(['psid' => 'psid-anon']);
+    $message = fn (string $mid) => messengerEvent([
+        'sender' => ['id' => 'psid-anon'],
+        'timestamp' => now()->getTimestampMs(),
+        'message' => ['mid' => $mid, 'text' => 'Hello'],
+    ]);
+
+    // Straight to the processor: one app instance re-runs every earlier
+    // request's after-response work on each test request, which would
+    // double-count lookups that production makes once.
+    $processor = app(MessengerWebhookProcessor::class);
+    $processor->handle($message('m_a'));
+    $processor->handle($message('m_b'));
+    app()->terminate();
+
+    expect($conversation->refresh()->name)->toBe('Edrian Ramos')
+        ->and($conversation->avatar_url)->toBe('https://cdn.test/edrian.jpg');
+
+    $profileLookups = collect(Http::recorded())->filter(fn ($pair) => str_contains($pair[0]->url(), '/psid-anon'));
+    expect($profileLookups)->toHaveCount(1);
 });

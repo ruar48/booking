@@ -11,6 +11,7 @@ use App\Integrations\Meta\MessengerException;
 use App\Models\MessengerConversation;
 use App\Models\MessengerMessage;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -227,9 +228,7 @@ class MessengerWebhookProcessor
     {
         $conversation = MessengerConversation::query()->firstOrCreate(['psid' => $psid]);
 
-        if ($conversation->wasRecentlyCreated) {
-            $this->fetchProfileAfterResponse($conversation);
-        }
+        $this->fetchProfileAfterResponse($conversation);
 
         return $conversation;
     }
@@ -237,9 +236,22 @@ class MessengerWebhookProcessor
     /**
      * Name and photo for the inbox. Optional: Meta only shares them once the
      * app has profile access, and the inbox has a fallback name.
+     *
+     * Asked again from time to time rather than once: a chat that arrived
+     * before Meta granted profile access gets its name later, and Meta's
+     * photo links expire after a few days.
      */
     private function fetchProfileAfterResponse(MessengerConversation $conversation): void
     {
+        $missing = $conversation->name === null || $conversation->avatar_url === null;
+        $retryAfter = $missing ? now()->addHours(6) : now()->addDays(3);
+
+        // Cache::add only succeeds when no attempt is on record, so a busy
+        // chat asks Meta at most once per interval.
+        if (! Cache::add("messenger:profile:{$conversation->id}", true, $retryAfter)) {
+            return;
+        }
+
         $client = $this->client;
 
         dispatch(function () use ($client, $conversation): void {
