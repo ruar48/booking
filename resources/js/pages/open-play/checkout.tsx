@@ -3,10 +3,12 @@ import { CalendarDays, CheckCircle2, Clock, MapPin, PartyPopper, QrCode, ShieldC
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { MessengerConnectCard } from '@/components/messenger-widget';
 import { ThermalReceipt } from '@/components/thermal-receipt';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useMessengerPrompt } from '@/hooks/use-messenger-prompt';
 import { useOpenPlayPaymentChannel } from '@/hooks/use-open-play-payment-channel';
 import { agreementPayload, showCheckoutErrors } from '@/lib/checkout-agreement';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
@@ -471,8 +473,17 @@ function PaidCard({
     fee: ConvenienceFee | null;
 }) {
     const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
+    const { needsConnect } = useMessengerPrompt();
+    const [messengerDismissed, setMessengerDismissed] = useState(false);
+    // Hold the redirect while we ask them to connect Messenger; it carries on
+    // once they connect or choose "Maybe later".
+    const holdForMessenger = needsConnect && !messengerDismissed;
 
     useEffect(() => {
+        if (holdForMessenger) {
+            return;
+        }
+
         if (secondsLeft <= 0) {
             router.visit(openPlayJoin(session));
 
@@ -482,7 +493,7 @@ function PaidCard({
         const timeout = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
 
         return () => window.clearTimeout(timeout);
-    }, [secondsLeft, session]);
+    }, [secondsLeft, session, holdForMessenger]);
 
     return (
         <Card className="border-emerald-500/20">
@@ -497,9 +508,13 @@ function PaidCard({
                           : ''}
                     You&apos;re registered for {session.title} — see you on the court.
                 </p>
-                <p className="text-muted-foreground text-xs">
-                    A receipt has been sent to your email. Redirecting to your session details in {secondsLeft}s…
-                </p>
+                {holdForMessenger ? (
+                    <MessengerConnectCard onDismiss={() => setMessengerDismissed(true)} />
+                ) : (
+                    <p className="text-muted-foreground text-xs">
+                        A receipt has been sent to your email. Redirecting to your session details in {secondsLeft}s…
+                    </p>
+                )}
                 <Button asChild className="mt-2">
                     <Link href={openPlayJoin(session)}>View session now</Link>
                 </Button>

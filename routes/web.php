@@ -7,7 +7,6 @@ use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MessengerWebhookController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PaymongoWebhookController;
-use App\Http\Controllers\SupportChatController;
 use App\Http\Middleware\VerifyMessengerSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Broadcast;
@@ -29,12 +28,6 @@ Route::get('webhooks/messenger', [MessengerWebhookController::class, 'verify'])-
 Route::post('webhooks/messenger', [MessengerWebhookController::class, 'handle'])
     ->middleware(VerifyMessengerSignature::class)
     ->name('webhooks.messenger');
-
-// Open to guests so the widget works on the public landing page; throttled
-// because every call costs money upstream.
-Route::post('support/chat', SupportChatController::class)
-    ->middleware('throttle:12,1')
-    ->name('support.chat');
 
 // Channel-auth endpoint for the Pusher connection, with logging on top of the
 // default Broadcast::auth() behaviour to make denied subscriptions debuggable.

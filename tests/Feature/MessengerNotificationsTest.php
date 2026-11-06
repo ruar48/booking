@@ -458,3 +458,39 @@ test('setup submits each template with its URL button example nested the way Met
             && ! array_key_exists('url_suffix_example', $button);
     });
 });
+
+// --- Floating prompt ---------------------------------------------------------
+
+test('the floating prompt asks customers to connect until they have, and stays out of staff\'s way', function () {
+    $this->withoutVite();
+    $customer = User::factory()->create();
+
+    $this->get(route('home'))
+        ->assertInertia(fn ($page) => $page
+            ->where('messengerPrompt.available', true)
+            ->where('messengerPrompt.signedIn', false)
+            ->where('messengerPrompt.chatUrl', 'https://m.me/venuepage'));
+
+    $this->actingAs($customer)->get(route('messenger.edit'))
+        ->assertInertia(fn ($page) => $page
+            ->where('messengerPrompt.signedIn', true)
+            ->where('messengerPrompt.connected', false));
+
+    linkedConversation($customer);
+
+    $this->actingAs($customer)->get(route('messenger.edit'))
+        ->assertInertia(fn ($page) => $page->where('messengerPrompt.connected', true));
+
+    $this->actingAs(venueAdmin())->get(route('messenger.edit'))
+        ->assertInertia(fn ($page) => $page->where('messengerPrompt', null));
+});
+
+test('the floating prompt is switched off while Messenger is not configured', function () {
+    $this->withoutVite();
+    config(['services.messenger.page_access_token' => null]);
+
+    $this->actingAs(User::factory()->create())->get(route('messenger.edit'))
+        ->assertInertia(fn ($page) => $page
+            ->where('messengerPrompt.available', false)
+            ->where('messengerPrompt.chatUrl', null));
+});

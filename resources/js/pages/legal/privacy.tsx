@@ -110,8 +110,7 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                         not stored) and, while you&apos;re signed in, which pages you open.
                     </li>
                     <li>
-                        <strong>Messages:</strong> the notifications we send you in the app and by email. Questions you
-                        type in the support chat are answered automatically on our server and are not saved.
+                        <strong>Messages:</strong> the notifications we send you in the app and by email.
                     </li>
                     <li>
                         <strong>Facebook Messenger:</strong> when you message our Facebook Page, Meta gives us your
@@ -317,9 +316,6 @@ export default function Privacy({ business, document: meta, retention }: Props) 
                     <li>
                         <strong>Record of staff changes:</strong> kept so that changes to bookings and payments can be
                         accounted for.
-                    </li>
-                    <li>
-                        <strong>Support chat:</strong> not stored.
                     </li>
                     <li>
                         <strong>Messenger chats with our Page:</strong> kept so our staff can see the conversation

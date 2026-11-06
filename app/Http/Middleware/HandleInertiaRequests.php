@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\MessengerConversation;
 use App\Models\Setting;
+use App\Services\Messenger\MessengerConnectionService;
 use App\Services\Messenger\MessengerInboxService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -56,6 +57,7 @@ class HandleInertiaRequests extends Middleware
                 ? $request->user()->unreadNotifications()->count()
                 : 0,
             'messengerUnread' => fn () => $this->messengerUnread($request),
+            'messengerPrompt' => fn () => $this->messengerPrompt($request),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'support' => fn () => $this->supportContact(),
         ];
@@ -110,6 +112,26 @@ class HandleInertiaRequests extends Middleware
             return app(MessengerInboxService::class)->unreadConversationCount();
         } catch (\Throwable) {
             return 0;
+        }
+    }
+
+    /**
+     * Drives the floating Messenger button and the "get notified" card.
+     * Null for staff, who work from the inbox instead, and whenever it can't
+     * be worked out — the button is optional, the page is not.
+     *
+     * @return array{available: bool, signedIn: bool, connected: bool, chatUrl: string|null}|null
+     */
+    private function messengerPrompt(Request $request): ?array
+    {
+        if ($request->user()?->can('viewAny', MessengerConversation::class)) {
+            return null;
+        }
+
+        try {
+            return app(MessengerConnectionService::class)->prompt($request->user());
+        } catch (\Throwable) {
+            return null;
         }
     }
 

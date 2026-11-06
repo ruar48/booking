@@ -28,9 +28,18 @@ class MessengerClient
      */
     public function conversationUrl(string $ref): string
     {
+        return $this->pageChatUrl().'?ref='.rawurlencode($ref);
+    }
+
+    /**
+     * Opens a chat with the Page, for anyone who just wants to talk to the
+     * venue. Their messages land in the staff inbox.
+     */
+    public function pageChatUrl(): string
+    {
         $page = config('services.messenger.page_username') ?: $this->pageId();
 
-        return 'https://m.me/'.rawurlencode((string) $page).'?ref='.rawurlencode($ref);
+        return 'https://m.me/'.rawurlencode((string) $page);
     }
 
     /**

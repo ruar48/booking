@@ -16,6 +16,13 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             notificationsCount: number;
             messengerUnread: number;
+            /** Null for staff, and when it could not be worked out. */
+            messengerPrompt: {
+                available: boolean;
+                signedIn: boolean;
+                connected: boolean;
+                chatUrl: string | null;
+            } | null;
             support?: {
                 email: string | null;
                 phone: string | null;

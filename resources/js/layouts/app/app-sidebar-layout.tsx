@@ -6,8 +6,8 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import { BottomNav } from '@/components/bottom-nav';
 import { InertiaEffects } from '@/components/inertia-effects';
+import { MessengerWidget } from '@/components/messenger-widget';
 import { PageTransition } from '@/components/page-transition';
-import { SupportWidget } from '@/components/support-widget';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -28,7 +28,7 @@ export default function AppSidebarLayout({
                 <PageTransition className="flex flex-1 flex-col">{children}</PageTransition>
             </AppContent>
             <BottomNav />
-            <SupportWidget />
+            <MessengerWidget />
             <InertiaEffects />
         </AppShell>
     );

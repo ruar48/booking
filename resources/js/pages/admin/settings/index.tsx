@@ -499,7 +499,7 @@ export default function AdminSettingsIndex({
                                         icon={Store}
                                         tone="emerald"
                                         title="About the venue"
-                                        description="Shown on your public page and in the support assistant."
+                                        description="Shown on your public page."
                                     >
                                         <div className="grid gap-2 sm:col-span-2">
                                             <Label htmlFor="venue-description">

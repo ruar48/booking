@@ -2,8 +2,8 @@ import { usePage } from '@inertiajs/react';
 import { Mail, Phone } from 'lucide-react';
 
 import { LegalLinks } from '@/components/legal-links';
+import { MessengerWidget } from '@/components/messenger-widget';
 import { SiteHeader, Wordmark } from '@/components/site-header';
-import { SupportWidget } from '@/components/support-widget';
 import { brand } from '@/lib/brand';
 
 /**
@@ -57,7 +57,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 </div>
             </footer>
 
-            <SupportWidget avoidBottomNav={false} />
+            <MessengerWidget avoidBottomNav={false} />
         </div>
     );
 }

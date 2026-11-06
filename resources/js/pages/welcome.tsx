@@ -37,10 +37,10 @@ import { CourtRates } from '@/components/court-rates';
 import { CourtRules } from '@/components/court-rules';
 import { BookYourCourt, PanelTitle, useCourtBooking } from '@/components/home-court-booking';
 import { LegalLinks } from '@/components/legal-links';
+import { MessengerWidget } from '@/components/messenger-widget';
 import { PaddleDuel } from '@/components/paddle-duel';
 import { PhotoLightbox } from '@/components/photo-lightbox';
 import { SiteHeader, splitName, Wordmark } from '@/components/site-header';
-import { SupportWidget } from '@/components/support-widget';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1251,7 +1251,7 @@ export default function Welcome({
                 <SiteFooter venue={venue} />
             </div>
 
-            <SupportWidget avoidBottomNav={false} />
+            <MessengerWidget avoidBottomNav={false} />
         </>
     );
 }

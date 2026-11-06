@@ -3,7 +3,6 @@ import FaqController from './FaqController'
 import LegalController from './LegalController'
 import PaymongoWebhookController from './PaymongoWebhookController'
 import MessengerWebhookController from './MessengerWebhookController'
-import SupportChatController from './SupportChatController'
 import ResourceBookingController from './ResourceBookingController'
 import OpenPlay from './OpenPlay'
 import Rental from './Rental'
@@ -25,7 +24,6 @@ FaqController: Object.assign(FaqController, FaqController),
 LegalController: Object.assign(LegalController, LegalController),
 PaymongoWebhookController: Object.assign(PaymongoWebhookController, PaymongoWebhookController),
 MessengerWebhookController: Object.assign(MessengerWebhookController, MessengerWebhookController),
-SupportChatController: Object.assign(SupportChatController, SupportChatController),
 ResourceBookingController: Object.assign(ResourceBookingController, ResourceBookingController),
 OpenPlay: Object.assign(OpenPlay, OpenPlay),
 Rental: Object.assign(Rental, Rental),

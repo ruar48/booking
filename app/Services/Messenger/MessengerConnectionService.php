@@ -47,6 +47,24 @@ class MessengerConnectionService
     }
 
     /**
+     * What the floating Messenger button and the post-payment card need on
+     * every page: whether to offer "connect" or just "chat with us".
+     *
+     * @return array{available: bool, signedIn: bool, connected: bool, chatUrl: string|null}
+     */
+    public function prompt(?User $user): array
+    {
+        $available = $this->client->isConfigured();
+
+        return [
+            'available' => $available,
+            'signedIn' => $user !== null,
+            'connected' => $user !== null && $available && $user->messengerConversation()->exists(),
+            'chatUrl' => $available ? $this->client->pageChatUrl() : null,
+        ];
+    }
+
+    /**
      * A fresh, single-use m.me link that connects whoever opens it to this
      * user's account, or null while Messenger isn't configured.
      */

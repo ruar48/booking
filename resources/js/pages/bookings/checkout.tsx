@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
+import { MessengerConnectCard } from '@/components/messenger-widget';
 import { StatusBadge } from '@/components/status-badge';
 import { ThermalReceipt } from '@/components/thermal-receipt';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +29,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
+import { useMessengerPrompt } from '@/hooks/use-messenger-prompt';
 import { agreementPayload, showCheckoutErrors } from '@/lib/checkout-agreement';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -701,8 +703,17 @@ const REDIRECT_SECONDS = 3;
 
 function PaidPanel({ booking, amount }: { booking: ResourceBooking; amount?: number | null }) {
     const [secondsLeft, setSecondsLeft] = useState(REDIRECT_SECONDS);
+    const { needsConnect } = useMessengerPrompt();
+    const [messengerDismissed, setMessengerDismissed] = useState(false);
+    // Hold the redirect while we ask them to connect Messenger; it carries on
+    // once they connect or choose "Maybe later".
+    const holdForMessenger = needsConnect && !messengerDismissed;
 
     useEffect(() => {
+        if (holdForMessenger) {
+            return;
+        }
+
         if (secondsLeft <= 0) {
             router.visit(bookingsShow(booking));
 
@@ -712,7 +723,7 @@ function PaidPanel({ booking, amount }: { booking: ResourceBooking; amount?: num
         const timeout = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
 
         return () => window.clearTimeout(timeout);
-    }, [secondsLeft, booking]);
+    }, [secondsLeft, booking, holdForMessenger]);
 
     return (
         <Card className="border-emerald-500/20">
@@ -723,9 +734,13 @@ function PaidPanel({ booking, amount }: { booking: ResourceBooking; amount?: num
                     {amount != null ? `${formatCurrency(amount)} paid. ` : ''}
                     Your reservation is confirmed — see you on the court.
                 </p>
-                <p className="text-muted-foreground text-xs">
-                    Redirecting to your booking in {secondsLeft}s…
-                </p>
+                {holdForMessenger ? (
+                    <MessengerConnectCard onDismiss={() => setMessengerDismissed(true)} />
+                ) : (
+                    <p className="text-muted-foreground text-xs">
+                        Redirecting to your booking in {secondsLeft}s…
+                    </p>
+                )}
                 <Button asChild className="mt-2">
                     <Link href={bookingsShow(booking)}>View booking now</Link>
                 </Button>
