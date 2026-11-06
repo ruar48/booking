@@ -8,6 +8,9 @@ const DISMISS_KEY = 'messenger-prompt-dismissed-until';
 const DISMISS_DAYS = 3;
 const POLL_MS = 3000;
 const WAIT_LIMIT_MS = 5 * 60 * 1000;
+// When the link works it connects within seconds; only after this long is the
+// connect-code fallback offered.
+const STUCK_AFTER_MS = 20 * 1000;
 
 function readDismissed(): boolean {
     try {
@@ -31,6 +34,7 @@ export function useMessengerPrompt() {
 
     const needsConnect = Boolean(prompt?.available && prompt.signedIn && !prompt.connected);
     const waiting = startedWaiting && needsConnect;
+    const [stuck, setStuck] = useState(false);
 
     // The link is completed by Meta's webhook, not by this page, so reload
     // the prompt until it says connected (or we give up).
@@ -41,10 +45,12 @@ export function useMessengerPrompt() {
 
         const interval = window.setInterval(() => router.reload({ only: ['messengerPrompt'] }), POLL_MS);
         const timeout = window.setTimeout(() => setStartedWaiting(false), WAIT_LIMIT_MS);
+        const stuckTimer = window.setTimeout(() => setStuck(true), STUCK_AFTER_MS);
 
         return () => {
             window.clearInterval(interval);
             window.clearTimeout(timeout);
+            window.clearTimeout(stuckTimer);
         };
     }, [waiting]);
 
@@ -71,6 +77,8 @@ export function useMessengerPrompt() {
         shouldNudge: needsConnect && !dismissed,
         dismiss,
         waiting,
+        /** Tapped Connect a while ago and still not linked: offer the code. */
+        stuck: stuck && needsConnect,
         connectHref: connect().url,
         startWaiting: () => setStartedWaiting(true),
     };

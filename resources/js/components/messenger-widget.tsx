@@ -27,7 +27,7 @@ export function MessengerWidget({
     avoidBottomNav?: boolean;
 } = {}) {
     const { support, name } = usePage().props;
-    const { prompt, needsConnect, shouldNudge, dismiss, waiting, connectHref, startWaiting } = useMessengerPrompt();
+    const { prompt, needsConnect, shouldNudge, dismiss, waiting, stuck, connectHref, startWaiting } = useMessengerPrompt();
     const [open, setOpen] = useState(false);
 
     if (!prompt?.available) {
@@ -81,7 +81,7 @@ export function MessengerWidget({
                                 </ul>
                                 <ConnectButton href={connectHref} onClick={startWaiting} />
                                 {waiting && <WaitingNote />}
-                                <CodeHint />
+                                {stuck && <CodeHint />}
                             </>
                         ) : prompt.signedIn ? (
                             <>
@@ -178,7 +178,7 @@ export function MessengerWidget({
  * they most want to hear back from us. Hides itself once connected.
  */
 export function MessengerConnectCard({ onDismiss }: { onDismiss: () => void }) {
-    const { needsConnect, waiting, connectHref, startWaiting } = useMessengerPrompt();
+    const { needsConnect, waiting, stuck, connectHref, startWaiting } = useMessengerPrompt();
 
     if (!needsConnect) {
         return null;
@@ -202,7 +202,7 @@ export function MessengerConnectCard({ onDismiss }: { onDismiss: () => void }) {
                 </Button>
             </div>
             {waiting && <WaitingNote className="mt-2" />}
-            <CodeHint className="mt-2 text-left" />
+            {stuck && <CodeHint className="mt-2 text-left" />}
         </div>
     );
 }

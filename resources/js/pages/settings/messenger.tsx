@@ -25,10 +25,15 @@ const MESSENGER_GRADIENT = 'bg-[linear-gradient(135deg,#0866ff_0%,#a033ff_60%,#f
 // Stop waiting for the webhook after this long. The link itself lasts 30 minutes.
 const WAIT_LIMIT_MS = 5 * 60 * 1000;
 
+// Offer the connect code only once the button has had a fair chance: when the
+// link works it connects within seconds and nobody sees a code.
+const STUCK_AFTER_MS = 20 * 1000;
+
 export default function Messenger({ messenger }: { messenger: MessengerStatus }) {
     const [startedWaiting, setWaiting] = useState(false);
     // Done waiting the moment the webhook links the account.
     const waiting = startedWaiting && !messenger.connected;
+    const [stuck, setStuck] = useState(false);
     const [confirmDisconnect, setConfirmDisconnect] = useState(false);
     const [testing, setTesting] = useState(false);
 
@@ -45,9 +50,11 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
 
         start();
         const timeout = window.setTimeout(() => setWaiting(false), WAIT_LIMIT_MS);
+        const stuckTimer = window.setTimeout(() => setStuck(true), STUCK_AFTER_MS);
 
         return () => {
             window.clearTimeout(timeout);
+            window.clearTimeout(stuckTimer);
             stop();
         };
     }, [waiting]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -124,9 +131,18 @@ export default function Messenger({ messenger }: { messenger: MessengerStatus })
                                     </p>
                                 )}
 
-                                {messenger.connectCode && (
-                                    <ConnectCode code={messenger.connectCode} onCopied={() => setWaiting(true)} />
-                                )}
+                                {messenger.connectCode &&
+                                    (stuck ? (
+                                        <ConnectCode code={messenger.connectCode} onCopied={() => setWaiting(true)} />
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() => setStuck(true)}
+                                            className="text-muted-foreground hover:text-foreground w-fit text-xs underline underline-offset-2"
+                                        >
+                                            Having trouble connecting?
+                                        </button>
+                                    ))}
                             </div>
                         )}
 
