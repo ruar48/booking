@@ -14,6 +14,7 @@ use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Policy;
 use App\Services\OpenPlayRegistrationService;
+use App\Services\OpenPlayStackService;
 use App\Services\PaymentReceiptPresenter;
 use App\Services\PaymentService;
 use App\Support\ConvenienceFee;
@@ -29,6 +30,7 @@ class OpenPlayJoinController extends Controller
         private readonly OpenPlayRegistrationService $registrationService,
         private readonly PaymentService $paymentService,
         private readonly PaymentReceiptPresenter $receipts,
+        private readonly OpenPlayStackService $stackService,
     ) {}
 
     public function browse(Request $request): Response
@@ -91,6 +93,7 @@ class OpenPlayJoinController extends Controller
 
         return Inertia::render('open-play/show', [
             'session' => $open_play,
+            'stack' => $this->stackService->board($open_play),
         ]);
     }
 
@@ -132,6 +135,8 @@ class OpenPlayJoinController extends Controller
         return Inertia::render('open-play/mine', [
             'session' => $open_play,
             'registrationId' => $registration->id,
+            'stack' => $this->stackService->board($open_play),
+            'myPlayerId' => $open_play->seatedPlayerIdFor($request->user()),
         ]);
     }
 
@@ -185,6 +190,7 @@ class OpenPlayJoinController extends Controller
             'isFull' => $open_play->max_players !== null && $registrationsCount >= $open_play->max_players,
             'needsProfile' => $player === null || $player->birthdate === null,
             'myRegistrationId' => $myRegistration?->payment_status === PaymentStatus::Paid ? $myRegistration->id : null,
+            'stack' => $this->stackService->board($open_play),
         ]);
     }
 

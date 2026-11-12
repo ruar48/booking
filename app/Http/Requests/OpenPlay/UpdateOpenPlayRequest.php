@@ -3,9 +3,9 @@
 namespace App\Http\Requests\OpenPlay;
 
 use App\Enums\BracketGenerationMode;
+use App\Enums\OpenPlayFormat;
 use App\Enums\TeamSize;
 use App\Enums\TournamentFormat;
-use App\Models\OpenPlaySession;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -33,8 +33,10 @@ class UpdateOpenPlayRequest extends FormRequest
             'price_per_player' => ['nullable', 'numeric', 'min:0'],
             'max_players' => ['nullable', 'integer', 'min:1', 'max:100'],
             'skill_level' => ['required', 'string', Rule::in(['all_levels', 'beginner', 'intermediate', 'advanced'])],
-            'bracket_format' => ['required', new Enum(TournamentFormat::class)],
-            'bracket_generation' => ['required', new Enum(BracketGenerationMode::class)],
+            'format' => ['required', new Enum(OpenPlayFormat::class)],
+            // Only a bracket session has (or keeps) bracket settings.
+            'bracket_format' => ['exclude_unless:format,bracket', 'required', new Enum(TournamentFormat::class)],
+            'bracket_generation' => ['exclude_unless:format,bracket', 'required', new Enum(BracketGenerationMode::class)],
             'team_size' => ['required', new Enum(TeamSize::class)],
             'resource_ids' => ['nullable', 'array'],
             'resource_ids.*' => ['integer', Rule::exists('resources', 'id')],

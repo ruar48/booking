@@ -32,10 +32,11 @@ class OpenPlayRegistrationController extends Controller
             ? Player::query()->findOrFail($validated['partner_player_id'])
             : null;
 
-        $error = $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
+        // register() returns the new registration, or an error message.
+        $result = $this->registrationService->register($open_play, $player, $partner, $request->user()->id);
 
-        if ($error !== null) {
-            Inertia::flash('toast', ['type' => 'error', 'message' => __($error)]);
+        if (is_string($result)) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => __($result)]);
 
             return back();
         }

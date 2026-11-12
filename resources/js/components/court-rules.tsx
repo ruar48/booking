@@ -9,11 +9,13 @@ import {
     Recycle,
     ShieldAlert,
     Users,
+    UtensilsCrossed,
     WineOff,
     Wrench,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
+import { sportLabel } from '@/lib/sport';
 import { cn } from '@/lib/utils';
 import { terms } from '@/routes/legal';
 
@@ -24,11 +26,12 @@ function ruleIcon(rule: string): LucideIcon {
         [/shoe|footwear|sole/, Footprints],
         [/smok|vap|cigar/, CigaretteOff],
         [/alcohol|liquor|beer|drunk/, WineOff],
+        [/food|drink|eat/, UtensilsCrossed],
         [/child|kid|minor|guardian/, Baby],
         [/pet|dog|animal/, PawPrint],
         // Before the equipment rule: "report any injury or damage to staff" is about safety.
         [/staff|injur|safety|emergenc/, ShieldAlert],
-        [/paddle|ball|rent|damage|equipment|replacement/, Wrench],
+        [/paddle|ball|cue|chalk|cloth|rack|rent|damage|equipment|replacement/, Wrench],
         [/clean|trash|litter|bin|garbage/, Recycle],
         [/time|slot|hour|minute|warm-?up|late/, Clock],
         [/person|people|player|guest|maximum|max\b/, Users],
@@ -41,14 +44,17 @@ function ruleIcon(rule: string): LucideIcon {
  * The venue's house rules (Policies with the "court rules" placement).
  *
  * `tone="site"` matches the public home page, which keeps its light palette
- * whatever the visitor's theme; the default follows the app theme.
+ * whatever the visitor's theme; the default follows the app theme. Pass the
+ * selected `sport` when the rules were picked for it, to say so in the title.
  */
 export function CourtRules({
     rules,
+    sport,
     tone = 'app',
     className,
 }: {
     rules: string[];
+    sport?: string;
     tone?: 'app' | 'site';
     className?: string;
 }) {
@@ -78,7 +84,7 @@ export function CourtRules({
                         site ? 'text-slate-500' : 'text-muted-foreground',
                     )}
                 >
-                    Court rules &amp; policies
+                    {sport ? `${sportLabel(sport)} rules & policies` : 'Court rules & policies'}
                 </h2>
                 <Link
                     href={`${terms().url}#house-rules`}

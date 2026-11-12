@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePoll } from '@inertiajs/react';
 import {
     Check,
     CircleDollarSign,
@@ -24,6 +24,7 @@ import {
     useMatchupEditor,
 } from '@/components/open-play-editable-bracket';
 import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
+import { OpenPlayStackBoard } from '@/components/open-play-stack-board';
 import { StatCard } from '@/components/stat-card';
 import { PageHeader } from '@/components/page-header';
 import { PlayerSearchInput } from '@/components/player-search-input';
@@ -56,6 +57,7 @@ import {
     entryLabel,
     isEntryInMatch,
     matchRoundLabel,
+    registersAsPairs,
 } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
 import { bracketFull, edit, index as openPlayIndex } from '@/routes/open-play';
@@ -72,10 +74,18 @@ import {
     updatePayment as updateRegistrationPayment,
 } from '@/routes/open-play/registrations';
 import { update as updateTargetScore } from '@/routes/open-play/target-score';
-import type { OpenPlaySession, OpenPlayMatch, OpenPlayRegistration, Player } from '@/types/booking';
+import type {
+    OpenPlaySession,
+    OpenPlayMatch,
+    OpenPlayRegistration,
+    OpenPlayStackBoard as StackBoard,
+    Player,
+} from '@/types/booking';
 
 type Props = {
     session: OpenPlaySession;
+    /** Null for a bracket session. */
+    stack: StackBoard | null;
 };
 
 function MatchRow({
@@ -326,7 +336,7 @@ function ManualMatchupForm({
     );
 }
 
-export default function OpenPlayManage({ session }: Props) {
+export default function OpenPlayManage({ session, stack }: Props) {
     const registrations = session.registrations ?? [];
     const paidCount = registrations.filter((r) => r.payment_status === 'paid').length;
     const matches = session.matches ?? [];
@@ -338,7 +348,13 @@ export default function OpenPlayManage({ session }: Props) {
             ? (finalMatch.winner ?? null)
             : null;
 
-    const isDoublesSession = session.team_size === 'doubles';
+    // Fixed partners only exist in a doubles bracket; paddle stacking regroups every game.
+    const isDoublesSession = registersAsPairs(session);
+    const paddleStacking = stack !== null;
+
+    // Keeps the courts and the line current when another staff phone (or a
+    // player stacking from theirs) changes them.
+    usePoll(5000, { only: ['stack'] }, { autoStart: paddleStacking });
 
     const [primaryPlayer, setPrimaryPlayer] = useState<Player | null>(null);
     const [partnerPlayer, setPartnerPlayer] = useState<Player | null>(null);
@@ -533,8 +549,14 @@ export default function OpenPlayManage({ session }: Props) {
                     />
                     <StatCard
                         label="Format"
-                        value={isDoublesSession ? '2v2' : '1v1'}
-                        caption={isDoublesSession ? 'Doubles — pairs' : 'Singles'}
+                        value={paddleStacking ? 'Stacking' : session.team_size === 'doubles' ? '2v2' : '1v1'}
+                        caption={
+                            paddleStacking
+                                ? `${stack.playersPerCourt} per court · ${session.team_size === 'doubles' ? 'doubles' : 'singles'}`
+                                : isDoublesSession
+                                  ? 'Doubles — pairs'
+                                  : 'Singles'
+                        }
                         icon={Users}
                         tone="violet"
                     />
@@ -747,7 +769,10 @@ export default function OpenPlayManage({ session }: Props) {
                     <OpenPlayJoinQrCard session={session} />
                 </div>
 
-                {/* Full width — brackets need every pixel they can get. */}
+                {stack ? (
+                    <OpenPlayStackBoard session={session} board={stack} staff />
+                ) : (
+                /* Full width — brackets need every pixel they can get. */
                 <div className="grid w-full gap-6">
                     <Card className="min-w-0">
                         <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -1056,6 +1081,7 @@ export default function OpenPlayManage({ session }: Props) {
                         </CardContent>
                     </Card>
                 </div>
+                )}
             </div>
 
             <ConfirmDialog

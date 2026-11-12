@@ -9,6 +9,7 @@ use App\Jobs\AnnounceOpenPlayOnMessenger;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
 use App\Models\Resource;
+use App\Services\OpenPlayStackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,13 +19,17 @@ use Inertia\Response;
 
 class OpenPlayController extends Controller
 {
+    public function __construct(
+        private readonly OpenPlayStackService $stackService,
+    ) {}
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', OpenPlaySession::class);
 
         $search = $request->string('search')->value() ?: null;
         $status = $request->string('status')->value() ?: null;
-        $bracketFormat = $request->string('bracket_format')->value() ?: null;
+        $format = $request->string('format')->value() ?: null;
         $dateFrom = $request->string('date_from')->value() ?: null;
         $dateTo = $request->string('date_to')->value() ?: null;
         $sort = $request->string('sort')->value() === 'latest' ? 'latest' : 'upcoming';
@@ -33,7 +38,7 @@ class OpenPlayController extends Controller
             ->when($search !== null, fn ($query) => $query->where('title', 'like', "%{$search}%"))
             ->when($status === 'upcoming', fn ($query) => $query->where('starts_at', '>=', now()))
             ->when($status === 'past', fn ($query) => $query->where('starts_at', '<', now()))
-            ->when($bracketFormat !== null, fn ($query) => $query->where('bracket_format', $bracketFormat))
+            ->when($format !== null, fn ($query) => $query->ofFormat($format))
             ->when($dateFrom !== null, fn ($query) => $query->whereDate('starts_at', '>=', $dateFrom))
             ->when($dateTo !== null, fn ($query) => $query->whereDate('starts_at', '<=', $dateTo))
             ->withSum('registrations as registrations_count', DB::raw('CASE WHEN partner_player_id IS NULL THEN 1 ELSE 2 END'))
@@ -55,7 +60,7 @@ class OpenPlayController extends Controller
             'filters' => [
                 'search' => $search,
                 'status' => $status,
-                'bracket_format' => $bracketFormat,
+                'format' => $format,
                 'date_from' => $dateFrom,
                 'date_to' => $dateTo,
                 'sort' => $sort,
@@ -141,6 +146,8 @@ class OpenPlayController extends Controller
 
         return Inertia::render('open-play/manage', [
             'session' => $open_play,
+            // Null for a bracket session.
+            'stack' => $this->stackService->board($open_play, forStaff: true),
         ]);
     }
 

@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\PaymentStatus;
-use App\Enums\TeamSize;
 use App\Exceptions\PaymentUnavailableException;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;
@@ -37,7 +36,7 @@ class OpenPlayRegistrationService
             'amount' => $requiresPayment ? $event->price_per_player : 0,
         ];
 
-        if ($event->team_size !== TeamSize::Doubles) {
+        if (! $event->registersAsPairs()) {
             return OpenPlayRegistration::query()->create([
                 'open_play_session_id' => $event->id,
                 'player_id' => $player->id,
@@ -97,8 +96,8 @@ class OpenPlayRegistrationService
      */
     public function registerWithFriends(OpenPlaySession $event, Player $lead, Collection $friends, int $createdBy): OpenPlayRegistration|string
     {
-        if ($event->team_size === TeamSize::Doubles) {
-            return 'Paying for friends is only available for singles sessions.';
+        if ($event->registersAsPairs()) {
+            return 'Paying for friends is not available for doubles brackets — register as a pair instead.';
         }
         $friends = $friends->unique('id')->values();
 
@@ -234,7 +233,7 @@ class OpenPlayRegistrationService
             }
         }
 
-        if ($event->team_size === TeamSize::Doubles) {
+        if ($event->registersAsPairs()) {
             $this->pairRandomly($event);
         }
 
@@ -248,7 +247,7 @@ class OpenPlayRegistrationService
      */
     public function pairRandomly(OpenPlaySession $event): int
     {
-        if ($event->team_size !== TeamSize::Doubles) {
+        if (! $event->registersAsPairs()) {
             return 0;
         }
 

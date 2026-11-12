@@ -14,7 +14,7 @@ import {
     subMonths,
 } from 'date-fns';
 import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -78,6 +78,8 @@ type Props = {
     submitLabel?: string;
     /** Keyed by "Y-m-d H:00". Covers the next 7 days; other dates show nothing. */
     hourlyWeather?: Record<string, HourForecast>;
+    /** Told the selected sport tab on mount and on every change. */
+    onSportChange?: (sport: Resource['sport']) => void;
 };
 
 
@@ -241,6 +243,7 @@ export function CourtScheduleGrid({
     onSubmit,
     submitLabel,
     hourlyWeather = {},
+    onSportChange,
 }: Props) {
     const pageErrors = (usePage().props as { errors?: Record<string, string> }).errors ?? {};
     const effectiveErrors = errors ?? pageErrors;
@@ -260,6 +263,10 @@ export function CourtScheduleGrid({
         () => availableSports[0] ?? 'pickleball',
     );
     const [datePickerOpen, setDatePickerOpen] = useState(false);
+
+    useEffect(() => {
+        onSportChange?.(selectedSport);
+    }, [selectedSport, onSportChange]);
 
     const visibleCourts = useMemo(
         () => courts.filter((court) => court.sport === selectedSport),

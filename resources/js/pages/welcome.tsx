@@ -48,6 +48,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleMapEmbed, venueAddress, venueMapUrls } from '@/components/venue-map';
 import { useShorterColumn } from '@/hooks/use-shorter-column';
 import { brand } from '@/lib/brand';
+import { EMPTY_RULE_BOOK, rulesForSport } from '@/lib/court-rules';
 import { formatClock, formatCurrency, formatDate, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { dashboard, register } from '@/routes';
@@ -58,6 +59,7 @@ import {
 import type {
     Announcement,
     BookedSlot,
+    CourtRuleBook,
     DateOverride,
     GallerySection,
     HourForecast,
@@ -87,7 +89,7 @@ type Props = {
     hourlyWeather?: Record<string, HourForecast>;
     gallery?: GallerySection[];
     coaches?: PublicCoach[];
-    courtRules?: string[];
+    courtRules?: CourtRuleBook;
     rates?: VenueRates;
     // Built server-side (HomeSeoService) and also printed by the Blade root view.
     seo: HomeSeo;
@@ -1071,7 +1073,7 @@ export default function Welcome({
     hourlyWeather = {},
     gallery = [],
     coaches = [],
-    courtRules = [],
+    courtRules = EMPTY_RULE_BOOK,
     rates,
     seo,
 }: Props) {
@@ -1082,12 +1084,6 @@ export default function Welcome({
     // The rules fill whichever column is shorter: beside a long list of time
     // slots they go in the sidebar, under a short panel they go below it.
     const rulesColumn = useShorterColumn(exploreRef, sidebarRef, rulesRef);
-    const rulesCard =
-        courtRules.length > 0 ? (
-            <div ref={rulesRef}>
-                <CourtRules rules={courtRules} tone="site" />
-            </div>
-        ) : null;
     const pageUrl = typeof window !== 'undefined' ? window.location.href : '';
     const ogImage =
         typeof window !== 'undefined'
@@ -1101,6 +1097,14 @@ export default function Welcome({
         dateOverrides,
         isAuthenticated: !!auth.user,
     });
+    // Follows the booking panel's sport tab, so Billiard shows billiard rules.
+    const sportRules = rulesForSport(courtRules, booking.sport);
+    const rulesCard =
+        sportRules.length > 0 ? (
+            <div ref={rulesRef}>
+                <CourtRules rules={sportRules} sport={booking.sports.length > 1 ? booking.sport : undefined} tone="site" />
+            </div>
+        ) : null;
 
     const navigate = (key: NavKey) => {
         if (exploreTabs.some((tab) => tab.key === key)) {

@@ -1,4 +1,4 @@
-import type { OpenPlayMatch, OpenPlayRegistration } from '@/types/booking';
+import type { OpenPlayMatch, OpenPlayRegistration, OpenPlaySession } from '@/types/booking';
 
 export function entryLabel(entry?: OpenPlayRegistration | null): string {
     if (!entry) {
@@ -205,4 +205,36 @@ export function losersBracketRoundHeights(matches: OpenPlayMatch[]): Map<number,
 
 export function isEntryInMatch(match: OpenPlayMatch, registrationId: number): boolean {
     return match.entry1_id === registrationId || match.entry2_id === registrationId;
+}
+
+/** True when the session runs as paddle stacking rather than a bracket. */
+export function isPaddleStacking(session: Pick<OpenPlaySession, 'format'>): boolean {
+    return session.format === 'paddle_stacking';
+}
+
+/**
+ * Whether entries are fixed doubles pairs. Only a doubles bracket pairs
+ * players; paddle stacking regroups them every game. Mirrors
+ * OpenPlaySession::registersAsPairs().
+ */
+export function registersAsPairs(session: Pick<OpenPlaySession, 'format' | 'team_size'>): boolean {
+    return session.format === 'bracket' && session.team_size === 'doubles';
+}
+
+/** "Paddle stacking", or the bracket's format — null when none is set. */
+export function openPlayFormatLabel(session: Pick<OpenPlaySession, 'format' | 'bracket_format'>): string | null {
+    if (isPaddleStacking(session)) {
+        return 'Paddle stacking';
+    }
+
+    switch (session.bracket_format) {
+        case 'single_elimination':
+            return 'Single elimination';
+        case 'double_elimination':
+            return 'Double elimination';
+        case 'round_robin':
+            return 'Round robin';
+        default:
+            return null;
+    }
 }

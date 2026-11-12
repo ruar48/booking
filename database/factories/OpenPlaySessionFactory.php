@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\OpenPlayFormat;
 use App\Models\OpenPlaySession;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -23,5 +24,14 @@ class OpenPlaySessionFactory extends Factory
             'ends_at' => (clone $startsAt)->modify('+2 hours'),
             'location' => fake()->optional()->address(),
         ];
+    }
+
+    /** A paddle-stacking session (the default column value is a bracket). */
+    public function paddleStacking(): static
+    {
+        return $this->state(fn (): array => [
+            'format' => OpenPlayFormat::PaddleStacking,
+            'bracket_format' => null,
+        ]);
     }
 }

@@ -16,6 +16,12 @@ import {
     ReadOnlyBracketTree,
     ReadOnlyDoubleEliminationBracket,
 } from '@/components/open-play-bracket';
+import {
+    MyPaddleCard,
+    OpenPlayStackBoard,
+    OpenPlayStackHero,
+    PaddleStackingExplainer,
+} from '@/components/open-play-stack-board';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,11 +36,14 @@ import {
 } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
 import { browse as openPlayBrowse } from '@/routes/open-play';
-import type { OpenPlaySession } from '@/types/booking';
+import type { OpenPlaySession, OpenPlayStackBoard as StackBoard } from '@/types/booking';
 
 type Props = {
     session: OpenPlaySession;
     registrationId: number;
+    /** Null for a bracket session. */
+    stack: StackBoard | null;
+    myPlayerId: number | null;
 };
 
 function rankMedal(rank: number): string {
@@ -79,10 +88,32 @@ function StatCard({
     );
 }
 
-export default function OpenPlayMine({ session, registrationId }: Props) {
-    // Keeps "Your next match" current as the organizer enters scores,
-    // without the player needing to manually refresh the page.
-    usePoll(5000, { only: ['session'] });
+export default function OpenPlayMine({ session, registrationId, stack, myPlayerId }: Props) {
+    // Keeps "Your next match" (or your place in the paddle stack) current as
+    // the organizer runs the session, without a manual refresh.
+    usePoll(5000, { only: ['session', 'stack'] });
+
+    if (stack) {
+        return (
+            <>
+                <Head title={`My open play — ${session.title}`} />
+                <div className="flex flex-1 flex-col gap-6 p-4">
+                    <OpenPlayStackHero
+                        session={session}
+                        board={stack}
+                        action={
+                            <Button variant="secondary" asChild className="shrink-0">
+                                <Link href={openPlayBrowse()}>Back to Open play</Link>
+                            </Button>
+                        }
+                    />
+                    <MyPaddleCard session={session} board={stack} myPlayerId={myPlayerId} />
+                    <OpenPlayStackBoard session={session} board={stack} myPlayerId={myPlayerId} />
+                    <PaddleStackingExplainer playersPerCourt={stack.playersPerCourt} />
+                </div>
+            </>
+        );
+    }
 
     const registrations = session.registrations ?? [];
     const matches = session.matches ?? [];

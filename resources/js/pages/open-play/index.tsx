@@ -16,13 +16,14 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
+import { openPlayFormatLabel } from '@/lib/open-play';
 import { create, edit, manage, index as openPlayIndex } from '@/routes/open-play';
 import type { OpenPlaySession, Paginated } from '@/types/booking';
 
 type Filters = {
     search?: string | null;
     status?: string | null;
-    bracket_format?: string | null;
+    format?: string | null;
     date_from?: string | null;
     date_to?: string | null;
     sort?: string | null;
@@ -56,7 +57,7 @@ export default function OpenPlayIndex({ sessions, upcomingCount, filters }: Prop
                 {
                     search: filters.search || undefined,
                     status: filters.status || undefined,
-                    bracket_format: filters.bracket_format || undefined,
+                    format: filters.format || undefined,
                     date_from: filters.date_from || undefined,
                     date_to: filters.date_to || undefined,
                     sort: filters.sort || undefined,
@@ -78,9 +79,12 @@ export default function OpenPlayIndex({ sessions, upcomingCount, filters }: Prop
             accessorKey: 'title',
             header: 'Session',
             cell: ({ row }) => (
-                <Link href={edit(row.original)} className="font-medium hover:underline">
-                    {row.original.title}
-                </Link>
+                <div className="flex flex-col">
+                    <Link href={edit(row.original)} className="font-medium hover:underline">
+                        {row.original.title}
+                    </Link>
+                    <span className="text-xs text-muted-foreground">{openPlayFormatLabel(row.original) ?? 'Format not set'}</span>
+                </div>
             ),
         },
         {
@@ -141,7 +145,7 @@ export default function OpenPlayIndex({ sessions, upcomingCount, filters }: Prop
             header: '',
             cell: ({ row }) => (
                 <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" asChild title="Manage players & bracket">
+                    <Button variant="ghost" size="icon" asChild title="Manage players, courts & bracket">
                         <Link href={manage(row.original)}>
                             <Users className="size-4" />
                         </Link>
@@ -199,18 +203,19 @@ export default function OpenPlayIndex({ sessions, upcomingCount, filters }: Prop
                                 </SelectContent>
                             </Select>
                             <Select
-                                value={filters.bracket_format || ANY_VALUE}
+                                value={filters.format || ANY_VALUE}
                                 onValueChange={(value) =>
                                     applyFilters({
-                                        bracket_format: value === ANY_VALUE ? undefined : value,
+                                        format: value === ANY_VALUE ? undefined : value,
                                     })
                                 }
                             >
                                 <SelectTrigger className="w-48">
-                                    <SelectValue placeholder="Bracket format" />
+                                    <SelectValue placeholder="Format" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value={ANY_VALUE}>All formats</SelectItem>
+                                    <SelectItem value="paddle_stacking">Paddle stacking</SelectItem>
                                     <SelectItem value="round_robin">Round robin</SelectItem>
                                     <SelectItem value="single_elimination">
                                         Single elimination

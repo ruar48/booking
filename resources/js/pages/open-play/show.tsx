@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePoll } from '@inertiajs/react';
 import { CalendarDays, Clock, MapPin, Trophy } from 'lucide-react';
 
 import {
@@ -6,16 +6,23 @@ import {
     ReadOnlyDoubleEliminationBracket,
 } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
+import {
+    OpenPlayStackBoard,
+    OpenPlayStackHero,
+    PaddleStackingExplainer,
+} from '@/components/open-play-stack-board';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate, formatTime } from '@/lib/format';
 import { computeStandings } from '@/lib/open-play';
 import { cn } from '@/lib/utils';
 import { browse as openPlayBrowse, join as openPlayJoin } from '@/routes/open-play';
-import type { OpenPlaySession } from '@/types/booking';
+import type { OpenPlaySession, OpenPlayStackBoard as StackBoard } from '@/types/booking';
 
 type Props = {
     session: OpenPlaySession;
+    /** Null for a bracket session. */
+    stack: StackBoard | null;
 };
 
 function formatBracketFormat(format?: string | null): string {
@@ -38,7 +45,44 @@ function rankMedal(rank: number): string {
     return `#${rank}`;
 }
 
-export default function OpenPlayShow({ session }: Props) {
+export default function OpenPlayShow({ session, stack }: Props) {
+    // Paddle stacking changes every few minutes on the day; keep the board live.
+    usePoll(10000, { only: ['stack'] }, { autoStart: stack !== null });
+
+    if (stack) {
+        return (
+            <>
+                <Head title={`Open play — ${session.title}`} />
+                <div className="flex flex-1 flex-col gap-4 p-4">
+                    <OpenPlayStackHero
+                        session={session}
+                        board={stack}
+                        action={
+                            !session.is_registration_closed && (
+                                <Button
+                                    asChild
+                                    className="shrink-0 bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark"
+                                >
+                                    <Link href={openPlayJoin(session)}>Join / Pay</Link>
+                                </Button>
+                            )
+                        }
+                    />
+                    <OpenPlayStackBoard session={session} board={stack} />
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Who&apos;s joined</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <OpenPlayRoster registrations={session.registrations ?? []} maxPlayers={session.max_players} />
+                        </CardContent>
+                    </Card>
+                    <PaddleStackingExplainer playersPerCourt={stack.playersPerCourt} />
+                </div>
+            </>
+        );
+    }
+
     const registrations = session.registrations ?? [];
     const matches = session.matches ?? [];
 

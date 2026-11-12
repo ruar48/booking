@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\PolicyPlacement;
 use App\Enums\Role;
+use App\Enums\Sport;
 use App\Http\Controllers\Controller;
 use App\Models\Policy;
 use App\Services\AuditLogService;
@@ -114,11 +115,16 @@ class PolicyController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'placement' => ['required', Rule::enum(PolicyPlacement::class)],
+            // Only court rules are split by sport; null means every sport.
+            'sport' => ['nullable', Rule::enum(Sport::class)],
             'body' => ['required', 'string'],
             'is_active' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
+        $validated['sport'] = $validated['placement'] === PolicyPlacement::CourtRules->value
+            ? ($validated['sport'] ?? null)
+            : null;
         $validated['is_active'] = $validated['is_active'] ?? true;
         $validated['sort_order'] = $validated['sort_order'] ?? 0;
 

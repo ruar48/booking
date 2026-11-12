@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 
 import InputError from '@/components/input-error';
 import { PageHeader } from '@/components/page-header';
+import { PolicySportField } from '@/components/policy-sport-field';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import type { SportValue } from '@/lib/sport';
 import { index as policiesIndex, store } from '@/routes/admin/policies';
 import type { Policy } from '@/types/booking';
 
@@ -23,6 +25,7 @@ export default function AdminPoliciesCreate() {
     const { data, setData, post, processing, errors } = useForm({
         title: '',
         placement: 'checkout' as Policy['placement'],
+        sport: null as SportValue | null,
         body: '',
         is_active: true,
         sort_order: 0,
@@ -72,10 +75,18 @@ export default function AdminPoliciesCreate() {
                                     </SelectContent>
                                 </Select>
                                 <p className="text-muted-foreground text-xs">
-                                    "Booking checkout" policies appear while players choose a payment method, for both court bookings and open play. "Court rules" are listed one per line on the home and booking pages, in the FAQ and in the Terms of Service.
+                                    "Booking checkout" policies appear while players choose a payment method, for both court bookings and open play. "Court rules" are listed one per line on the home and booking pages (for the sport being booked), in the FAQ and in the Terms of Service.
                                 </p>
                                 <InputError message={errors.placement} />
                             </div>
+
+                            {data.placement === 'court_rules' && (
+                                <PolicySportField
+                                    value={data.sport}
+                                    onChange={(sport) => setData('sport', sport)}
+                                    error={errors.sport}
+                                />
+                            )}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="body">Policy text</Label>

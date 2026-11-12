@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\OpenPlay\OpenPlayController;
 use App\Http\Controllers\OpenPlay\OpenPlayJoinController;
+use App\Http\Controllers\OpenPlay\OpenPlayMyStackController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('open-play/browse', [OpenPlayJoinController::class, 'browse'])->name('open-play.browse');
@@ -13,6 +14,10 @@ Route::get('open-play/{open_play}/checkout', [OpenPlayJoinController::class, 'sh
 Route::post('open-play/{open_play}/checkout', [OpenPlayJoinController::class, 'checkout'])
     ->middleware('throttle:10,1')
     ->name('open-play.checkout.generate');
+
+// A registered player stacking or pulling their own paddle (paddle-stacking sessions).
+Route::post('open-play/{open_play}/my-paddle', [OpenPlayMyStackController::class, 'store'])->name('open-play.my-paddle.store');
+Route::delete('open-play/{open_play}/my-paddle', [OpenPlayMyStackController::class, 'destroy'])->name('open-play.my-paddle.destroy');
 
 // Any authenticated member can search players (name only) to pick a doubles
 // partner, whether registering themselves via the public join page or an

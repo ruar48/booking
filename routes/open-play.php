@@ -5,6 +5,7 @@ use App\Http\Controllers\OpenPlay\OpenPlayBracketMatchController;
 use App\Http\Controllers\OpenPlay\OpenPlayController;
 use App\Http\Controllers\OpenPlay\OpenPlayMatchController;
 use App\Http\Controllers\OpenPlay\OpenPlayRegistrationController;
+use App\Http\Controllers\OpenPlay\OpenPlayStackController;
 use App\Http\Controllers\OpenPlay\OpenPlayTargetScoreController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,12 @@ Route::prefix('open-play/{open_play}')->name('open-play.')->group(function () {
     Route::patch('bracket/visibility', [OpenPlayBracketController::class, 'updateVisibility'])->name('bracket.visibility.update');
     Route::post('bracket/matches', [OpenPlayBracketMatchController::class, 'store'])->name('bracket.matches.store');
     Route::patch('target-score', [OpenPlayTargetScoreController::class, 'update'])->name('target-score.update');
+
+    // Paddle stacking. Scoped, so an entry or court from another session 404s.
+    Route::post('stack', [OpenPlayStackController::class, 'store'])->name('stack.store');
+    Route::post('stack/everyone', [OpenPlayStackController::class, 'storeEveryone'])->name('stack.everyone');
+    Route::delete('stack/{stackEntry}', [OpenPlayStackController::class, 'destroy'])->scopeBindings()->name('stack.destroy');
+    Route::post('courts/{resource}/finish', [OpenPlayStackController::class, 'finish'])->scopeBindings()->name('courts.finish');
 });
 
 Route::delete('open-play-registrations/{registration}', [OpenPlayRegistrationController::class, 'destroy'])->name('open-play.registrations.destroy');

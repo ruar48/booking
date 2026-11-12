@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { ReadOnlyBracketTree, ReadOnlyDoubleEliminationBracket } from '@/components/open-play-bracket';
 import { OpenPlayRoster } from '@/components/open-play-roster';
+import { OpenPlayStackBoard, PaddleStackingExplainer } from '@/components/open-play-stack-board';
 import { PlayerCombobox } from '@/components/player-combobox';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
@@ -11,13 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
+import { registersAsPairs } from '@/lib/open-play';
 import { edit as editProfile } from '@/routes/profile';
-import { browse as openPlayBrowse, checkout as openPlayCheckout } from '@/routes/open-play';
+import { browse as openPlayBrowse, checkout as openPlayCheckout, mine as openPlayMine } from '@/routes/open-play';
 import { store as joinStore } from '@/routes/open-play/join';
-import type { OpenPlaySession, Player } from '@/types/booking';
+import type { OpenPlaySession, OpenPlayStackBoard as StackBoard, Player } from '@/types/booking';
 
 type Props = {
     session: OpenPlaySession;
+    /** Null for a bracket session. */
+    stack: StackBoard | null;
     registrationsCount: number;
     isRegistered: boolean;
     paymentPending: boolean;
@@ -55,8 +59,11 @@ export default function OpenPlayJoin({
     isFull,
     needsProfile,
     myRegistrationId,
+    stack,
 }: Props) {
-    const isDoublesSession = session.team_size === 'doubles';
+    // Only a doubles bracket asks for a partner; paddle stacking players join on their own.
+    const isDoublesSession = registersAsPairs(session);
+    const stackInPlay = !!stack && (stack.waiting.length > 0 || stack.courts.some((court) => court.players.length > 0));
     const requiresPayment = session.price_per_player != null && Number(session.price_per_player) > 0;
 
     const [partnerMode, setPartnerMode] = useState<'select' | 'random'>('select');
@@ -150,8 +157,9 @@ export default function OpenPlayJoin({
                     <Card>
                         <CardContent className="space-y-4 pt-6">
                             <div className="flex flex-wrap gap-2">
+                                {stack && <Badge variant="outline">Paddle stacking</Badge>}
                                 <Badge variant="outline">{formatSkillLevel(session.skill_level)}</Badge>
-                                <Badge variant="outline">{isDoublesSession ? '2v2 Doubles' : '1v1 Singles'}</Badge>
+                                <Badge variant="outline">{session.team_size === 'doubles' ? '2v2 Doubles' : '1v1 Singles'}</Badge>
                                 {session.price_per_player != null && (
                                     <Badge variant="outline">
                                         {formatCurrency(session.price_per_player)} / player
@@ -206,7 +214,13 @@ export default function OpenPlayJoin({
                         </CardContent>
                     </Card>
 
-                    {matches.length > 0 && (
+                    {stack && stackInPlay && (
+                        <OpenPlayStackBoard session={session} board={stack} />
+                    )}
+
+                    {stack && <PaddleStackingExplainer playersPerCourt={stack.playersPerCourt} />}
+
+                    {!stack && matches.length > 0 && (
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-base">Bracket</CardTitle>
@@ -244,11 +258,18 @@ export default function OpenPlayJoin({
                     )}
 
                     {isRegistered ? (
-                        <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800">
-                            <CheckCircle2 className="size-5 shrink-0" />
-                            <span className="font-semibold">
-                                You&apos;re registered for this session — see you on the court!
-                            </span>
+                        <div className="flex flex-col gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 sm:flex-row sm:items-center">
+                            <div className="flex flex-1 items-center gap-3">
+                                <CheckCircle2 className="size-5 shrink-0" />
+                                <span className="font-semibold">
+                                    You&apos;re registered for this session — see you on the court!
+                                </span>
+                            </div>
+                            {stack && (
+                                <Button asChild size="sm" className="bg-brand-lime font-bold text-brand-navy hover:bg-brand-lime-dark">
+                                    <Link href={openPlayMine(session)}>My paddle</Link>
+                                </Button>
+                            )}
                         </div>
                     ) : paymentPending ? (
                         <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900">

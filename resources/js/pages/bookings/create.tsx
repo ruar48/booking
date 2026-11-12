@@ -10,10 +10,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { EMPTY_RULE_BOOK, rulesForSport } from '@/lib/court-rules';
 import { create, index as bookingsIndex } from '@/routes/bookings';
 import customers from '@/routes/bookings/customers';
 import type {
     BookedSlot,
+    CourtRuleBook,
     DateOverride,
     HourForecast,
     Resource,
@@ -25,7 +27,7 @@ type Props = {
     dateOverrides?: DateOverride[];
     canManage: boolean;
     hourlyWeather?: Record<string, HourForecast>;
-    courtRules?: string[];
+    courtRules?: CourtRuleBook;
 };
 
 type BookingForMode = 'myself' | 'existing' | 'new';
@@ -42,9 +44,11 @@ export default function BookingsCreate({
     dateOverrides = [],
     canManage,
     hourlyWeather = {},
-    courtRules = [],
+    courtRules = EMPTY_RULE_BOOK,
 }: Props) {
     const { auth } = usePage().props;
+    // Follows the schedule's sport tab, so Billiard shows billiard rules.
+    const [sport, setSport] = useState<Resource['sport']>('pickleball');
 
     const [mode, setMode] = useState<BookingForMode>('myself');
     const [markPaid, setMarkPaid] = useState(false);
@@ -227,10 +231,15 @@ export default function BookingsCreate({
                             customer={customerPayload}
                             markPaid={markPaid}
                             hourlyWeather={hourlyWeather}
+                            onSportChange={setSport}
                         />
                     </CardContent>
                 </Card>
-                <CourtRules rules={courtRules} className="mx-auto w-full max-w-4xl" />
+                <CourtRules
+                    rules={rulesForSport(courtRules, sport)}
+                    sport={sport}
+                    className="mx-auto w-full max-w-4xl"
+                />
             </div>
         </>
     );

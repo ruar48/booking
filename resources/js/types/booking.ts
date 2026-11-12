@@ -34,6 +34,7 @@ export type OpenPlaySession = {
     price_per_player?: number | null;
     max_players?: number | null;
     target_score: number;
+    format: OpenPlayFormat;
     bracket_format: 'single_elimination' | 'double_elimination' | 'round_robin' | null;
     bracket_generation: 'automatic' | 'random' | 'manual';
     bracket_visible: boolean;
@@ -43,6 +44,50 @@ export type OpenPlaySession = {
     registrations?: OpenPlayRegistration[];
     matches?: OpenPlayMatch[];
     resources?: Pick<Resource, 'id' | 'name'>[];
+};
+
+/** Mirror of App\Enums\OpenPlayFormat. */
+export type OpenPlayFormat = 'paddle_stacking' | 'bracket';
+
+/** A player on a paddle-stacking board: in line, on a court or sitting out. */
+export type StackPlayer = {
+    /** The stack entry id. */
+    id: number;
+    playerId: number;
+    name: string;
+    avatar: string | null;
+    gender: string | null;
+    gamesPlayed: number;
+};
+
+/** Registered but not stacked yet — staff only. */
+export type UnstackedPlayer = {
+    playerId: number;
+    name: string;
+    avatar: string | null;
+    gender: string | null;
+    paid: boolean;
+};
+
+export type StackCourt = {
+    id: number;
+    name: string;
+    players: StackPlayer[];
+};
+
+/** OpenPlayStackService::board() — null for bracket sessions. */
+export type OpenPlayStackBoard = {
+    /** 4 for doubles, 2 for singles: the size of each group called. */
+    playersPerCourt: number;
+    /** Whether players can stack their own paddle right now. */
+    selfStackOpen: boolean;
+    courts: StackCourt[];
+    /** In line, front first. */
+    waiting: StackPlayer[];
+    /** Staff only. */
+    sittingOut?: StackPlayer[];
+    /** Staff only. */
+    notStacked?: UnstackedPlayer[];
 };
 
 export type OpenPlayRegistration = {
@@ -472,6 +517,8 @@ export type Policy = {
     title: string;
     slug: string;
     placement: 'checkout' | 'court_rules' | 'general';
+    /** Court rules only: the sport they apply to, or null for every sport. */
+    sport?: SportValue | null;
     body: string;
     is_active: boolean;
     version: number;
@@ -480,6 +527,12 @@ export type Policy = {
     updatedBy?: { id: number; name: string } | null;
     created_at?: string;
     updated_at?: string;
+};
+
+/** Policy::courtRuleBook(): house rules for every sport, plus each sport's own. */
+export type CourtRuleBook = {
+    general: string[];
+    sports: Partial<Record<SportValue, string[]>>;
 };
 
 export type GalleryPhoto = {

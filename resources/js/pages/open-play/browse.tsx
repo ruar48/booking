@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatCurrency, formatDate, formatTime } from '@/lib/format';
+import { isPaddleStacking, openPlayFormatLabel } from '@/lib/open-play';
 import { browse as openPlayBrowse, join, mine, show } from '@/routes/open-play';
 import type { OpenPlaySession } from '@/types/booking';
 
@@ -27,19 +28,6 @@ function formatSkillLevel(level?: string): string {
     return level.charAt(0).toUpperCase() + level.slice(1);
 }
 
-function formatBracketFormat(format?: string | null): string | null {
-    switch (format) {
-        case 'single_elimination':
-            return 'Single elimination';
-        case 'double_elimination':
-            return 'Double elimination';
-        case 'round_robin':
-            return 'Round robin';
-        default:
-            return null;
-    }
-}
-
 export default function OpenPlayBrowse({ sessions }: Props) {
     const upcoming = sessions.filter((session) => !isPast(parseISO(session.starts_at)));
     const past = sessions.filter((session) => isPast(parseISO(session.starts_at)));
@@ -50,7 +38,7 @@ export default function OpenPlayBrowse({ sessions }: Props) {
             <div className="flex flex-1 flex-col gap-6 p-4">
                 <PageHeader
                     title="Open play"
-                    description="Join a session and track your bracket, matches, and standing."
+                    description="Join a session, then stack your paddle on the day or track your bracket."
                 />
 
                 {upcoming.length === 0 && past.length === 0 ? (
@@ -91,7 +79,7 @@ export default function OpenPlayBrowse({ sessions }: Props) {
 
 function SessionCard({ session }: { session: BrowseSession }) {
     const isDoubles = session.team_size === 'doubles';
-    const bracketFormat = formatBracketFormat(session.bracket_format);
+    const formatLabel = openPlayFormatLabel(session);
 
     return (
         <Card>
@@ -107,7 +95,7 @@ function SessionCard({ session }: { session: BrowseSession }) {
                 <div className="flex flex-wrap gap-1.5 pt-1">
                     <Badge variant="outline">{isDoubles ? '2v2 Doubles' : '1v1 Singles'}</Badge>
                     <Badge variant="outline">{formatSkillLevel(session.skill_level)}</Badge>
-                    {bracketFormat && <Badge variant="outline">{bracketFormat}</Badge>}
+                    {formatLabel && <Badge variant="outline">{formatLabel}</Badge>}
                 </div>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
@@ -161,7 +149,7 @@ function SessionCard({ session }: { session: BrowseSession }) {
                         <Button asChild className="w-full">
                             <Link href={mine(session)}>
                                 <CalendarClock className="size-4" />
-                                Track my bracket
+                                {isPaddleStacking(session) ? 'My paddle' : 'Track my bracket'}
                             </Link>
                         </Button>
                     ) : session.is_full ? (

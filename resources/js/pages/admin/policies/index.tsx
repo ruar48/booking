@@ -17,6 +17,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { formatDateTime } from '@/lib/format';
+import { sportLabel } from '@/lib/sport';
 import { create, destroy, edit, index as policiesIndex } from '@/routes/admin/policies';
 import type { Policy } from '@/types/booking';
 
@@ -57,7 +58,12 @@ export default function AdminPoliciesIndex({ policies }: Props) {
             accessorKey: 'placement',
             header: 'Shown at',
             cell: ({ row }) => (
-                <Badge variant="outline">{PLACEMENT_LABELS[row.original.placement] ?? row.original.placement}</Badge>
+                <div className="flex flex-wrap gap-1">
+                    <Badge variant="outline">{PLACEMENT_LABELS[row.original.placement] ?? row.original.placement}</Badge>
+                    {row.original.placement === 'court_rules' && (
+                        <Badge variant="secondary">{row.original.sport ? sportLabel(row.original.sport) : 'All sports'}</Badge>
+                    )}
+                </div>
             ),
         },
         {

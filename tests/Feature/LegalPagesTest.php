@@ -97,7 +97,9 @@ it('states the business, payment hold, booking policy and house rules the venue 
         ->where('document.version', '2026-11-05')
         ->where('bookingPolicy', fn (Collection $lines) => $lines->contains('Paid bookings are final.')
             && $lines->contains('No refunds unless we cancel.'))
-        ->where('courtRules', fn (Collection $rules) => $rules->all() === CourtRulesSeeder::RULES));
+        ->where('courtRules.general', CourtRulesSeeder::GENERAL_RULES)
+        ->where('courtRules.sports.pickleball', CourtRulesSeeder::PICKLEBALL_RULES)
+        ->where('courtRules.sports.billiards', CourtRulesSeeder::BILLIARD_RULES));
 });
 
 it('names a privacy contact before a DPO email is set, and states the real retention periods', function () {
@@ -134,7 +136,12 @@ it('answers rates, the payment hold, fees and facilities from live settings', fu
     expect($questions['hold']['answer'])->toContain('30 minutes')
         ->and($questions['fee']['answer'])->toContain('about 1.5% of the booking amount')
         ->and($questions['rates']['bullets'])->toBe(['Court 9: ₱300/hour, ₱350/hour from 6 PM'])
-        ->and($questions['court-rules']['bullets'])->toBe(CourtRulesSeeder::RULES)
+        // House rules, then each sport's own rules labelled with the sport.
+        ->and($questions['court-rules']['bullets'])->toBe([
+            ...CourtRulesSeeder::GENERAL_RULES,
+            ...array_map(fn (string $rule): string => "Pickleball: {$rule}", CourtRulesSeeder::PICKLEBALL_RULES),
+            ...array_map(fn (string $rule): string => "Billiard: {$rule}", CourtRulesSeeder::BILLIARD_RULES),
+        ])
         ->and($questions['location']['answer'])->toBe('Santa Maria Norte, Binalonan, Pangasinan 2436, Philippines')
         ->and($questions['contact']['answer'])->toContain('+639170000000')
         // "Equipment rental" is one of the amenities, so rentals are explained.
@@ -159,15 +166,40 @@ it('seeds starter court rules that the home and booking pages show', function ()
 
     $this->seed(CourtRulesSeeder::class);
 
-    $rules = Policy::linesAt(PolicyPlacement::CourtRules);
+    $rules = Policy::courtRuleBook();
 
-    expect($rules)->toBe(CourtRulesSeeder::RULES);
+    expect($rules)->toBe([
+        'general' => CourtRulesSeeder::GENERAL_RULES,
+        'sports' => [
+            'pickleball' => CourtRulesSeeder::PICKLEBALL_RULES,
+            'billiards' => CourtRulesSeeder::BILLIARD_RULES,
+        ],
+    ]);
 
-    $this->get('/')->assertInertia(fn ($page) => $page->component('welcome')->where('courtRules', $rules));
+    $this->get('/')->assertInertia(fn ($page) => $page->component('welcome')
+        ->where('courtRules.general', $rules['general'])
+        ->where('courtRules.sports.billiards', $rules['sports']['billiards']));
 
     $this->actingAs(legalUser(RoleEnum::Player))
         ->get(route('bookings.create'))
-        ->assertInertia(fn ($page) => $page->where('courtRules', $rules));
+        ->assertInertia(fn ($page) => $page
+            ->where('courtRules.general', $rules['general'])
+            ->where('courtRules.sports.pickleball', $rules['sports']['pickleball']));
+});
+
+it('keeps each sport\'s rules to that sport, with house rules shared by all', function () {
+    Policy::query()->create(['title' => 'House', 'placement' => PolicyPlacement::CourtRules, 'body' => 'No smoking.']);
+    Policy::query()->create(['title' => 'Pickleball', 'placement' => PolicyPlacement::CourtRules, 'sport' => Sport::Pickleball, 'body' => 'Court shoes only.']);
+    Policy::query()->create(['title' => 'Billiard', 'placement' => PolicyPlacement::CourtRules, 'sport' => Sport::Billiards, 'body' => "No jump shots.\nRack the balls."]);
+    Policy::query()->create(['title' => 'Old billiard', 'placement' => PolicyPlacement::CourtRules, 'sport' => Sport::Billiards, 'body' => 'Retired.', 'is_active' => false]);
+
+    expect(Policy::courtRuleBook())->toBe([
+        'general' => ['No smoking.'],
+        'sports' => [
+            'pickleball' => ['Court shoes only.'],
+            'billiards' => ['No jump shots.', 'Rack the balls.'],
+        ],
+    ]);
 });
 
 it('seeds only the court rules, never twice and never over an edit', function () {
@@ -178,15 +210,16 @@ it('seeds only the court rules, never twice and never over an edit', function ()
 
     $this->seed(CourtRulesSeeder::class);
 
-    // One new policy row and nothing else: no demo users, courts, products or settings.
-    expect(array_diff_assoc($rowCounts(), $before))->toBe(['policies' => $before['policies'] + 1]);
+    // Three new policy rows (house, pickleball, billiard) and nothing else:
+    // no demo users, courts, products or settings.
+    expect(array_diff_assoc($rowCounts(), $before))->toBe(['policies' => $before['policies'] + 3]);
 
-    $policy = Policy::query()->where('placement', PolicyPlacement::CourtRules)->sole();
+    $policy = Policy::query()->where('placement', PolicyPlacement::CourtRules)->whereNull('sport')->sole();
     $policy->update(['body' => 'Our own house rules.']);
 
     $this->seed(CourtRulesSeeder::class);
 
-    expect(Policy::query()->where('placement', PolicyPlacement::CourtRules)->count())->toBe(1)
+    expect(Policy::query()->where('placement', PolicyPlacement::CourtRules)->count())->toBe(3)
         ->and($policy->fresh()?->body)->toBe('Our own house rules.');
 });
 
@@ -208,6 +241,26 @@ it('lets the owner manage court rules like any other policy, one rule per line',
 
     $this->post(route('admin.policies.store'), ['title' => 'Bad', 'placement' => 'homepage_banner', 'body' => 'x'])
         ->assertSessionHasErrors('placement');
+
+    // Court rules can be tied to one sport; other placements never are.
+    $this->post(route('admin.policies.store'), [
+        'title' => 'Billiard rules',
+        'placement' => 'court_rules',
+        'sport' => 'billiards',
+        'body' => 'No jump shots.',
+    ])->assertRedirect(route('admin.policies.index'));
+    $this->post(route('admin.policies.store'), [
+        'title' => 'Checkout terms',
+        'placement' => 'checkout',
+        'sport' => 'billiards',
+        'body' => 'Paid is final.',
+    ])->assertRedirect(route('admin.policies.index'));
+    $this->post(route('admin.policies.store'), ['title' => 'Bad', 'placement' => 'court_rules', 'sport' => 'darts', 'body' => 'x'])
+        ->assertSessionHasErrors('sport');
+
+    expect(Policy::query()->where('title', 'Billiard rules')->value('sport'))->toBe(Sport::Billiards)
+        ->and(Policy::query()->where('title', 'Checkout terms')->value('sport'))->toBeNull()
+        ->and(Policy::courtRuleBook()['sports']['billiards'])->toBe(['No jump shots.']);
 });
 
 it('deletes login history once it is past the retention period', function () {

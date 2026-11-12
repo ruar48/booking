@@ -36,7 +36,7 @@ class LegalPagesPresenter
             // Shown word for word, so the Terms and the checkout agreement
             // can't say different things.
             'bookingPolicy' => Policy::linesAt(PolicyPlacement::Checkout),
-            'courtRules' => Policy::linesAt(PolicyPlacement::CourtRules),
+            'courtRules' => Policy::courtRuleBook(),
         ];
     }
 

@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Enums\PolicyPlacement;
+use App\Enums\Sport;
 use App\Integrations\Meta\MessengerClient;
 use App\Models\DateOverride;
 use App\Models\Policy;
@@ -174,7 +174,7 @@ class FaqService
             [
                 'id' => 'what-is-open-play',
                 'question' => 'What is Open Play?',
-                'answer' => 'Scheduled social sessions where you join as an individual player instead of booking a whole court. The organizers set the pairings and brackets.',
+                'answer' => 'Scheduled social sessions where you join as an individual player instead of booking a whole court. Most run as paddle stacking: when you arrive, stack your paddle (from the session page or at the counter), and the next players in line take the next free court. After your game you go to the back of the stack. Some sessions run as a tournament bracket instead.',
             ],
             [
                 'id' => 'join-open-play',
@@ -201,7 +201,17 @@ class FaqService
      */
     private function venueQuestions(BusinessIdentity $business, array $profile): array
     {
-        $rules = Policy::linesAt(PolicyPlacement::CourtRules);
+        // House rules first, then each sport's own, labelled with the sport.
+        $ruleBook = Policy::courtRuleBook();
+        $rules = $ruleBook['general'];
+
+        foreach ($ruleBook['sports'] as $sport => $lines) {
+            $label = Sport::from($sport)->label();
+
+            foreach ($lines as $line) {
+                $rules[] = "{$label}: {$line}";
+            }
+        }
         $amenities = array_values(array_filter((array) ($profile['amenities'] ?? []), fn (mixed $item): bool => is_string($item) && $item !== ''));
         $offersRentals = collect($amenities)->contains(fn (string $amenity): bool => (bool) preg_match('/rent|equipment|paddle/i', $amenity));
 

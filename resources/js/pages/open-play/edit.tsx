@@ -12,19 +12,13 @@ import { FormEvent, useState } from 'react';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { FormSection } from '@/components/form-section';
 import InputError from '@/components/input-error';
+import { OpenPlayFormatFields } from '@/components/open-play-format-fields';
 import { OpenPlayJoinQrCard } from '@/components/open-play-join-qr-card';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { destroy, index as openPlayIndex, update } from '@/routes/open-play';
 import type { OpenPlaySession, Resource } from '@/types/booking';
@@ -56,6 +50,7 @@ export default function OpenPlayEdit({ session, resources }: Props) {
         max_players: String(session.max_players ?? ''),
         skill_level: session.skill_level ?? 'all_levels',
         team_size: session.team_size ?? 'singles',
+        format: session.format ?? 'bracket',
         bracket_format: session.bracket_format ?? 'round_robin',
         bracket_generation: session.bracket_generation ?? 'automatic',
         resource_ids: (session.resources ?? []).map((resource) => resource.id),
@@ -197,125 +192,11 @@ export default function OpenPlayEdit({ session, resources }: Props) {
                             title="Format"
                             description="How matches are organised once the session starts."
                         >
-                            <div className="grid gap-2">
-                                <Label>Skill level</Label>
-                                <Select
-                                    value={data.skill_level}
-                                    onValueChange={(v) =>
-                                        setData('skill_level', v)
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all_levels">
-                                            All levels
-                                        </SelectItem>
-                                        <SelectItem value="beginner">
-                                            Beginner
-                                        </SelectItem>
-                                        <SelectItem value="intermediate">
-                                            Intermediate
-                                        </SelectItem>
-                                        <SelectItem value="advanced">
-                                            Advanced
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.skill_level} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Match type</Label>
-                                <Select
-                                    value={data.team_size}
-                                    onValueChange={(v) =>
-                                        setData(
-                                            'team_size',
-                                            v as 'singles' | 'doubles',
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="singles">
-                                            1v1 (Singles)
-                                        </SelectItem>
-                                        <SelectItem value="doubles">
-                                            2v2 (Doubles)
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.team_size} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Bracket format</Label>
-                                <Select
-                                    value={data.bracket_format}
-                                    onValueChange={(v) =>
-                                        setData(
-                                            'bracket_format',
-                                            v as
-                                                | 'round_robin'
-                                                | 'single_elimination'
-                                                | 'double_elimination',
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="round_robin">
-                                            Round robin
-                                        </SelectItem>
-                                        <SelectItem value="single_elimination">
-                                            Single elimination
-                                        </SelectItem>
-                                        <SelectItem value="double_elimination">
-                                            Double elimination
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError message={errors.bracket_format} />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Matchup generation</Label>
-                                <Select
-                                    value={data.bracket_generation}
-                                    onValueChange={(v) =>
-                                        setData(
-                                            'bracket_generation',
-                                            v as
-                                                | 'automatic'
-                                                | 'random'
-                                                | 'manual',
-                                        )
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="automatic">
-                                            Automatic (seeded by registration
-                                            order)
-                                        </SelectItem>
-                                        <SelectItem value="random">
-                                            Random draw
-                                        </SelectItem>
-                                        <SelectItem value="manual">
-                                            Manual (I&apos;ll set up matchups
-                                            myself)
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <InputError
-                                    message={errors.bracket_generation}
-                                />
-                            </div>
+                            <OpenPlayFormatFields
+                                values={data}
+                                onChange={(field, value) => setData(field, value)}
+                                errors={errors}
+                            />
                         </FormSection>
                     </div>
 

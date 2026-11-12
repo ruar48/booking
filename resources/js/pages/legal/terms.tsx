@@ -3,7 +3,9 @@ import { Head, Link } from '@inertiajs/react';
 import { BusinessDetails, LegalDocument } from '@/components/legal-document';
 import type { LegalSection } from '@/components/legal-document';
 import { formatCurrency } from '@/lib/format';
+import { compareSports, sportLabel } from '@/lib/sport';
 import { privacy } from '@/routes/legal';
+import type { CourtRuleBook } from '@/types/booking';
 import type { BusinessIdentity, LegalDocumentMeta } from '@/types/legal';
 
 /*
@@ -20,7 +22,8 @@ type Props = {
     eveningRateFrom: string;
     /** The live Payment and Booking Policy, agreed to again at checkout. */
     bookingPolicy: string[];
-    courtRules: string[];
+    /** House rules for every sport, plus each sport's own. */
+    courtRules: CourtRuleBook;
 };
 
 function feeDescription({ percent, fixed }: Props['convenienceFee']): string | null {
@@ -46,6 +49,9 @@ export default function Terms({
     courtRules,
 }: Props) {
     const fee = feeDescription(convenienceFee);
+    const sportRules = Object.entries(courtRules.sports)
+        .filter((entry): entry is [string, string[]] => (entry[1]?.length ?? 0) > 0)
+        .sort(([a], [b]) => compareSports(a, b));
 
     const sections: LegalSection[] = [
         {
@@ -212,13 +218,26 @@ export default function Terms({
             title: 'Court rules and use of the facilities',
             content: (
                 <>
-                    {courtRules.length > 0 ? (
+                    {courtRules.general.length > 0 && (
                         <ul>
-                            {courtRules.map((rule) => (
+                            {courtRules.general.map((rule) => (
                                 <li key={rule}>{rule}</li>
                             ))}
                         </ul>
-                    ) : (
+                    )}
+                    {sportRules.map(([sport, rules]) => (
+                        <div key={sport}>
+                            <p>
+                                <strong>{sportLabel(sport)}</strong>
+                            </p>
+                            <ul>
+                                {rules.map((rule) => (
+                                    <li key={rule}>{rule}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                    {courtRules.general.length === 0 && sportRules.length === 0 && (
                         <p>Please follow the rules posted at the venue.</p>
                     )}
                     <p>

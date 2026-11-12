@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Actions\Booking\ReleaseUnpaidBookings;
 use App\Contracts\Repositories\AnnouncementRepositoryInterface;
 use App\Enums\BookingStatus;
-use App\Enums\PolicyPlacement;
 use App\Enums\RentalItemStatus;
 use App\Enums\ResourceStatus;
 use App\Enums\Sport;
@@ -116,7 +115,7 @@ class HomePageService
             'seo' => $this->seo->forVenue($venue),
             'gallery' => $this->galleryService->publicSections(),
             'coaches' => $this->coachService->publicProfiles(),
-            'courtRules' => Policy::linesAt(PolicyPlacement::CourtRules),
+            'courtRules' => Policy::courtRuleBook(),
             'rates' => $this->rates($courts),
             'stats' => [
                 'courts' => $courts->count(),
