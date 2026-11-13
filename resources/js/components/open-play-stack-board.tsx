@@ -486,7 +486,7 @@ export function PaddleStackingExplainer({ playersPerCourt }: { playersPerCourt: 
             </CardHeader>
             <CardContent>
                 <ol className="list-decimal space-y-1.5 pl-5 text-sm text-muted-foreground">
-                    <li>When you arrive, stack your paddle — from this page or at the counter.</li>
+                    <li>When you arrive, stack your paddle at the counter.</li>
                     <li>The order of the stack is the order of play.</li>
                     <li>When a court frees up, the first {playersPerCourt} in the stack take it.</li>
                     <li>After your game, your paddle goes to the back of the stack.</li>
