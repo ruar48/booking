@@ -7,6 +7,7 @@ use App\Http\Requests\Gallery\StoreGalleryPhotoRequest;
 use App\Http\Requests\Gallery\UpdateGalleryPhotoRequest;
 use App\Models\GalleryPhoto;
 use App\Services\GalleryService;
+use App\Services\HomePageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -57,6 +58,7 @@ class GalleryPhotoController extends Controller
     public function update(UpdateGalleryPhotoRequest $request, GalleryPhoto $galleryPhoto): RedirectResponse
     {
         $galleryPhoto->update($request->validated());
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Photo updated.')]);
 

@@ -136,6 +136,8 @@ class GalleryService
             throw $e;
         }
 
+        HomePageService::forget();
+
         return count($stored);
     }
 
@@ -144,6 +146,7 @@ class GalleryService
         DB::transaction(fn () => $photo->delete());
 
         Storage::disk('gallery')->delete($photo->path);
+        HomePageService::forget();
     }
 
     /**
@@ -157,5 +160,7 @@ class GalleryService
             $category->photos()->update(['gallery_category_id' => null]);
             $category->delete();
         });
+
+        HomePageService::forget();
     }
 }

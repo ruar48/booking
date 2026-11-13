@@ -43,6 +43,22 @@ it('uploads several photos with a shared caption', function () {
     $photos->each(fn (GalleryPhoto $photo) => Storage::disk('gallery')->assertExists($photo->path));
 });
 
+it('refreshes the cached public gallery after photos are uploaded', function () {
+    $this->get(route('home'))
+        ->assertInertia(fn (AssertableInertia $page) => $page->has('gallery', 0));
+
+    $this->actingAs(galleryUser(Role::ClubAdmin))
+        ->post(route('admin.gallery.store'), [
+            'photos' => [UploadedFile::fake()->image('court.jpg')],
+        ])
+        ->assertRedirect(route('admin.gallery.index'));
+
+    $this->get(route('home'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->has('gallery', 1)
+            ->has('gallery.0.photos', 1));
+});
+
 it('rejects files that are not photos', function () {
     $this->actingAs(galleryUser(Role::ClubAdmin))
         ->post(route('admin.gallery.store'), [

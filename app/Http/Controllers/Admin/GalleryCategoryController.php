@@ -7,6 +7,7 @@ use App\Http\Requests\Gallery\StoreGalleryCategoryRequest;
 use App\Http\Requests\Gallery\UpdateGalleryCategoryRequest;
 use App\Models\GalleryCategory;
 use App\Services\GalleryService;
+use App\Services\HomePageService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
@@ -19,6 +20,7 @@ class GalleryCategoryController extends Controller
     public function store(StoreGalleryCategoryRequest $request): RedirectResponse
     {
         GalleryCategory::query()->create($request->validated());
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Category added.')]);
 
@@ -28,6 +30,7 @@ class GalleryCategoryController extends Controller
     public function update(UpdateGalleryCategoryRequest $request, GalleryCategory $galleryCategory): RedirectResponse
     {
         $galleryCategory->update($request->validated());
+        HomePageService::forget();
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Category renamed.')]);
 
