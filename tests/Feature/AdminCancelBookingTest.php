@@ -48,11 +48,13 @@ it('does not let a customer cancel, even their own booking', function () {
         'status' => BookingStatus::Pending,
     ]);
 
+    // Turned away by the venue.admin route middleware before the policy runs.
     $this->actingAs($player)
         ->patch(route('bookings.cancel', $booking))
-        ->assertForbidden();
+        ->assertRedirect();
 
-    expect($booking->fresh()->status)->toBe(BookingStatus::Pending);
+    expect($booking->fresh()->status)->toBe(BookingStatus::Pending)
+        ->and($player->can('cancel', $booking))->toBeFalse();
 });
 
 it('will not cancel a booking that is already cancelled or completed', function (BookingStatus $status) {

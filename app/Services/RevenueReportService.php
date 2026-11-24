@@ -19,10 +19,12 @@ use Illuminate\Support\Collection;
  * dashboard.
  *
  * What counts, matching the per-module reports:
- *  - bookings:  paid, not cancelled,    dated by when the court is played
- *  - walk_in:   paid, not cancelled, booked by staff for someone at the
- *               counter; dated by when booked, since that's when the cash
- *               was taken
+ *  - bookings:  paid, not cancelled,    dated by when booked
+ *  - walk_in:   the same, but booked by staff for someone at the counter
+ *
+ * Bookings are dated by when they were made, not by when the court is
+ * played: that's when the money comes in (online ones must be paid within
+ * the checkout window), so a paid booking for next week is today's sale.
  *  - pos:       completed sales,       dated by when sold
  *  - rentals:   rented out (not a pending reservation), dated by rented_at
  *  - open_play: paid registration fees, dated by sign-up
@@ -127,7 +129,7 @@ class RevenueReportService
             ->whereColumn('created_by', '!=', 'user_id');
 
         return collect()
-            ->concat($rows($paidBookings()->whereNot($isWalkIn), 'starts_at', 'amount', 'bookings'))
+            ->concat($rows($paidBookings()->whereNot($isWalkIn), 'created_at', 'amount', 'bookings'))
             ->concat($rows($paidBookings()->where($isWalkIn), 'created_at', 'amount', 'walk_in'))
             ->concat($rows(Sale::query()->where('status', SaleStatus::Completed), 'created_at', 'total', 'pos'))
             ->concat($rows(RentalTransaction::query()->where('status', '!=', RentalStatus::Reserved), 'rented_at', 'total_amount', 'rentals'))

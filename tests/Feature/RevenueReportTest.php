@@ -23,14 +23,16 @@ beforeEach(function () {
     $this->travelTo(Carbon::parse('2026-10-07 12:00:00'));
 });
 
-function paidBooking(string $startsAt, float $amount, PaymentStatus $status = PaymentStatus::Paid): void
+/** A booking made (and paid) at $bookedAt, for a court a few days later. */
+function paidBooking(string $bookedAt, float $amount, PaymentStatus $status = PaymentStatus::Paid): void
 {
-    ResourceBooking::factory()->create([
-        'starts_at' => Carbon::parse($startsAt),
-        'ends_at' => Carbon::parse($startsAt)->addHour(),
+    $booking = ResourceBooking::factory()->create([
+        'starts_at' => Carbon::parse($bookedAt)->addDays(3),
+        'ends_at' => Carbon::parse($bookedAt)->addDays(3)->addHour(),
         'payment_status' => $status,
         'amount' => $amount,
     ]);
+    $booking->forceFill(['created_at' => Carbon::parse($bookedAt)])->save();
 }
 
 function posSale(string $at, float $total, SaleStatus $status = SaleStatus::Completed): void
@@ -86,6 +88,17 @@ it('leaves out money that was not actually taken', function () {
     openPlayFee('2026-10-07 08:00', 100, PaymentStatus::Unpaid);
 
     expect(app(RevenueReportService::class)->summary()['day']['current']['total'])->toBe(0.0);
+});
+
+it('counts a paid booking for a future date as a sale today', function () {
+    ResourceBooking::factory()->create([
+        'starts_at' => Carbon::parse('2026-10-11 18:00'),
+        'ends_at' => Carbon::parse('2026-10-11 22:00'),
+        'payment_status' => PaymentStatus::Paid,
+        'amount' => 1000,
+    ]);
+
+    expect(app(RevenueReportService::class)->summary()['day']['current']['bookings'])->toBe(1000.0);
 });
 
 it('leaves out paid bookings that were later cancelled', function () {
