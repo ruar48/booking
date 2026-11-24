@@ -101,6 +101,11 @@ class ResourceBookingService
         ]);
     }
 
+    /**
+     * Only the booking status changes. Payment is left as it was: any refund
+     * is handled by staff by hand, outside the app. Revenue reports skip
+     * cancelled bookings, so a paid one's amount drops out on its own.
+     */
     public function cancel(ResourceBooking $booking, ?string $reason = null): ResourceBooking
     {
         $booking = $this->bookingRepository->update($booking, [

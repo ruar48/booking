@@ -613,7 +613,7 @@ export type DashboardMatchStats = {
     total: number;
 };
 
-export type RevenueSource = 'bookings' | 'pos' | 'rentals' | 'open_play';
+export type RevenueSource = 'bookings' | 'walk_in' | 'pos' | 'rentals' | 'open_play';
 
 export type RevenueBucket = Record<RevenueSource, number> & {
     key: string;

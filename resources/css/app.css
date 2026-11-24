@@ -100,6 +100,7 @@
        dataviz palette checker on the white card (aqua/yellow sit under 3:1,
        so the chart always ships with a labelled breakdown beside it). */
     --sales-bookings: #2a78d6;
+    --sales-walk-in: #7c5cd6;
     --sales-pos: #eb6834;
     --sales-rentals: #1baf7a;
     --sales-open-play: #eda100;
@@ -143,6 +144,7 @@
     --chart-5: oklch(0.645 0.246 16.439);
     /* Same four hues stepped for the dark card (all pass, >= 3:1). */
     --sales-bookings: #3987e5;
+    --sales-walk-in: #9b7ef0;
     --sales-pos: #d95926;
     --sales-rentals: #199e70;
     --sales-open-play: #c98500;

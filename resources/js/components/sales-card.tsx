@@ -12,6 +12,7 @@ import type { RevenueBucket, RevenueGranularity, RevenueSeries, RevenueSource } 
 /** Fixed order = stacking order (bottom up) and legend order. */
 const SOURCES: { key: RevenueSource; label: string; color: string }[] = [
     { key: 'bookings', label: 'Court bookings', color: 'var(--sales-bookings)' },
+    { key: 'walk_in', label: 'Walk-in bookings', color: 'var(--sales-walk-in)' },
     { key: 'pos', label: 'POS sales', color: 'var(--sales-pos)' },
     { key: 'rentals', label: 'Rentals', color: 'var(--sales-rentals)' },
     { key: 'open_play', label: 'Open play', color: 'var(--sales-open-play)' },
@@ -38,7 +39,7 @@ export function SalesCard({ sales }: { sales: Record<RevenueGranularity, Revenue
                 <div>
                     <CardTitle>Sales</CardTitle>
                     <CardDescription>
-                        Court bookings, POS, rentals and open play · {VIEWS[view].span}
+                        Court and walk-in bookings, POS, rentals and open play · {VIEWS[view].span}
                     </CardDescription>
                 </div>
                 <ToggleGroup

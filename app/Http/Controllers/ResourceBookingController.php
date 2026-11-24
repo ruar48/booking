@@ -13,6 +13,7 @@ use App\Enums\PaymentStatus;
 use App\Events\BookingFailed;
 use App\Exceptions\BookingConflictException;
 use App\Exceptions\PaymentUnavailableException;
+use App\Http\Requests\Booking\CancelBookingRequest;
 use App\Http\Requests\Booking\CheckoutRequest;
 use App\Http\Requests\Booking\CloseDateRequest;
 use App\Http\Requests\Booking\ReopenDateRequest;
@@ -214,6 +215,15 @@ class ResourceBookingController extends Controller
         $this->bookingService->markGroupPaid($booking);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Payment marked as paid.')]);
+
+        return to_route('bookings.show', $booking);
+    }
+
+    public function cancel(CancelBookingRequest $request, ResourceBooking $booking): RedirectResponse
+    {
+        $this->bookingService->cancel($booking, $request->validated('reason'));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Booking cancelled.')]);
 
         return to_route('bookings.show', $booking);
     }

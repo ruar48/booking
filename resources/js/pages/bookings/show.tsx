@@ -16,14 +16,18 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import type {ComponentType, ReactNode} from 'react';
 
+import { ConfirmDialog } from '@/components/confirm-dialog';
 import { StatusBadge } from '@/components/status-badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { VenueMap, venueAddress } from '@/components/venue-map';
 import { useBookingPaymentChannel } from '@/hooks/use-booking-payment-channel';
 import { formatCurrency, formatDate, formatDateTime, formatTime } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import {
+    cancel as cancelBooking,
     checkout,
     index as bookingsIndex,
     markPaid,
@@ -33,6 +37,7 @@ import type { ResourceBooking, VenueProfile } from '@/types/booking';
 type Props = {
     booking: ResourceBooking;
     canManage?: boolean;
+    canCancel?: boolean;
     paymentDeadline?: string | null;
     venue?: VenueProfile | null;
 };
@@ -70,9 +75,30 @@ function useDeadlineCountdown(deadline: string | null | undefined) {
 export default function BookingsShow({
     booking,
     canManage = false,
+    canCancel = false,
     paymentDeadline = null,
     venue = null,
 }: Props) {
+    const [confirmCancel, setConfirmCancel] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelling, setCancelling] = useState(false);
+
+    const submitCancel = () => {
+        router.patch(
+            cancelBooking(booking).url,
+            { reason: cancelReason.trim() || null },
+            {
+                preserveScroll: true,
+                onStart: () => setCancelling(true),
+                onFinish: () => setCancelling(false),
+                onSuccess: () => {
+                    setConfirmCancel(false);
+                    setCancelReason('');
+                },
+            },
+        );
+    };
+
     const isUnpaid = booking.payment_status === 'unpaid';
     useBookingPaymentChannel(isUnpaid ? booking.id : null);
 
@@ -240,6 +266,15 @@ export default function BookingsShow({
                                     Mark as paid
                                 </Button>
                             ) : null}
+                            {canCancel ? (
+                                <Button
+                                    variant="destructive"
+                                    onClick={() => setConfirmCancel(true)}
+                                >
+                                    <XCircle />
+                                    Cancel booking
+                                </Button>
+                            ) : null}
                         </div>
                     </CardContent>
                 </Card>
@@ -400,6 +435,33 @@ export default function BookingsShow({
                     </Card>
                 ) : null}
             </div>
+
+            <ConfirmDialog
+                open={confirmCancel}
+                onOpenChange={(open) => !cancelling && setConfirmCancel(open)}
+                title={`Do you really want to cancel booking #${booking.id}?`}
+                description={
+                    booking.payment_status === 'paid'
+                        ? `The slot will be released and ${booking.amount != null ? formatCurrency(booking.amount) : 'the amount'} will be deducted from revenue. No refund is sent automatically — handle it manually. This cannot be undone.`
+                        : 'The slot will be released for other customers. This cannot be undone.'
+                }
+                confirmLabel={cancelling ? 'Cancelling…' : 'Yes, cancel booking'}
+                cancelLabel="Keep booking"
+                variant="destructive"
+                loading={cancelling}
+                onConfirm={submitCancel}
+            >
+                <div className="space-y-2">
+                    <Label htmlFor="cancel-reason">Reason (optional)</Label>
+                    <Textarea
+                        id="cancel-reason"
+                        value={cancelReason}
+                        onChange={(event) => setCancelReason(event.target.value)}
+                        maxLength={500}
+                        placeholder="e.g. Customer requested cancellation"
+                    />
+                </div>
+            </ConfirmDialog>
         </>
     );
 }

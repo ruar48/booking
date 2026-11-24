@@ -57,7 +57,16 @@ class ResourceBookingPolicy
         return $this->isClubAdmin($user);
     }
 
-    // There is deliberately no cancel or reschedule ability: under the venue's
-    // Payment and Booking Policy a booking is final once made. Unpaid ones are
-    // released by bookings:cancel-unpaid, not by a person.
+    /**
+     * Only venue staff can cancel, and only a booking that is still live.
+     * Customers cannot: under the venue's Payment and Booking Policy a booking
+     * is final for them, and unpaid ones are released by bookings:cancel-unpaid.
+     */
+    public function cancel(User $user, ResourceBooking $resourceBooking): bool
+    {
+        return $this->isClubAdmin($user)
+            && in_array($resourceBooking->status, [BookingStatus::Pending, BookingStatus::Approved], true);
+    }
+
+    // There is deliberately no reschedule ability.
 }

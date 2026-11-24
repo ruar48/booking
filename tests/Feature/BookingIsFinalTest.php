@@ -10,31 +10,32 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia;
 
 /**
- * Under the venue's Payment and Booking Policy a booking is final: nobody can
- * cancel or reschedule it from the app, staff included. Unpaid bookings are
- * still released automatically by bookings:cancel-unpaid.
+ * Under the venue's Payment and Booking Policy a booking is final for the
+ * customer: they cannot cancel or reschedule it from the app. Venue staff can
+ * cancel (see AdminCancelBookingTest); nobody can reschedule. Unpaid bookings
+ * are still released automatically by bookings:cancel-unpaid.
  */
-it('has no cancel or reschedule routes', function () {
-    expect(Route::has('bookings.cancel'))->toBeFalse()
-        ->and(Route::has('bookings.reschedule'))->toBeFalse()
+it('has no reschedule routes', function () {
+    expect(Route::has('bookings.reschedule'))->toBeFalse()
         ->and(Route::has('bookings.reschedule.edit'))->toBeFalse();
 });
 
-it('offers no cancel or reschedule action on the booking page, even to staff', function (PaymentStatus $paymentStatus) {
-    $admin = User::factory()->create();
-    $admin->assignRole(Role::ClubAdmin->value);
+it('offers the customer no cancel or reschedule action on their booking page', function (PaymentStatus $paymentStatus) {
+    $player = User::factory()->create();
+    $player->assignRole(Role::Player->value);
 
     $booking = ResourceBooking::factory()->create([
+        'user_id' => $player->id,
         'status' => BookingStatus::Pending,
         'payment_status' => $paymentStatus,
     ]);
 
-    $this->actingAs($admin)
+    $this->actingAs($player)
         ->get(route('bookings.show', $booking))
         ->assertOk()
         ->assertInertia(fn (AssertableInertia $page) => $page
             ->missing('canReschedule')
-            ->missing('canCancel'));
+            ->where('canCancel', false));
 })->with([PaymentStatus::Unpaid, PaymentStatus::Paid]);
 
 it('still auto-cancels an unpaid booking once its payment window passes', function () {

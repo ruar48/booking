@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RentalStatus;
 use App\Enums\SaleStatus;
@@ -18,7 +19,10 @@ use Illuminate\Support\Collection;
  * dashboard.
  *
  * What counts, matching the per-module reports:
- *  - bookings:  paid,                  dated by when the court is played
+ *  - bookings:  paid, not cancelled,    dated by when the court is played
+ *  - walk_in:   paid, not cancelled, booked by staff for someone at the
+ *               counter; dated by when booked, since that's when the cash
+ *               was taken
  *  - pos:       completed sales,       dated by when sold
  *  - rentals:   rented out (not a pending reservation), dated by rented_at
  *  - open_play: paid registration fees, dated by sign-up
@@ -28,7 +32,7 @@ use Illuminate\Support\Collection;
  */
 class RevenueReportService
 {
-    public const SOURCES = ['bookings', 'pos', 'rentals', 'open_play'];
+    public const SOURCES = ['bookings', 'walk_in', 'pos', 'rentals', 'open_play'];
 
     /** How many buckets each view shows, ending with the current one. */
     private const WINDOWS = ['day' => 14, 'week' => 12, 'month' => 12];
@@ -113,8 +117,18 @@ class RevenueReportService
                 (float) $row->getRawOriginal($amountColumn),
             ]);
 
+        // A cancelled booking is refunded, so its money no longer counts.
+        $paidBookings = fn () => ResourceBooking::query()
+            ->where('payment_status', PaymentStatus::Paid)
+            ->whereNotIn('status', [BookingStatus::Cancelled, BookingStatus::Rejected]);
+
+        $isWalkIn = fn ($query) => $query
+            ->whereNotNull('created_by')
+            ->whereColumn('created_by', '!=', 'user_id');
+
         return collect()
-            ->concat($rows(ResourceBooking::query()->where('payment_status', PaymentStatus::Paid), 'starts_at', 'amount', 'bookings'))
+            ->concat($rows($paidBookings()->whereNot($isWalkIn), 'starts_at', 'amount', 'bookings'))
+            ->concat($rows($paidBookings()->where($isWalkIn), 'created_at', 'amount', 'walk_in'))
             ->concat($rows(Sale::query()->where('status', SaleStatus::Completed), 'created_at', 'total', 'pos'))
             ->concat($rows(RentalTransaction::query()->where('status', '!=', RentalStatus::Reserved), 'rented_at', 'total_amount', 'rentals'))
             ->concat($rows(OpenPlayRegistration::query()->where('payment_status', PaymentStatus::Paid), 'created_at', 'amount', 'open_play'));

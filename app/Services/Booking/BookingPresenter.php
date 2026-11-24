@@ -47,6 +47,7 @@ class BookingPresenter
         return [
             'booking' => $booking,
             'canManage' => $viewer->isVenueAdmin(),
+            'canCancel' => $viewer->can('cancel', $booking),
             'policies' => $this->checkoutPolicies(),
             'groupBookings' => $isGrouped ? $groupBookings->values() : null,
             'groupTotalAmount' => $isGrouped ? round((float) $groupBookings->sum('amount'), 2) : null,

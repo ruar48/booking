@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\BookingStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RentalStatus;
 use App\Enums\SaleStatus;
@@ -70,6 +71,7 @@ it('adds up every source for today, split by source', function () {
 
     expect($today)->toBe([
         'bookings' => 200.0,
+        'walk_in' => 0.0,
         'pos' => 55.5,
         'rentals' => 100.0,
         'open_play' => 100.0,
@@ -84,6 +86,36 @@ it('leaves out money that was not actually taken', function () {
     openPlayFee('2026-10-07 08:00', 100, PaymentStatus::Unpaid);
 
     expect(app(RevenueReportService::class)->summary()['day']['current']['total'])->toBe(0.0);
+});
+
+it('leaves out paid bookings that were later cancelled', function () {
+    ResourceBooking::factory()->create([
+        'starts_at' => Carbon::parse('2026-10-07 09:00'),
+        'ends_at' => Carbon::parse('2026-10-07 10:00'),
+        'status' => BookingStatus::Cancelled,
+        'payment_status' => PaymentStatus::Paid,
+        'amount' => 200,
+    ]);
+
+    expect(app(RevenueReportService::class)->summary()['day']['current']['total'])->toBe(0.0);
+});
+
+it('reports walk-ins separately, on the day the cash was taken', function () {
+    $staff = User::factory()->create();
+
+    ResourceBooking::factory()->create([
+        'created_by' => $staff->id,
+        'starts_at' => Carbon::parse('2026-10-10 20:00'),
+        'ends_at' => Carbon::parse('2026-10-10 21:00'),
+        'payment_status' => PaymentStatus::Paid,
+        'amount' => 250,
+    ]);
+
+    $today = app(RevenueReportService::class)->summary()['day']['current'];
+
+    expect($today['walk_in'])->toBe(250.0)
+        ->and($today['bookings'])->toBe(0.0)
+        ->and($today['total'])->toBe(250.0);
 });
 
 it('buckets by day, Monday-start week, and month, with the previous period', function () {
