@@ -4,6 +4,7 @@ namespace App\Http\Controllers\OpenPlay;
 
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OpenPlay\StoreOpenPlayWalkInRequest;
 use App\Models\OpenPlayRegistration;
 use App\Models\OpenPlaySession;
 use App\Models\Player;
@@ -11,6 +12,7 @@ use App\Services\OpenPlayRegistrationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Throwable;
 
 class OpenPlayRegistrationController extends Controller
 {
@@ -42,6 +44,28 @@ class OpenPlayRegistrationController extends Controller
         }
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Player registered.')]);
+
+        return back();
+    }
+
+    public function storeWalkIn(StoreOpenPlayWalkInRequest $request, OpenPlaySession $open_play): RedirectResponse
+    {
+        try {
+            $this->registrationService->registerWalkIn(
+                $open_play,
+                $request->validated('name'),
+                $request->validated('phone'),
+                $request->boolean('mark_paid'),
+                $request->user()->id,
+            );
+        } catch (Throwable $e) {
+            report($e);
+            Inertia::flash('toast', ['type' => 'error', 'message' => __('Could not add the walk-in. Please try again.')]);
+
+            return back();
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Walk-in added.')]);
 
         return back();
     }

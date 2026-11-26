@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Actions\CreateWalkInCustomer;
 use App\Enums\PaymentStatus;
 use App\Exceptions\PaymentUnavailableException;
 use App\Models\OpenPlayRegistration;
@@ -9,9 +10,14 @@ use App\Models\OpenPlaySession;
 use App\Models\Player;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class OpenPlayRegistrationService
 {
+    public function __construct(
+        private readonly CreateWalkInCustomer $createWalkInCustomer,
+    ) {}
+
     /**
      * Registers a player for a session. If the session charges a fee, the
      * registration is created unpaid and doesn't hold a roster slot (and
@@ -81,6 +87,40 @@ class OpenPlayRegistrationService
         }
 
         return $registration;
+    }
+
+    /**
+     * Registers someone standing at the venue who has no account: creates
+     * their account and player profile, then registers them. Staff can take
+     * the fee in cash on the spot, so the entry may be marked paid at once.
+     * One transaction — a failed registration must not leave an orphaned
+     * walk-in account behind.
+     *
+     * @throws RuntimeException If registration is refused (rolls back the new account).
+     */
+    public function registerWalkIn(OpenPlaySession $event, string $name, string $phone, bool $markPaid, int $createdBy): OpenPlayRegistration
+    {
+        return DB::transaction(function () use ($event, $name, $phone, $markPaid, $createdBy): OpenPlayRegistration {
+            $user = $this->createWalkInCustomer->create($name, $phone);
+            $player = Player::query()->where('user_id', $user->id)->firstOrFail();
+
+            // A brand-new player can't already hold a spot, so a refusal here
+            // is unexpected — throw so the new account is rolled back too.
+            $registration = $this->register($event, $player, null, $createdBy);
+
+            if (is_string($registration)) {
+                throw new RuntimeException($registration);
+            }
+
+            if ($markPaid && $registration->payment_status !== PaymentStatus::Paid) {
+                $registration->update(['payment_status' => PaymentStatus::Paid]);
+
+                // A paid solo in a doubles session can now be paired.
+                $this->pairRandomly($event);
+            }
+
+            return $registration;
+        });
     }
 
     /**

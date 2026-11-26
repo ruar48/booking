@@ -30,6 +30,7 @@ import { PageHeader } from '@/components/page-header';
 import { PlayerSearchInput } from '@/components/player-search-input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -72,6 +73,7 @@ import {
     pairRandom as pairRandomly,
     store as storeRegistration,
     updatePayment as updateRegistrationPayment,
+    walkIn as storeWalkIn,
 } from '@/routes/open-play/registrations';
 import { update as updateTargetScore } from '@/routes/open-play/target-score';
 import type {
@@ -371,6 +373,33 @@ export default function OpenPlayManage({ session, stack }: Props) {
     const [pairingProcessing, setPairingProcessing] = useState(false);
     const [addAllProcessing, setAddAllProcessing] = useState(false);
 
+    const [walkInName, setWalkInName] = useState('');
+    const [walkInPhone, setWalkInPhone] = useState('');
+    const [walkInPaid, setWalkInPaid] = useState(true);
+    const [walkInProcessing, setWalkInProcessing] = useState(false);
+    const [walkInErrors, setWalkInErrors] = useState<Record<string, string>>({});
+
+    const submitWalkIn = (event: FormEvent) => {
+        event.preventDefault();
+        setWalkInProcessing(true);
+
+        router.post(
+            storeWalkIn(session).url,
+            { name: walkInName, phone: walkInPhone, mark_paid: walkInPaid },
+            {
+                preserveScroll: true,
+                preserveState: true,
+                onSuccess: () => {
+                    setWalkInName('');
+                    setWalkInPhone('');
+                    setWalkInErrors({});
+                },
+                onError: (errors) => setWalkInErrors(errors as Record<string, string>),
+                onFinish: () => setWalkInProcessing(false),
+            },
+        );
+    };
+
     const needsPartnerSelection = isDoublesSession && partnerMode === 'select';
     const unpairedCount = registrations.filter((r) => !r.partner_player_id).length;
 
@@ -653,6 +682,65 @@ export default function OpenPlayManage({ session, stack }: Props) {
                                 {(registerErrors.player_id || registerErrors.partner_player_id) && (
                                     <p className="text-destructive text-sm">
                                         {registerErrors.player_id ?? registerErrors.partner_player_id}
+                                    </p>
+                                )}
+                            </form>
+
+                            <form
+                                onSubmit={submitWalkIn}
+                                className="grid gap-3 rounded-lg border border-dashed p-4"
+                            >
+                                <div>
+                                    <p className="text-sm font-medium">Walk-in</p>
+                                    <p className="text-muted-foreground text-sm">
+                                        No account yet? Add them with a name and phone number.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                                    <div className="grid min-w-0 flex-1 gap-1">
+                                        <Label htmlFor="walk_in_name">Name</Label>
+                                        <Input
+                                            id="walk_in_name"
+                                            value={walkInName}
+                                            onChange={(e) => setWalkInName(e.target.value)}
+                                            placeholder="Juan Dela Cruz"
+                                        />
+                                    </div>
+                                    <div className="grid min-w-0 flex-1 gap-1">
+                                        <Label htmlFor="walk_in_phone">Phone</Label>
+                                        <Input
+                                            id="walk_in_phone"
+                                            type="tel"
+                                            value={walkInPhone}
+                                            onChange={(e) => setWalkInPhone(e.target.value)}
+                                            placeholder="09XX XXX XXXX"
+                                        />
+                                    </div>
+                                    <Button
+                                        type="submit"
+                                        variant="outline"
+                                        className="shrink-0"
+                                        disabled={!walkInName.trim() || !walkInPhone.trim() || walkInProcessing}
+                                    >
+                                        <UserPlus className="size-4" />
+                                        {walkInProcessing ? 'Adding…' : 'Add walk-in'}
+                                    </Button>
+                                </div>
+                                {!!session.price_per_player && (
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox
+                                            id="walk_in_paid"
+                                            checked={walkInPaid}
+                                            onCheckedChange={(checked) => setWalkInPaid(checked === true)}
+                                        />
+                                        <Label htmlFor="walk_in_paid" className="font-normal">
+                                            Paid at the counter ({formatCurrency(session.price_per_player)})
+                                        </Label>
+                                    </div>
+                                )}
+                                {(walkInErrors.name || walkInErrors.phone) && (
+                                    <p className="text-destructive text-sm">
+                                        {walkInErrors.name ?? walkInErrors.phone}
                                     </p>
                                 )}
                             </form>
